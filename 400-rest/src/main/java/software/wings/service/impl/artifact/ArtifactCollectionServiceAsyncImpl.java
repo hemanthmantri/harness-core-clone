@@ -6,11 +6,12 @@
  */
 
 package software.wings.service.impl.artifact;
+
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.microservice.NotifyEngineTarget.ARTIFACT_COLLECTION;
 
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
@@ -182,7 +183,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       delegateTaskBuilder.data(dataBuilder.build());
     }
 
-    waitNotifyEngine.waitForAllOn(GENERAL,
+    waitNotifyEngine.waitForAllOn(ARTIFACT_COLLECTION,
         new BuildSourceCallback(accountId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()), waitId);
     log.debug("Queuing delegate task for artifactStream with waitId {}", waitId);
     final String taskId = delegateService.queueTaskV2(delegateTaskBuilder.build());
