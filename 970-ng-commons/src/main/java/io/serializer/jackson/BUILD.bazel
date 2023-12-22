@@ -17,6 +17,7 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//:lombok",
         "//970-ng-commons/src/main/java/io/harness/beans/inputset:module",
         "//970-ng-commons/src/main/java/io/harness/common:module",
         "//970-ng-commons/src/main/java/io/harness/pms/yaml:module",

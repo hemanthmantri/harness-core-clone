@@ -10,3 +10,4 @@ infrastructure:
   inner9: valueFromInputSet.allowedValues(dev, nondev, prod)
   inner10: <+dollar.expr.from.inputSet>.allowedValues(dev, <+env>, <+env2>, stage)
   inner11: "[\"abc\",\"def\"]"
+  inner12: "[\"abc\",\"def\"]"

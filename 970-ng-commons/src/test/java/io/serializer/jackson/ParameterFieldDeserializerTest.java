@@ -68,6 +68,8 @@ public class ParameterFieldDeserializerTest extends CategoryTest implements Mult
     assertThat(readValue.infrastructure.getValue().inner11.getValue()).isEqualTo(List.of("abc", "def"));
     assertThat(readValue.infrastructure.isExpression()).isEqualTo(false);
     assertThat(readValue.infrastructure.getValue().inner11.isExpression()).isEqualTo(false);
+    assertThat(readValue.infrastructure.getValue().inner12.isExpression()).isEqualTo(false);
+    assertThat(readValue.infrastructure.getValue().inner12.getValue()).isEqualTo("[\"abc\",\"def\"]");
   }
 
   @Test
@@ -236,5 +238,6 @@ public class ParameterFieldDeserializerTest extends CategoryTest implements Mult
     private ParameterField<String> inner10;
     private ParameterField<Timeout> timeout;
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY) private ParameterField<List<String>> inner11;
+    private ParameterField<String> inner12;
   }
 }
