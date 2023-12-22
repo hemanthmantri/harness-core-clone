@@ -66,7 +66,7 @@ public class DebeziumConfiguration {
     props.setProperty(KEY_CONVERTER_SCHEMAS_ENABLE, "false");
     props.setProperty(VALUE_CONVERTER_SCHEMAS_ENABLE, "false");
     props.setProperty(OFFSET_FLUSH_INTERVAL_MS, "5000");
-    props.setProperty(TRANSFORMS_UNWRAP_ARRAY_ENCODING, "document");
+    props.setProperty(TRANSFORMS_UNWRAP_ARRAY_ENCODING, debeziumConfig.getTransformsUnwrapArrayEncoding());
     props.setProperty(MAX_BATCH_SIZE, debeziumConfig.getMaxBatchSize());
     props.setProperty(MAX_QUEUE_SIZE, debeziumConfig.getMaxQueueSize());
     props.setProperty(MAX_QUEUE_SIZE_IN_BYTES, String.valueOf(debeziumConfig.getMaxQueueSizeInBytes()));

@@ -103,6 +103,8 @@ public class DebeziumConfig {
   @JsonProperty("field.exclude.list") private String fieldExcludeList;
   @JsonProperty("mongodb.connection.string") private String mongodbConnectionString;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("transforms.unwrap.array.encoding") private String transformsUnwrapArrayEncoding;
+
   public List<String> getMonitoredCollections() {
     if (EmptyPredicate.isEmpty(collectionIncludeList)) {
       return new ArrayList<>();

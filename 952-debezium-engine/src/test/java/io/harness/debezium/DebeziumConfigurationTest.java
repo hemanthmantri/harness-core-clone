@@ -33,10 +33,10 @@ public class DebeziumConfigurationTest extends CategoryTest {
   public void testGetDebeziumProperties() {
     DebeziumConfig debeziumConfig =
         new DebeziumConfig(false, "testConnector", "offset_file", "offsets", "mongo", "shop", "false", "products", 1000,
-            "initial", "4", "1", 1000, "1000", "100", "db1.coll1.field1,db2.coll2.field2", "uri", null);
+            "initial", "4", "1", 1000, "1000", "100", "db1.coll1.field1,db2.coll2.field2", "uri", null, "array");
     RedisConfig redisConfig = new RedisConfig();
     Properties expectedProps = new Properties();
-    expectedProps.setProperty(DebeziumConfiguration.TRANSFORMS_UNWRAP_ARRAY_ENCODING, "document");
+    expectedProps.setProperty(DebeziumConfiguration.TRANSFORMS_UNWRAP_ARRAY_ENCODING, "array");
     expectedProps.setProperty(DebeziumConfiguration.SNAPSHOT_MODE, "initial");
     expectedProps.setProperty("topic.prefix", debeziumConfig.getMongodbName());
     expectedProps.setProperty(DebeziumConfiguration.CONNECTOR_NAME, debeziumConfig.getConnectorName());

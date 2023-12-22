@@ -44,6 +44,7 @@ debeziumConfigs:
     field.exclude.list: ${FIELD_EXCLUDE_LIST_PIPELINE:-pms-harness.planExecutionsSummary.layoutNodeMap}
     heartbeat.interval.ms: ${HEARTBEAT_INTERVAL_MS_PIPELINE:-10000}
     mongodb.connection.string: ${MONGODB_CONNECTION_STRING_PIPELINE:-mongodb://localhost:27017}
+    transforms.unwrap.array.encoding: ${TRANSFORMS_UNWRAP_ARRAY_ENCODING_PIPELINE:-document}
   - isEnabled: ${IS_ENABLED_PIPELINE_SNAPSHOT:-false}
     name: ${DEBEZIUM_NAME_PIPELINE_SNAPSHOT:-pipelineSnapshot} # unique for each debezium config
     mongodb.name: ${MONGODB_NAME_PIPELINE_SNAPSHOT:-pmsMongoSnapshot} # unique for each debezium config
@@ -59,6 +60,7 @@ debeziumConfigs:
     field.exclude.list: ${FIELD_EXCLUDE_LIST_PIPELINE_SNAPSHOT:-pms-harness.planExecutionsSummary.layoutNodeMap}
     heartbeat.interval.ms: ${HEARTBEAT_INTERVAL_MS_PIPELINE_SNAPSHOT:-10000}
     mongodb.connection.string: ${MONGODB_CONNECTION_STRING_PIPELINE_SNAPSHOT:-mongodb://localhost:27017}
+    transforms.unwrap.array.encoding: ${TRANSFORMS_UNWRAP_ARRAY_ENCODING_PIPELINE_SNAPSHOT:-document}
     eventsFramework:
       redis:
         sentinel: false
@@ -92,6 +94,7 @@ debeziumConfigs:
     poll.interval.ms: ${POLL_INTERVAL_MS_PLG:-3000}
     heartbeat.interval.ms: ${HEARTBEAT_INTERVAL_MS_PLG:-10000}
     mongodb.connection.string: ${MONGODB_CONNECTION_STRING_PLG:-mongodb://0.0.0.0:27017}
+    transforms.unwrap.array.encoding: ${TRANSFORMS_UNWRAP_ARRAY_ENCODING_PLG:-document}
   - isEnabled: ${IS_ENABLED_APPLICATIONS:-false}
     name: ${DEBEZIUM_NAME_APPLICATIONS:-applications} # unique for each debezium config
     mongodb.name: ${MONGODB_NAME_APPLICATIONS:-harnessMongo} # unique for each debezium config
@@ -107,6 +110,7 @@ debeziumConfigs:
     field.exclude.list: ${FIELD_EXCLUDE_LIST_APPLICATIONS:-harness.applications.keywords}
     heartbeat.interval.ms: ${HEARTBEAT_INTERVAL_APPLICATIONS:-10000}
     mongodb.connection.string: ${MONGODB_CONNECTION_STRING_APPLICATIONS:-mongodb://localhost:27017}
+    transforms.unwrap.array.encoding: ${TRANSFORMS_UNWRAP_ARRAY_ENCODING_APPLICATIONS:-document}
   - isEnabled: ${IS_ENABLED_SSCA:-false}
     name: ${DEBEZIUM_NAME_SSCA:-ssca} # unique for each debezium config
     mongodb.name: ${MONGODB_NAME_SSCA:-sscaMongo} # unique for each debezium config
@@ -121,6 +125,7 @@ debeziumConfigs:
     poll.interval.ms: ${POLL_INTERVAL_MS_SSCA:-3000}
     heartbeat.interval.ms: ${HEARTBEAT_INTERVAL_SSCA:-10000}
     mongodb.connection.string: ${MONGODB_CONNECTION_STRING_SSCA:-mongodb://localhost:27017}
+    transforms.unwrap.array.encoding: ${TRANSFORMS_UNWRAP_ARRAY_ENCODING_SSCA:-array}
 
 eventsFramework:
   redis:
