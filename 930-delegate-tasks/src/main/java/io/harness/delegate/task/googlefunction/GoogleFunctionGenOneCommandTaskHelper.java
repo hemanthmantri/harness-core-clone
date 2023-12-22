@@ -250,6 +250,7 @@ public class GoogleFunctionGenOneCommandTaskHelper {
       }
       throwGetFunctionFailureException(e, logCallback);
     }
+    validateFunctionStateBeforeDeployment(functionName, gcpGoogleFunctionInfraConfig, logCallback, timeout);
     DeleteFunctionRequest deleteFunctionRequest = DeleteFunctionRequest.newBuilder().setName(functionName).build();
     logCallback.saveExecutionLog(
         format("Deleting function: %s", googleFunctionCommandTaskHelper.getResourceName(functionName)));
@@ -315,18 +316,22 @@ public class GoogleFunctionGenOneCommandTaskHelper {
 
   private void validateFunctionStateBeforeDeployment(String functionName,
       GcpGoogleFunctionInfraConfig gcpGoogleFunctionInfraConfig, LogCallback logCallback, Long timeout) {
+    logCallback.saveExecutionLog(color("Waiting for function to complete any ongoing operation before starting"
+            + " new operation.",
+        LogColor.Yellow));
     try {
       HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeout), () -> {
         while (true) {
           Optional<CloudFunction> functionOptional =
               getFunction(functionName, gcpGoogleFunctionInfraConfig, logCallback);
-          if (functionOptional.isEmpty() || CloudFunctionStatus.ACTIVE.equals(functionOptional.get().getStatus())) {
+          if (functionOptional.isEmpty() || CloudFunctionStatus.ACTIVE.equals(functionOptional.get().getStatus())
+              || CloudFunctionStatus.OFFLINE.equals(functionOptional.get().getStatus())) {
+            logCallback.saveExecutionLog(color("There is no ongoing operation now.", LogColor.Yellow));
             return true;
           }
-          logCallback.saveExecutionLog(
-              format("Waiting for function to achieve steady state before deployment, current status is: "
-                      + "%s",
-                  color(functionOptional.get().getStatus().name(), LogColor.Yellow)));
+          logCallback.saveExecutionLog(format("Waiting for function to achieve steady state, current status is: "
+                  + "%s",
+              color(functionOptional.get().getStatus().name(), LogColor.Yellow)));
           Morpheus.sleep(ofSeconds(10));
         }
       });
