@@ -22,6 +22,7 @@ import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.FileData;
 import io.harness.cdng.CDStepHelper;
+import io.harness.cdng.executables.CdTaskChainExecutable;
 import io.harness.cdng.expressions.CDExpressionResolver;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -54,7 +55,6 @@ import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.pcf.CfCommandUnitConstants;
 import io.harness.pcf.model.CfCliVersionNG;
 import io.harness.plancreator.steps.TaskSelectorYaml;
-import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -92,7 +92,7 @@ import lombok.extern.slf4j.Slf4j;
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = true, components = {HarnessModuleComponent.CDS_PCF})
 @OwnedBy(HarnessTeam.CDP)
 @Slf4j
-public class TasCommandStep extends TaskChainExecutableWithRollbackAndRbac implements TasStepExecutor {
+public class TasCommandStep extends CdTaskChainExecutable implements TasStepExecutor {
   public static final StepType STEP_TYPE = StepType.newBuilder()
                                                .setType(ExecutionNodeType.TANZU_COMMAND.getYamlType())
                                                .setStepCategory(StepCategory.STEP)
@@ -119,15 +119,16 @@ public class TasCommandStep extends TaskChainExecutableWithRollbackAndRbac imple
   }
 
   @Override
-  public TaskChainResponse executeNextLinkWithSecurityContext(Ambiance ambiance, StepBaseParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
-      throws Exception {
+  public TaskChainResponse executeNextLinkWithSecurityContextAndNodeInfo(Ambiance ambiance,
+      StepBaseParameters stepParameters, StepInputPackage inputPackage, PassThroughData passThroughData,
+      ThrowingSupplier<ResponseData> responseSupplier) throws Exception {
     return tasStepHelper.executeNextLink(this, ambiance, stepParameters, passThroughData, responseSupplier);
   }
 
   @Override
-  public StepResponse finalizeExecutionWithSecurityContext(Ambiance ambiance, StepBaseParameters stepParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
+  public StepResponse finalizeExecutionWithSecurityContextAndNodeInfo(Ambiance ambiance,
+      StepBaseParameters stepParameters, PassThroughData passThroughData,
+      ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     try {
       if (passThroughData instanceof GitFetchResponsePassThroughData) {
         GitFetchResponsePassThroughData stepExceptionPassThroughData =
