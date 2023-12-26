@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 68
+version: 69
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -175,6 +175,9 @@ roles:
         - core_inputset_edit
         - core_inputset_delete
         - core_inputset_view
+        - core_gitxWebhooks_edit
+        - core_gitxWebhooks_delete
+        - core_gitxWebhooks_view
       allowedScopeLevels:
         - project
       managed: true
@@ -235,6 +238,7 @@ roles:
         - cet_token_view
         - cet_criticalevent_view
         - iac_workspace_view
+        - core_gitxWebhooks_view
       allowedScopeLevels:
         - project
       managed: true
@@ -417,6 +421,9 @@ roles:
         - iac_workspace_edit
         - iac_workspace_editvariable
         - iac_workspace_view
+        - core_gitxWebhooks_edit
+        - core_gitxWebhooks_delete
+        - core_gitxWebhooks_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -479,6 +486,7 @@ roles:
         - cet_token_view
         - cet_criticalevent_view
         - iac_workspace_view
+        - core_gitxWebhooks_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -731,6 +739,9 @@ roles:
         - iac_workspace_edit
         - iac_workspace_editvariable
         - iac_workspace_view
+        - core_gitxWebhooks_edit
+        - core_gitxWebhooks_delete
+        - core_gitxWebhooks_view
       allowedScopeLevels:
         - account
       managed: true
@@ -812,6 +823,7 @@ roles:
         - ccm_recommendations_view
         - ccm_commitmentOrchestrator_view
         - iac_workspace_view
+        - core_gitxWebhooks_view
       allowedScopeLevels:
         - account
       managed: true

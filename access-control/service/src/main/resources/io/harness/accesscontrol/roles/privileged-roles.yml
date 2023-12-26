@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: supportRolesConfiguration
-version: 28
+version: 29
 roles:
   - identifier: _super_account_viewer
     name: Super Account Viewer
@@ -82,3 +82,4 @@ roles:
       - idp_catalogaccesspolicy_view
       - idp_integration_view
       - idp_advancedconfiguration_view
+      - core_gitxWebhooks_view

@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: permissionsConfiguration
-version: 68
+version: 69
 permissions:
   - identifier: core_project_delete
     name: Delete Project
@@ -1923,6 +1923,30 @@ permissions:
   - identifier: ssca_remediationtracker_close
     name: Close remediation tracker
     status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_gitxWebhooks_edit
+    name: Create or Edit GitXWebhooks
+    status: EXPERIMENTAL
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_gitxWebhooks_delete
+    name: Delete GitXWebhooks
+    status: EXPERIMENTAL
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_gitxWebhooks_view
+    name: View GitXWebhooks
+    status: EXPERIMENTAL
     includeInAllRoles: false
     allowedScopeLevels:
       - account
