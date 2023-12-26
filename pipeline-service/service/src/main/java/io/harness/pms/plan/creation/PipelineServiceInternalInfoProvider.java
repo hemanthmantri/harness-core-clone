@@ -153,6 +153,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new ServiceNowImportSetStepPlanCreator());
     planCreators.add(new CustomApprovalStepPlanCreator());
     planCreators.add(new WaitStepPlanCreator());
+    planCreators.add(new io.harness.steps.wait.v1.WaitStepPlanCreator());
     planCreators.add(new PipelineStagePlanCreator());
     planCreators.add(new PipelineRollbackStagePlanCreator());
     planCreators.add(new PipelineStagePlanCreatorV1());

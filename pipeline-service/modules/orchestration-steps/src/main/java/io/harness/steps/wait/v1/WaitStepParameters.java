@@ -31,6 +31,10 @@ public class WaitStepParameters implements SpecParameters {
     this.duration = duration;
   }
 
+  public io.harness.steps.wait.WaitStepParameters toWaitStepParameterV0() {
+    return io.harness.steps.wait.WaitStepParameters.infoBuilder().duration(getDuration()).build();
+  }
+
   @Override
   public String getVersion() {
     return HarnessYamlVersion.V1;

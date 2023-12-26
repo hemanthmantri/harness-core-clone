@@ -36,7 +36,9 @@ public abstract class PmsAbstractStepNodeV1 extends AbstractStepNodeV1 {
   // TODO: set rollback parameters
   public StepElementParametersV1 getStepParameters(PlanCreationContext ctx, KryoSerializer kryoSerializer) {
     StepElementParametersV1Builder stepBuilder = StepParametersUtilsV1.getStepParameters(this);
-    StepUtils.appendDelegateSelectorsV1((WithDelegateSelector) getSpec(), ctx, kryoSerializer);
+    if (getSpec() instanceof WithDelegateSelector) {
+      StepUtils.appendDelegateSelectorsV1((WithDelegateSelector) getSpec(), ctx, kryoSerializer);
+    }
     stepBuilder.spec(getSpecParameters());
     return stepBuilder.build();
   }

@@ -103,6 +103,7 @@ public class OrchestrationStepsModuleStepRegistrar {
 
     engineSteps.putAll(NGCommonUtilStepsRegistrar.getEngineSteps());
     engineSteps.put(WaitStep.STEP_TYPE, WaitStep.class);
+    engineSteps.put(io.harness.steps.wait.v1.WaitStep.STEP_TYPE, io.harness.steps.wait.v1.WaitStep.class);
     engineSteps.put(GroupStepV1.STEP_TYPE, GroupStepV1.class);
     engineSteps.put(InitContainerStep.STEP_TYPE, InitContainerStep.class);
     engineSteps.put(RunContainerStep.STEP_TYPE, RunContainerStep.class);

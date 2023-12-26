@@ -104,7 +104,7 @@ import org.mockito.MockitoAnnotations;
 
 @OwnedBy(PIPELINE)
 public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
-  public static final int PLAN_CREATOR_NUMBER = 38;
+  public static final int PLAN_CREATOR_NUMBER = 39;
   public static final int FILTER_JSON_CREATOR_NUMBER = 15;
   public static final int VARIABLE_CREATOR_NUMBER = 27;
 
@@ -166,6 +166,7 @@ public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
     assertThat(planCreatorClasses.contains(PipelineRollbackStagePlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(CdSscaEnforcementStepPlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(ApprovalStagePlanCreator.class)).isTrue();
+    assertThat(planCreatorClasses.contains(io.harness.steps.wait.v1.WaitStepPlanCreator.class)).isTrue();
   }
 
   @Test
