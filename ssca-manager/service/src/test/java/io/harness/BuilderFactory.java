@@ -218,8 +218,7 @@ public class BuilderFactory {
         .vulnerabilityInfo(new io.harness.spec.server.ssca.v1.model.DefaultVulnerability()
                                .type("Default")
                                .severity(io.harness.spec.server.ssca.v1.model.VulnerabilitySeverity.HIGH)
-                               .componentName("log4j")
-                               .componentVersion("1.0.17-1.0.18"))
+                               .componentName("log4j"))
         .remediationCondition(new io.harness.spec.server.ssca.v1.model.RemediationCondition().operator(
             io.harness.spec.server.ssca.v1.model.RemediationCondition.OperatorEnum.ALL));
   }
@@ -233,7 +232,7 @@ public class BuilderFactory {
                          .name("test")
                          .email("test@gmail.com")
                          .build())
-        .vulnerabilityInfo(DefaultVulnerability.builder().version("1.0.17-1.0.18").component("log4j").build())
+        .vulnerabilityInfo(DefaultVulnerability.builder().component("log4j").build())
         .condition(RemediationCondition.builder().operator(RemediationCondition.Operator.ALL).build());
   }
 

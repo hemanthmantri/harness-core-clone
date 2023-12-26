@@ -215,7 +215,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
             != io.harness.spec.server.ssca.v1.model.RemediationCondition.OperatorEnum.ALL)
         && (body.getRemediationCondition().getOperator()
             != io.harness.spec.server.ssca.v1.model.RemediationCondition.OperatorEnum.MATCHES)) {
-      List<Integer> versions = VersionField.getVersion(body.getVulnerabilityInfo().getComponentVersion());
+      List<Integer> versions = VersionField.getVersion(body.getRemediationCondition().getVersion());
       if (versions.size() != 3 || versions.get(0) == -1) {
         throw new InvalidArgumentsException(
             "Unsupported Version Format. Semantic Versioning is required for LessThan and LessThanEquals operator.");

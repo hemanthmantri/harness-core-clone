@@ -60,7 +60,6 @@ public class RemediationTrackerMapper {
             .component(vulnerabilityInfo.getComponentName())
             .vulnerabilityDescription(vulnerabilityInfo.getVulnerabilityDescription())
             .type(VulnerabilityInfoType.DEFAULT)
-            .version(vulnerabilityInfo.getComponentVersion())
             .severity(mapSeverityToVulnerabilitySeverity(vulnerabilityInfo.getSeverity()))
             .build();
       case "CVE":
@@ -73,7 +72,6 @@ public class RemediationTrackerMapper {
             .component(vulnerabilityInfo.getComponentName())
             .vulnerabilityDescription(vulnerabilityInfo.getVulnerabilityDescription())
             .type(VulnerabilityInfoType.CVE)
-            .version(vulnerabilityInfo.getComponentVersion())
             .severity(mapSeverityToVulnerabilitySeverity(vulnerabilityInfo.getSeverity()))
             .build();
       default:

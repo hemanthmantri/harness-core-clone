@@ -146,7 +146,6 @@ public class RemediationTrackerServiceImplTest extends SSCAManagerTestBase {
     cveVulnerability.setType("CVE");
     cveVulnerability.setCve("CVE-2021-44228");
     cveVulnerability.setComponentName("log4j");
-    cveVulnerability.setComponentVersion("1.2.3");
     cveVulnerability.setSeverity(VulnerabilitySeverity.HIGH);
     remediationTrackerCreateRequestBody.setVulnerabilityInfo(cveVulnerability);
     RemediationTrackerEntity remediationTrackerEntity =
