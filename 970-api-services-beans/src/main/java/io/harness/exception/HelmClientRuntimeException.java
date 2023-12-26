@@ -9,18 +9,25 @@ package io.harness.exception;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.CodePulse;
+import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ProductModule;
+import io.harness.taskcontext.TaskContext;
 
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @OwnedBy(CDP)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@CodePulse(module = ProductModule.CDS, unitCoverageRequired = false, components = {HarnessModuleComponent.CDS_K8S})
 public class HelmClientRuntimeException extends RuntimeException {
   @Getter final HelmClientException helmClientException;
   @Getter ExceptionType type;
+  @Setter @Getter TaskContext taskContext;
 
   public HelmClientRuntimeException(@NotNull HelmClientException helmClientException) {
     super(ExceptionUtils.getMessage(helmClientException));
@@ -28,9 +35,20 @@ public class HelmClientRuntimeException extends RuntimeException {
   }
 
   public HelmClientRuntimeException(@NotNull HelmClientException helmClientException, ExceptionType type) {
-    super(ExceptionUtils.getMessage(helmClientException));
-    this.helmClientException = helmClientException;
+    this(helmClientException);
     this.type = type;
   }
+
+  public HelmClientRuntimeException(
+      @NotNull HelmClientException helmClientException, ExceptionType type, TaskContext taskContext) {
+    this(helmClientException, type);
+    this.taskContext = taskContext;
+  }
+
+  public HelmClientRuntimeException(@NotNull HelmClientException helmClientException, TaskContext taskContext) {
+    this(helmClientException);
+    this.taskContext = taskContext;
+  }
+
   public enum ExceptionType { INTERRUPT }
 }

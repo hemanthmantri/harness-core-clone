@@ -1,31 +1,27 @@
 /*
- * Copyright 2021 Harness Inc. All rights reserved.
+ * Copyright 2023 Harness Inc. All rights reserved.
  * Use of this source code is governed by the PolyForm Shield 1.0.0 license
  * that can be found in the licenses directory at the root of this repository, also available at
  * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
 
-package io.harness.delegate.task.k8s;
-
-import static io.harness.annotations.dev.HarnessTeam.CDP;
+package io.harness.taskcontext;
 
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
-import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.taskcontext.infra.InfraContext;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
-@OwnedBy(CDP)
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = false, components = {HarnessModuleComponent.CDS_K8S})
-public interface K8sInfraDelegateConfig {
-  String getNamespace();
-  List<EncryptedDataDetail> getEncryptionDataDetails();
-  default boolean useSocketCapability() {
-    return false;
-  }
+public interface TaskContext {
+  void addHint(String hint);
 
-  InfraContext toInfraContext(String delegateId);
+  void addHints(List<String> hints);
+
+  Set<String> getHints();
+
+  Optional<String> getConnectorInfo();
 }

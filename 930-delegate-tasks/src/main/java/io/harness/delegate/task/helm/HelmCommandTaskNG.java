@@ -53,6 +53,9 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.secret.SecretSanitizerThreadLocal;
+import io.harness.taskcontext.HelmTaskContext;
+import io.harness.taskcontext.HelmTaskContext.HelmTaskContextBuilder;
+import io.harness.taskcontext.HelmTaskContextHolder;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -112,6 +115,14 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
     if (helmCommandRequestNG.getCommandUnitsProgress() == null) {
       helmCommandRequestNG.setCommandUnitsProgress(CommandUnitsProgress.builder().build());
     }
+
+    HelmTaskContextBuilder helmTaskContextBuilder = HelmTaskContext.builder();
+    if (helmCommandRequestNG.getK8sInfraDelegateConfig() != null) {
+      helmTaskContextBuilder.infraContext(
+          helmCommandRequestNG.getK8sInfraDelegateConfig().toInfraContext(getDelegateId()));
+    }
+    HelmTaskContextHolder.set(helmTaskContextBuilder.build());
+
     HelmCommandResponseNG helmCommandResponseNG;
 
     try {
@@ -177,6 +188,7 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
           UnitProgressDataMapper.toUnitProgressData(helmCommandRequestNG.getCommandUnitsProgress()),
           sanitizedException);
     } finally {
+      HelmTaskContextHolder.clear();
       k8sTaskCleaner.cleanup(cleanupDTOBuilder.build());
     }
 

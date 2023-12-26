@@ -8,11 +8,13 @@
 package io.harness.delegate.exceptionhandler.handler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.DEFAULT_EXPLAIN_LIST_RELEASE;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_CHART_VERSION_IMPROPER_CONSTRAINT;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_NO_CHART_FOUND;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_NO_CHART_VERSION_FOUND;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_NO_RELEASES_ERROR;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_TIMEOUT_EXCEPTION;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.DEFAULT_HINT_HELM_LIST_RELEASE;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_CHART_VERSION_IMPROPER_CONSTRAINT;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_NO_CHART_FOUND;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_NO_CHART_VERSION_FOUND;
@@ -20,6 +22,7 @@ import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_NO
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_TIMEOUT_ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACHYUTH;
+import static io.harness.rule.OwnerRule.MLUKIC;
 import static io.harness.rule.OwnerRule.TARUN_UBA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -27,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.azure.AzureEnvironmentType;
+import io.harness.azure.model.AzureAuthenticationType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HelmClientException;
@@ -36,7 +41,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.helm.HelmCliCommandType;
 import io.harness.rule.Owner;
+import io.harness.taskcontext.HelmTaskContext;
+import io.harness.taskcontext.infra.AzureK8sInfraContext;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -241,5 +250,78 @@ public class HelmClientRuntimeExceptionHandlerTest extends CategoryTest {
     assertThat(handledException.getCause().getMessage()).contains(EXPLAIN_TIMEOUT_EXCEPTION);
     assertThat(handledException.getCause().getCause()).isInstanceOf(HelmClientException.class);
     assertThat(handledException.getCause().getCause().getMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = MLUKIC)
+  @Category(UnitTests.class)
+  public void testHandleK8sClusterPermissionError() {
+    List<String> hints = new ArrayList<>();
+    hints.add("hint1");
+    hints.add("hint2");
+    AzureK8sInfraContext azureK8sInfraContext =
+        AzureK8sInfraContext.builder()
+            .azureAuthenticationType(AzureAuthenticationType.SERVICE_PRINCIPAL_SECRET)
+            .azureConnectorEnvironmentType(AzureEnvironmentType.AZURE)
+            .clientId("1234")
+            .tenantId("4321")
+            .delegateId("delId")
+            .build();
+    HelmTaskContext helmTaskContext = HelmTaskContext.builder().infraContext(azureK8sInfraContext).build();
+    helmTaskContext.addHints(hints);
+    HelmClientRuntimeException runtimeException = new HelmClientRuntimeException(
+        new HelmClientException(
+            "secrets is forbidden: User \"12345678900987654321\" cannot list resource \"secrets\" in API group \"\" in the namespace \"default\": User does not have access to the resource in Azure. Update role assignment to allow access. ",
+            HelmCliCommandType.LIST_RELEASE),
+        helmTaskContext);
+    final WingsException handledException = handler.handleException(runtimeException);
+    assertThat(handledException).isInstanceOf(HintException.class);
+    assertThat(handledException.getMessage()).contains(String.format(DEFAULT_HINT_HELM_LIST_RELEASE));
+    assertThat(handledException.getCause()).isInstanceOf(ExplanationException.class);
+    assertThat(handledException.getCause().getMessage()).contains(DEFAULT_EXPLAIN_LIST_RELEASE);
+    assertThat(handledException.getCause().getCause()).isInstanceOf(HintException.class);
+    assertThat(handledException.getCause().getCause().getMessage()).contains("hint2");
+    assertThat(handledException.getCause().getCause().getCause()).isInstanceOf(HintException.class);
+    assertThat(handledException.getCause().getCause().getCause().getMessage()).contains("hint1");
+    assertThat(handledException.getCause().getCause().getCause().getCause()).isInstanceOf(HintException.class);
+    assertThat(handledException.getCause().getCause().getCause().getCause().getMessage())
+        .isEqualTo(
+            "Please check permissions for user defined in Service Principal Azure Connector with clientId [1234], tenantId [4321] and environment [AzurePublicCloud]");
+    assertThat(handledException.getCause().getCause().getCause().getCause().getCause())
+        .isInstanceOf(HelmClientException.class);
+    assertThat(handledException.getCause().getCause().getCause().getCause().getCause().getMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = MLUKIC)
+  @Category(UnitTests.class)
+  public void testGetDynamicHints() {
+    List<String> hints = new ArrayList<>();
+    hints.add("hint1");
+    hints.add("hint2");
+    AzureK8sInfraContext azureK8sInfraContext =
+        AzureK8sInfraContext.builder()
+            .azureAuthenticationType(AzureAuthenticationType.SERVICE_PRINCIPAL_SECRET)
+            .azureConnectorEnvironmentType(AzureEnvironmentType.AZURE)
+            .clientId("1234")
+            .tenantId("4321")
+            .delegateId("delId")
+            .build();
+    HelmTaskContext helmTaskContext = HelmTaskContext.builder().infraContext(azureK8sInfraContext).build();
+    helmTaskContext.addHints(hints);
+
+    List<String> dynamicHints = handler.getDynamicHints("some error message", helmTaskContext);
+    assertThat(dynamicHints).isNotNull();
+    assertThat(dynamicHints.size()).isEqualTo(2);
+    assertThat(dynamicHints).contains("hint1", "hint2");
+  }
+
+  @Test
+  @Owner(developers = MLUKIC)
+  @Category(UnitTests.class)
+  public void testGetDynamicHintsEmpty() {
+    List<String> dynamicHints = handler.getDynamicHints("some error message", null);
+    assertThat(dynamicHints).isNotNull();
+    assertThat(dynamicHints).isEmpty();
   }
 }

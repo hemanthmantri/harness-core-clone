@@ -8,6 +8,7 @@
 package io.harness.delegate.task.helm;
 
 import static io.harness.rule.OwnerRule.ACHYUTH;
+import static io.harness.rule.OwnerRule.MLUKIC;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,14 +34,20 @@ import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.k8s.utils.K8sTaskCleaner;
 import io.harness.delegate.task.ManifestDelegateConfigHelper;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
+import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmTaskDTO;
 import io.harness.k8s.config.K8sGlobalConfigService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
+import io.harness.taskcontext.HelmTaskContext;
+import io.harness.taskcontext.HelmTaskContextHolder;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +57,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@Slf4j
 public class HelmCommandTaskNGTest extends CategoryTest {
   @Mock private HelmDeployServiceNG helmDeployServiceNG;
   @Mock private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
@@ -67,6 +75,8 @@ public class HelmCommandTaskNGTest extends CategoryTest {
   private final HelmCommandTaskNG helmCommandTaskNG = new HelmCommandTaskNG(
       DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(false).build()).build(),
       null, notifyResponseData -> {}, () -> true);
+
+  private final ExecutorService executorService = Executors.newFixedThreadPool(1);
 
   @Before
   public void setup() {
@@ -206,5 +216,31 @@ public class HelmCommandTaskNGTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testRunWithObjectList() {
     helmCommandTaskNG.run(new Object[] {});
+  }
+
+  @Test
+  @Owner(developers = MLUKIC)
+  @Category(UnitTests.class)
+  public void testTaskContextThreadLocal() throws Exception {
+    assertThat(HelmTaskContextHolder.isNull()).isTrue();
+    HelmTaskContextHolder.set(HelmTaskContext.builder().build());
+    assertThat(HelmTaskContextHolder.isNull()).isFalse();
+
+    HelmInstallCommandRequestNG request = HelmInstallCommandRequestNG.builder()
+                                              .k8sInfraDelegateConfig(DirectK8sInfraDelegateConfig.builder().build())
+                                              .accountId("accountId")
+                                              .build();
+    HelmInstallCmdResponseNG deployResponse =
+        HelmInstallCmdResponseNG.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+
+    doReturn(deployResponse).when(helmDeployServiceNG).deploy(request, taskDTO);
+
+    HelmCmdExecResponseNG response = spyHelmCommandTask.run(request);
+
+    verify(helmDeployServiceNG, times(1)).deploy(request, taskDTO);
+    verify(k8sTaskCleaner, times(1)).cleanup(any());
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(response.getHelmCommandResponse()).isSameAs(deployResponse);
+    assertThat(HelmTaskContextHolder.isNull()).isTrue();
   }
 }
