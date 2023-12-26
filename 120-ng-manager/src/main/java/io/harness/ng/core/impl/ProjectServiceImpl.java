@@ -61,7 +61,6 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.DefaultUserGroupService;
@@ -313,25 +312,20 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  @DefaultOrganization
-  public Optional<Project> get(
-      String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
+  public Optional<Project> get(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return projectRepository.findByAccountIdentifierAndOrgIdentifierAndIdentifierIgnoreCaseAndDeletedNot(
         accountIdentifier, orgIdentifier, projectIdentifier, true);
   }
 
   @Override
-  @DefaultOrganization
-  public Optional<Project> get(
-      String accountIdentifier, ScopeInfo scopeInfo, @ProjectIdentifier String projectIdentifier) {
+  public Optional<Project> get(String accountIdentifier, ScopeInfo scopeInfo, String projectIdentifier) {
     return projectRepository.findByAccountIdentifierAndParentUniqueIdAndIdentifierIgnoreCaseAndDeletedNot(
         accountIdentifier, scopeInfo.getUniqueId(), projectIdentifier, true);
   }
 
   @Override
-  @DefaultOrganization
   public Optional<Project> getConsideringCase(
-      String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return projectRepository.findByAccountIdentifierAndOrgIdentifierAndIdentifierAndDeletedNot(
         accountIdentifier, orgIdentifier, projectIdentifier, true);
   }
@@ -449,9 +443,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  @DefaultOrganization
-  public Project update(String accountIdentifier, ScopeInfo scopeInfo, @OrgIdentifier String orgIdentifier,
-      @ProjectIdentifier String identifier, ProjectDTO projectDTO) {
+  public Project update(String accountIdentifier, ScopeInfo scopeInfo, String identifier, ProjectDTO projectDTO) {
     validateUpdateProjectRequest(accountIdentifier, scopeInfo.getOrgIdentifier(), identifier, projectDTO);
     Optional<Project> optionalProject = get(accountIdentifier, scopeInfo, identifier);
 
@@ -715,9 +707,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  @DefaultOrganization
-  public boolean delete(String accountIdentifier, @OrgIdentifier String orgIdentifier,
-      @ProjectIdentifier String projectIdentifier, Long version) {
+  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, Long version) {
     try (AutoLogContext ignore1 =
              new NgAutoLogContext(projectIdentifier, orgIdentifier, accountIdentifier, OVERRIDE_ERROR)) {
       return Failsafe.with(DEFAULT_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
@@ -746,14 +736,11 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  @DefaultOrganization
-  public boolean delete(String accountIdentifier, ScopeInfo scopeInfo, @OrgIdentifier String orgIdentifier,
-      @ProjectIdentifier String projectIdentifier, Long version) {
+  public boolean delete(String accountIdentifier, ScopeInfo scopeInfo, String projectIdentifier, Long version) {
     try (AutoLogContext ignore1 =
              new NgAutoLogContext(projectIdentifier, scopeInfo.getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR)) {
       return Failsafe.with(DEFAULT_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-        Project deletedProject =
-            projectRepository.hardDelete(accountIdentifier, scopeInfo.getUniqueId(), projectIdentifier, version);
+        Project deletedProject = projectRepository.hardDelete(accountIdentifier, scopeInfo, projectIdentifier, version);
         scopeInfoCache.remove(
             scopeInfoHelper.getScopeInfoCacheKey(accountIdentifier, scopeInfo.getOrgIdentifier(), projectIdentifier));
         if (isNull(deletedProject)) {
@@ -791,12 +778,11 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public Map<String, Integer> getProjectsCountPerOrganization(
-      String accountIdentifier, List<String> parentUniqueIdentifiers) {
+  public Map<String, Integer> getProjectsCountPerOrganization(String accountIdentifier, List<String> parentUniqueIds) {
     Criteria criteria =
         Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).ne(Boolean.TRUE);
-    if (isNotEmpty(parentUniqueIdentifiers)) {
-      criteria.and(ProjectKeys.parentUniqueId).in(parentUniqueIdentifiers);
+    if (isNotEmpty(parentUniqueIds)) {
+      criteria.and(ProjectKeys.parentUniqueId).in(parentUniqueIds);
     }
     MatchOperation matchStage = Aggregation.match(criteria);
     SortOperation sortStage = sort(Sort.by(ProjectKeys.orgIdentifier));

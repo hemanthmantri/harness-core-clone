@@ -41,6 +41,7 @@ import io.harness.accesscontrol.acl.api.ResourceScope;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ScopeInfo;
+import io.harness.beans.ScopeInfoResolutionExemptedApi;
 import io.harness.beans.SortOrder;
 import io.harness.exception.EntityNotFoundException;
 import io.harness.favorites.ResourceType;
@@ -61,6 +62,7 @@ import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.services.ScopeInfoService;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.UserHelperService;
@@ -139,6 +141,7 @@ public class ProjectResource {
   private final FavoritesService favoritesService;
   private final UserHelperService userHelperService;
   private final AccessControlClient accessControlClient;
+  private final ScopeInfoService scopeResolverService;
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
@@ -149,6 +152,7 @@ public class ProjectResource {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns created Project")
       })
+  @ScopeInfoResolutionExemptedApi
   public ResponseDTO<ProjectResponse>
   create(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
@@ -157,9 +161,10 @@ public class ProjectResource {
               "Organization identifier for the Project. If left empty, the Project is created under Default Organization")
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
           DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier,
-      @RequestBody(required = true, description = "Details of the Project to create") @NotNull
-      @Valid ProjectRequest projectDTO, @Context ScopeInfo scopeInfo) {
-    Project createdProject = projectService.create(accountIdentifier, scopeInfo, projectDTO.getProject());
+      @RequestBody(required = true,
+          description = "Details of the Project to create") @NotNull @Valid ProjectRequest projectDTO) {
+    Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null);
+    Project createdProject = projectService.create(accountIdentifier, scopeInfo.orElseThrow(), projectDTO.getProject());
     return ResponseDTO.newResponse(createdProject.getVersion().toString(),
         ProjectMapper.toProjectResponseBuilder(createdProject)
             .isFavorite(projectService.isFavorite(createdProject, userHelperService.getUserId()))
@@ -177,6 +182,7 @@ public class ProjectResource {
         ApiResponse(responseCode = "default", description = "Returns Project having ID as specified in request")
       })
   @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
+  @ScopeInfoResolutionExemptedApi
   public ResponseDTO<ProjectResponse>
   get(@Parameter(description = PROJECT_PARAM_MESSAGE) @NotNull @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
@@ -185,9 +191,9 @@ public class ProjectResource {
       @Parameter(
           description = "Organization identifier for the project. If left empty, Default Organization is assumed")
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
-          DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier,
-      @Context ScopeInfo scopeInfo) {
-    Optional<Project> projectOptional = projectService.get(accountIdentifier, scopeInfo, identifier);
+          DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier) {
+    Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null);
+    Optional<Project> projectOptional = projectService.get(accountIdentifier, scopeInfo.orElseThrow(), identifier);
     if (!projectOptional.isPresent()) {
       throw new EntityNotFoundException(
           String.format("Project with orgIdentifier [%s] and identifier [%s] not found", orgIdentifier, identifier));
@@ -300,6 +306,7 @@ public class ProjectResource {
         ApiResponse(responseCode = "default", description = "Returns updated Project details")
       })
   @NGAccessControlCheck(resourceType = PROJECT, permission = EDIT_PROJECT_PERMISSION)
+  @ScopeInfoResolutionExemptedApi
   public ResponseDTO<ProjectResponse>
   update(@Parameter(description = "Version number of Project") @HeaderParam(IF_MATCH) String ifMatch,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @NotNull @PathParam(
@@ -313,11 +320,11 @@ public class ProjectResource {
       @RequestBody(required = true,
           description =
               "This is the updated Project. Please provide values for all fields, not just the fields you are updating")
-      @NotNull @Valid ProjectRequest projectDTO,
-      @Context ScopeInfo scopeInfo) {
+      @NotNull @Valid ProjectRequest projectDTO) {
+    Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null);
     projectDTO.getProject().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Project updatedProject =
-        projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier, projectDTO.getProject());
+        projectService.update(accountIdentifier, scopeInfo.orElseThrow(), identifier, projectDTO.getProject());
     return ResponseDTO.newResponse(updatedProject.getVersion().toString(),
         ProjectMapper.toProjectResponseBuilder(updatedProject)
             .isFavorite(projectService.isFavorite(updatedProject, userHelperService.getUserId()))
@@ -328,6 +335,7 @@ public class ProjectResource {
   @Path("{identifier}/move")
   @Hidden()
   @ApiOperation(value = "Move a Project across orgs", nickname = "moveProject")
+  @ScopeInfoResolutionExemptedApi
   public ResponseDTO<Boolean> moveProject(
       @Parameter(description = PROJECT_PARAM_MESSAGE) @NotNull @PathParam(
           NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
@@ -337,7 +345,6 @@ public class ProjectResource {
           description = "Organization identifier for the Project. If left empty, Default Organization is assumed")
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
           DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier,
-      @Context ScopeInfo scopeInfo,
       @RequestBody(required = true,
           description = "This is the updated org identifier") @NotNull @Valid MoveProjectRequest moveProjectRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, identifier),
@@ -345,8 +352,9 @@ public class ProjectResource {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, orgIdentifier, moveProjectRequest.getDestinationOrgIdentifier()),
         Resource.of(ORGANIZATION, moveProjectRequest.getDestinationOrgIdentifier()), CREATE_PROJECT_PERMISSION);
-    return ResponseDTO.newResponse(projectService.moveProject(
-        accountIdentifier, scopeInfo, orgIdentifier, identifier, moveProjectRequest.getDestinationOrgIdentifier()));
+    Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null);
+    return ResponseDTO.newResponse(projectService.moveProject(accountIdentifier, scopeInfo.orElseThrow(), orgIdentifier,
+        identifier, moveProjectRequest.getDestinationOrgIdentifier()));
   }
 
   @DELETE
@@ -361,6 +369,7 @@ public class ProjectResource {
                 "It returns true if the Project is deleted successfully and false if the Project is not deleted")
       })
   @NGAccessControlCheck(resourceType = PROJECT, permission = DELETE_PROJECT_PERMISSION)
+  @ScopeInfoResolutionExemptedApi
   public ResponseDTO<Boolean>
   delete(@Parameter(description = "Version number of Project") @HeaderParam(IF_MATCH) String ifMatch,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @NotNull @PathParam(
@@ -371,10 +380,10 @@ public class ProjectResource {
           description =
               "This is the Organization Identifier for the Project. By default, the Default Organization's Identifier is considered.")
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
-          DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier,
-      @Context ScopeInfo scopeInfo) {
+          DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier) {
+    Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null);
     return ResponseDTO.newResponse(projectService.delete(
-        accountIdentifier, scopeInfo, orgIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
+        accountIdentifier, scopeInfo.orElseThrow(), identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @GET

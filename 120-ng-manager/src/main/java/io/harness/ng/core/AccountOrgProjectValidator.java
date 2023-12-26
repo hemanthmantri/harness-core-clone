@@ -7,8 +7,10 @@
 
 package io.harness.ng.core;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.remote.client.CGRestUtils.getResponse;
 
 import io.harness.account.AccountClient;
@@ -31,9 +33,13 @@ public class AccountOrgProjectValidator {
   private final ProjectService projectService;
   private final AccountClient accountClient;
 
-  @DefaultOrganization
-  public boolean isPresent(
-      String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
+  public boolean isPresent(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    boolean isProjectIdentifierPresent = isNotEmpty(projectIdentifier);
+    boolean isOrgIdentifierEmpty = isEmpty(orgIdentifier);
+    if (isProjectIdentifierPresent && isOrgIdentifierEmpty) {
+      orgIdentifier = DEFAULT_ORG_IDENTIFIER;
+    }
+
     if (isEmpty(accountIdentifier)) {
       return true;
     } else if (isEmpty(orgIdentifier)) {

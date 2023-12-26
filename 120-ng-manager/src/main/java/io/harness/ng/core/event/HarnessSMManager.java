@@ -7,8 +7,10 @@
 
 package io.harness.ng.core.event;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
@@ -29,7 +31,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.AccountOrgProjectValidator;
-import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -67,9 +68,13 @@ public class HarnessSMManager {
     ngSecretManagerMigration.createGlobal(GLOBAL_ACCOUNT_ID, null, null, true);
   }
 
-  @DefaultOrganization
-  public void createHarnessSecretManager(
-      String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
+  public void createHarnessSecretManager(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    boolean isAccountProjectIdentifierPresent = isNotEmpty(accountIdentifier) && isNotEmpty(projectIdentifier);
+    boolean isOrgIdentifierEmpty = isEmpty(orgIdentifier);
+    if (isAccountProjectIdentifierPresent && isOrgIdentifierEmpty) {
+      orgIdentifier = DEFAULT_ORG_IDENTIFIER;
+    }
+
     if (isHarnessSecretManagerPresent(accountIdentifier, orgIdentifier, projectIdentifier)) {
       log.info(String.format(
           "Harness Secret Manager for accountIdentifier %s, orgIdentifier %s and projectIdentifier %s already present",
@@ -88,7 +93,6 @@ public class HarnessSMManager {
     globalSecretManager.setProjectIdentifier(projectIdentifier);
     globalSecretManager.setOrgIdentifier(orgIdentifier);
     globalSecretManager.setDefault(true);
-
     Scope secretScope = getSecretScope(orgIdentifier, projectIdentifier);
 
     ConnectorDTO connectorDTO =
@@ -108,19 +112,11 @@ public class HarnessSMManager {
     return secretScope;
   }
 
-  @DefaultOrganization
   private boolean isHarnessSecretManagerPresent(
-      String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return secretManagerConnectorService
         .get(accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER)
         .isPresent();
-  }
-
-  @DefaultOrganization
-  public boolean deleteHarnessSecretManager(
-      String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
-    return secretManagerConnectorService.delete(
-        accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER, false);
   }
 
   public ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO, Scope secretScope,

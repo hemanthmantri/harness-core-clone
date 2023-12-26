@@ -11,6 +11,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.ScopeInfo;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 
@@ -68,11 +69,11 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   }
 
   @Override
-  public Project restore(String accountIdentifier, String parentUniqueIdentifier, String identifier) {
+  public Project restore(String accountIdentifier, String parentUniqueId, String identifier) {
     Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(ProjectKeys.parentUniqueId)
-                            .is(parentUniqueIdentifier)
+                            .is(parentUniqueId)
                             .and(ProjectKeys.identifier)
                             .is(identifier)
                             .and(ProjectKeys.deleted)
@@ -87,11 +88,25 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
     return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Project.class);
   }
 
-  public Project hardDelete(String accountIdentifier, String parentUniqueIdentifier, String identifier, Long version) {
+  public Project hardDelete(String accountIdentifier, String orgIdentifier, String identifier, Long version) {
+    Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ProjectKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ProjectKeys.identifier)
+                            .is(identifier);
+    if (version != null) {
+      criteria.and(ProjectKeys.version).is(version);
+    }
+    Query query = new Query(criteria);
+    return mongoTemplate.findAndRemove(query, Project.class);
+  }
+
+  public Project hardDelete(String accountIdentifier, ScopeInfo scopeInfo, String identifier, Long version) {
     Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(ProjectKeys.parentUniqueId)
-                            .is(parentUniqueIdentifier)
+                            .is(scopeInfo.getUniqueId())
                             .and(ProjectKeys.identifier)
                             .is(identifier);
     if (version != null) {

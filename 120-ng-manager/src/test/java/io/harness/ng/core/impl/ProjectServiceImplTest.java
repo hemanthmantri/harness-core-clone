@@ -34,6 +34,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -280,7 +281,7 @@ public class ProjectServiceImplTest extends CategoryTest {
              orgIdentifier))
         .thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, scopeInfo, identifier)).thenReturn(Optional.of(project));
-    projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier, projectDTO);
+    projectService.update(accountIdentifier, scopeInfo, identifier, projectDTO);
 
     ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
     verify(projectRepository, times(1)).save(captor.capture());
@@ -331,7 +332,7 @@ public class ProjectServiceImplTest extends CategoryTest {
         .thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, scopeInfo, identifier)).thenReturn(Optional.of(existingProject));
 
-    projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier, projectDTO);
+    projectService.update(accountIdentifier, scopeInfo, identifier, projectDTO);
 
     ArgumentCaptor<Project> updatedProjectCapture = ArgumentCaptor.forClass(Project.class);
     verify(projectRepository, times(1)).save(updatedProjectCapture.capture());
@@ -383,7 +384,7 @@ public class ProjectServiceImplTest extends CategoryTest {
         .thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, scopeInfo, identifier)).thenReturn(Optional.of(existingProject));
 
-    projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier, projectDTO);
+    projectService.update(accountIdentifier, scopeInfo, identifier, projectDTO);
 
     ArgumentCaptor<Project> updatedProjectCapture = ArgumentCaptor.forClass(Project.class);
     verify(projectRepository, times(1)).save(updatedProjectCapture.capture());
@@ -425,7 +426,7 @@ public class ProjectServiceImplTest extends CategoryTest {
         .thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, scopeInfo, identifier)).thenReturn(Optional.of(project));
 
-    projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier, projectDTO);
+    projectService.update(accountIdentifier, scopeInfo, identifier, projectDTO);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -458,7 +459,7 @@ public class ProjectServiceImplTest extends CategoryTest {
         .thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, scopeInfo, identifier)).thenReturn(Optional.empty());
 
-    Project updatedProject = projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier, projectDTO);
+    Project updatedProject = projectService.update(accountIdentifier, scopeInfo, identifier, projectDTO);
 
     assertNull(updatedProject);
   }
@@ -496,7 +497,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     projectDTO.setIdentifier(identifier.toUpperCase());
     when(projectRepository.save(any())).thenReturn(project);
 
-    projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier.toUpperCase(), projectDTO);
+    projectService.update(accountIdentifier, scopeInfo, identifier.toUpperCase(), projectDTO);
 
     ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
     verify(projectRepository, times(1)).save(captor.capture());
@@ -551,7 +552,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     expectedProject.setName("updatedTest");
     when(projectRepository.save(any())).thenReturn(expectedProject);
 
-    projectService.update(accountIdentifier, scopeInfo, orgIdentifier, identifier.toUpperCase(), updateDTO);
+    projectService.update(accountIdentifier, scopeInfo, identifier.toUpperCase(), updateDTO);
 
     ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
     verify(projectRepository, times(1)).save(captor.capture());
@@ -802,18 +803,12 @@ public class ProjectServiceImplTest extends CategoryTest {
                           .build();
 
     when(yamlGitConfigService.deleteAll(any(), any(), any())).thenReturn(true);
-    when(projectRepository.hardDelete(any(), any(), any(), any())).thenReturn(project);
-    ScopeInfo scopeInfo = ScopeInfo.builder()
-                              .accountIdentifier(accountIdentifier)
-                              .scopeType(ScopeLevel.ORGANIZATION)
-                              .orgIdentifier(orgIdentifier)
-                              .uniqueId(orgUniqueIdentifier)
-                              .build();
+    when(projectRepository.hardDelete(any(), anyString(), any(), any())).thenReturn(project);
 
-    projectService.delete(accountIdentifier, scopeInfo, orgIdentifier, projectIdentifier, version);
+    projectService.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
 
     verify(projectRepository, times(1))
-        .hardDelete(eq(accountIdentifier), eq(orgUniqueIdentifier), eq(projectIdentifier), any());
+        .hardDelete(eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), any());
     verify(outboxService, times(1)).save(any());
     verify(favoritesService, times(1))
         .deleteFavorites(accountIdentifier, orgIdentifier, null, ResourceType.PROJECT.toString(), projectIdentifier);
@@ -829,7 +824,29 @@ public class ProjectServiceImplTest extends CategoryTest {
     String projectIdentifier = randomAlphabetic(10);
     Long version = 0L;
 
-    when(projectRepository.hardDelete(any(), any(), any(), any())).thenReturn(null);
+    when(projectRepository.hardDelete(any(), anyString(), any(), any())).thenReturn(null);
+
+    projectService.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
+  }
+
+  @Test
+  @Owner(developers = ASHISHSANODIA)
+  @Category(UnitTests.class)
+  public void testHardDeleteWithScopeInfo() {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String orgUniqueIdentifier = randomAlphabetic(10);
+    String projectIdentifier = randomAlphabetic(10);
+    Long version = 0L;
+    Project project = Project.builder()
+                          .name("name")
+                          .accountIdentifier(accountIdentifier)
+                          .orgIdentifier(orgIdentifier)
+                          .identifier(projectIdentifier)
+                          .build();
+
+    when(yamlGitConfigService.deleteAll(any(), any(), any())).thenReturn(true);
+    when(projectRepository.hardDelete(any(), any(ScopeInfo.class), any(), any())).thenReturn(project);
     ScopeInfo scopeInfo = ScopeInfo.builder()
                               .accountIdentifier(accountIdentifier)
                               .scopeType(ScopeLevel.ORGANIZATION)
@@ -837,7 +854,33 @@ public class ProjectServiceImplTest extends CategoryTest {
                               .uniqueId(orgUniqueIdentifier)
                               .build();
 
-    projectService.delete(accountIdentifier, scopeInfo, orgIdentifier, projectIdentifier, version);
+    projectService.delete(accountIdentifier, scopeInfo, projectIdentifier, version);
+
+    verify(projectRepository, times(1)).hardDelete(eq(accountIdentifier), eq(scopeInfo), eq(projectIdentifier), any());
+    verify(outboxService, times(1)).save(any());
+    verify(favoritesService, times(1))
+        .deleteFavorites(accountIdentifier, orgIdentifier, null, ResourceType.PROJECT.toString(), projectIdentifier);
+  }
+
+  @Test(expected = EntityNotFoundException.class)
+  @Owner(developers = ASHISHSANODIA)
+  @Category(UnitTests.class)
+  public void testHardDeleteWithScopeInfoButInvalidIdentifier() {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String orgUniqueIdentifier = randomAlphabetic(10);
+    String projectIdentifier = randomAlphabetic(10);
+    Long version = 0L;
+
+    when(projectRepository.hardDelete(any(), any(ScopeInfo.class), any(), any())).thenReturn(null);
+    ScopeInfo scopeInfo = ScopeInfo.builder()
+                              .accountIdentifier(accountIdentifier)
+                              .scopeType(ScopeLevel.ORGANIZATION)
+                              .orgIdentifier(orgIdentifier)
+                              .uniqueId(orgUniqueIdentifier)
+                              .build();
+
+    projectService.delete(accountIdentifier, scopeInfo, projectIdentifier, version);
   }
 
   @Test

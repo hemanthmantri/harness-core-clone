@@ -8,6 +8,7 @@
 package io.harness.filestore.service.impl;
 
 import static io.harness.FileStoreConstants.ROOT_FOLDER_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -75,7 +76,8 @@ public class FileValidationServiceImpl implements FileValidationService {
     String projectIdentifier = fileDto.getProjectIdentifier();
 
     if (isNotEmpty(projectIdentifier)) {
-      Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null);
+      Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(
+          accountIdentifier, isNotEmpty(orgIdentifier) ? orgIdentifier : DEFAULT_ORG_IDENTIFIER, null);
       projectService.get(accountIdentifier, scopeInfo.orElseThrow(), projectIdentifier)
           .orElseThrow(()
                            -> new InvalidArgumentsException(format(

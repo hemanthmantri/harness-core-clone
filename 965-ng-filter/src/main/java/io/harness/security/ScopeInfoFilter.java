@@ -10,6 +10,8 @@ package io.harness.security;
 import static io.harness.NGCommonEntityConstants.ACCOUNT_HEADER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.ScopeInfoFactory.SCOPE_INFO_CONTEXT_PROPERTY;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
@@ -20,7 +22,6 @@ import io.harness.beans.ScopeInfo.ScopeInfoBuilder;
 import io.harness.beans.ScopeInfoContext;
 import io.harness.beans.ScopeInfoResolutionExemptedApi;
 import io.harness.beans.ScopeLevel;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.scopeinfoclient.remote.ScopeInfoClient;
 
@@ -44,7 +45,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PL)
 @Singleton
@@ -52,7 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @Provider
 public class ScopeInfoFilter implements ContainerRequestFilter, ContainerResponseFilter {
-  private static final String SCOPE_INFO_FILTER_LOG = "SCOPE_INFO_FILTER: ";
+  private static final String SCOPE_INFO_FILTER_LOG = "SCOPE_INFO_FILTER:";
   public static final Set<String> matchingPathRequests =
       Set.of("/organizations", "/aggregate/organizations", "/projects", "/aggregate/projects");
 
@@ -76,8 +76,7 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
           requestContext.getHeaderString(ScopeInfoContext.SCOPE_INFO_SCOPE_TYPE_CONTEXT_PROPERTY);
 
       ScopeInfoBuilder existingScopeInfoBuilder = ScopeInfo.builder();
-      if (EmptyPredicate.isNotEmpty(existingAccountIdentifier) && EmptyPredicate.isNotEmpty(existingScopeType)
-          && EmptyPredicate.isNotEmpty(existingUniqueId)) {
+      if (isNotEmpty(existingAccountIdentifier) && isNotEmpty(existingScopeType) && isNotEmpty(existingUniqueId)) {
         existingScopeInfoBuilder.accountIdentifier(existingAccountIdentifier).build();
         existingScopeInfoBuilder.orgIdentifier(existingOrgIdentifier);
         existingScopeInfoBuilder.projectIdentifier(existingProjectIdentifier);
@@ -98,7 +97,7 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
         String accountIdentifier = accountIdentifierOptional.get();
         String orgIdentifier = getOrgIdentifierFrom(requestContext).orElse(null);
         String projectIdentifier =
-            EmptyPredicate.isNotEmpty(orgIdentifier) ? getProjectIdentifierFrom(requestContext).orElse(null) : null;
+            isNotEmpty(orgIdentifier) ? getProjectIdentifierFrom(requestContext).orElse(null) : null;
 
         if (Objects.equals(accountIdentifier, existingScopeInfo.getAccountIdentifier())
             && Objects.equals(orgIdentifier, existingScopeInfo.getOrgIdentifier())
@@ -112,9 +111,9 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
             NGRestUtils.getResponse(scopeInfoClient.getScopeInfo(accountIdentifier, orgIdentifier, projectIdentifier));
         if (optionalScopeInfo.isEmpty()) {
           String errorMsg = null;
-          if (StringUtils.isEmpty(orgIdentifier) && StringUtils.isEmpty(projectIdentifier)) {
+          if (isEmpty(orgIdentifier) && isEmpty(projectIdentifier)) {
             errorMsg = format("Account with identifier [%s] not found", accountIdentifier);
-          } else if (StringUtils.isEmpty(projectIdentifier)) {
+          } else if (isEmpty(projectIdentifier)) {
             errorMsg = format("Organization with identifier [%s] not found", orgIdentifier);
           } else {
             errorMsg = format("Project with identifier [%s] not found", projectIdentifier);
@@ -138,26 +137,26 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
   private Optional<String> getAccountIdentifierFrom(ContainerRequestContext containerRequestContext) {
     String accountIdentifier = containerRequestContext.getHeaderString(ACCOUNT_HEADER);
 
-    if (StringUtils.isEmpty(accountIdentifier)) {
+    if (isEmpty(accountIdentifier)) {
       accountIdentifier =
           containerRequestContext.getUriInfo().getPathParameters().getFirst(NGCommonEntityConstants.ACCOUNT_KEY);
     }
-    if (StringUtils.isEmpty(accountIdentifier)) {
+    if (isEmpty(accountIdentifier)) {
       accountIdentifier =
           containerRequestContext.getUriInfo().getQueryParameters().getFirst(NGCommonEntityConstants.ACCOUNT_KEY);
     }
-    if (StringUtils.isEmpty(accountIdentifier)) {
+    if (isEmpty(accountIdentifier)) {
       accountIdentifier =
           containerRequestContext.getUriInfo().getQueryParameters().getFirst(NGCommonEntityConstants.ACCOUNT);
     }
     final String accountIdStringConstant = "accountId";
-    if (StringUtils.isEmpty(accountIdentifier)) {
+    if (isEmpty(accountIdentifier)) {
       accountIdentifier = containerRequestContext.getUriInfo().getQueryParameters().getFirst(accountIdStringConstant);
     }
-    if (StringUtils.isEmpty(accountIdentifier)) {
+    if (isEmpty(accountIdentifier)) {
       accountIdentifier = containerRequestContext.getUriInfo().getPathParameters().getFirst(accountIdStringConstant);
     }
-    return StringUtils.isEmpty(accountIdentifier) ? Optional.empty() : Optional.of(accountIdentifier);
+    return isEmpty(accountIdentifier) ? Optional.empty() : Optional.of(accountIdentifier);
   }
 
   @VisibleForTesting
@@ -177,11 +176,11 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
         return Optional.empty();
       }
     }
-    if (EmptyPredicate.isEmpty(orgIdentifier)) {
+    if (isEmpty(orgIdentifier)) {
       orgIdentifier =
           containerRequestContext.getUriInfo().getQueryParameters().getFirst(NGCommonEntityConstants.ORG_KEY);
     }
-    return StringUtils.isEmpty(orgIdentifier) ? Optional.empty() : Optional.of(orgIdentifier);
+    return isEmpty(orgIdentifier) ? Optional.empty() : Optional.of(orgIdentifier);
   }
 
   @VisibleForTesting
@@ -199,11 +198,11 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
         return Optional.empty();
       }
     }
-    if (EmptyPredicate.isEmpty(projectIdentifier)) {
+    if (isEmpty(projectIdentifier)) {
       projectIdentifier =
           containerRequestContext.getUriInfo().getQueryParameters().getFirst(NGCommonEntityConstants.PROJECT_KEY);
     }
-    return StringUtils.isEmpty(projectIdentifier) ? Optional.empty() : Optional.of(projectIdentifier);
+    return isEmpty(projectIdentifier) ? Optional.empty() : Optional.of(projectIdentifier);
   }
 
   private boolean isScopeInfoResolutionExemptedRequest(
@@ -222,6 +221,7 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
         && requestContext.getUriInfo().getRequestUri() != null
         && requestContext.getUriInfo().getRequestUri().getPath() != null
         && !resourceInfo.getResourceMethod().isAnnotationPresent(ScopeInfoResolutionExemptedApi.class)
-        && matchingPathRequests.stream().anyMatch(requestContext.getUriInfo().getRequestUri().getPath()::startsWith);
+        && matchingPathRequests.stream().anyMatch(
+            requestContext.getUriInfo().getRequestUri().getPath().toLowerCase()::startsWith);
   }
 }

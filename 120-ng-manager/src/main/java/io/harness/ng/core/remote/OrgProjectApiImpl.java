@@ -122,7 +122,7 @@ public class OrgProjectApiImpl implements OrgProjectApi {
       String identifier, UpdateProjectRequest updateProjectRequest, String account, String org) {
     Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(account, org, null);
     Project updatedProject = projectService.update(
-        account, scopeInfo.orElseThrow(), org, identifier, projectApiUtils.getProjectDto(updateProjectRequest));
+        account, scopeInfo.orElseThrow(), identifier, projectApiUtils.getProjectDto(updateProjectRequest));
     ProjectResponse projectResponse = projectApiUtils.getProjectResponse(updatedProject);
 
     return Response.ok().entity(projectResponse).tag(updatedProject.getVersion().toString()).build();
@@ -161,7 +161,7 @@ public class OrgProjectApiImpl implements OrgProjectApi {
     if (!projectOptional.isPresent()) {
       throw new NotFoundException(format("Project with org [%s] and identifier [%s] not found", org, identifier));
     }
-    boolean deleted = projectService.delete(account, scopeInfo.orElseThrow(), org, identifier, null);
+    boolean deleted = projectService.delete(account, scopeInfo.orElseThrow(), identifier, null);
     if (!deleted) {
       throw new NotFoundException(format("Project with identifier [%s] could not be deleted", identifier));
     }

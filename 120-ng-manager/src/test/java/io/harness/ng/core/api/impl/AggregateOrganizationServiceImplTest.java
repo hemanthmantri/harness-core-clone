@@ -99,14 +99,6 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
   public void testGet() {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
-    String orgUniqueIdentifier = randomAlphabetic(10);
-    ScopeInfo scopeInfo = ScopeInfo.builder()
-                              .accountIdentifier(accountIdentifier)
-                              .scopeType(ScopeLevel.ORGANIZATION)
-                              .orgIdentifier(orgIdentifier)
-                              .uniqueId(orgUniqueIdentifier)
-                              .build();
-    when(scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null)).thenReturn(Optional.of(scopeInfo));
     ScopeInfo builtScope = ScopeInfo.builder()
                                .accountIdentifier(accountIdentifier)
                                .scopeType(ScopeLevel.ACCOUNT)
@@ -143,14 +135,6 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
   public void testGet_OtherFieldsMissing() {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
-    String orgUniqueIdentifier = randomAlphabetic(10);
-    ScopeInfo scopeInfo = ScopeInfo.builder()
-                              .accountIdentifier(accountIdentifier)
-                              .scopeType(ScopeLevel.ORGANIZATION)
-                              .orgIdentifier(orgIdentifier)
-                              .uniqueId(orgUniqueIdentifier)
-                              .build();
-    when(scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null)).thenReturn(Optional.of(scopeInfo));
     ScopeInfo builtScope = ScopeInfo.builder()
                                .accountIdentifier(accountIdentifier)
                                .scopeType(ScopeLevel.ACCOUNT)

@@ -38,6 +38,7 @@ import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.scopes.ScopeDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ScopeInfo;
+import io.harness.beans.ScopeInfoResolutionExemptedApi;
 import io.harness.beans.SortOrder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
@@ -59,6 +60,7 @@ import io.harness.ng.core.dto.UserGroupAggregateFilter;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ScopeInfoService;
 import io.harness.ng.core.usergroups.filter.UserGroupFilterType;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -70,6 +72,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Parameter;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
@@ -108,18 +111,21 @@ public class NGAggregateResource {
   private final OrganizationService organizationService;
   private final AccessControlClient accessControlClient;
   private final AggregateAccountResourceService aggregateAccountResourceService;
+  private final ScopeInfoService scopeResolverService;
 
   @GET
   @Path("projects/{identifier}")
   @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   @ApiOperation(value = "Gets a ProjectAggregateDTO by identifier", nickname = "getProjectAggregateDTO")
+  @ScopeInfoResolutionExemptedApi
   public ResponseDTO<ProjectAggregateDTO> get(
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
           DEFAULT_ORG_IDENTIFIER) @OrgIdentifier @io.harness.ng.core.OrgIdentifier String orgIdentifier) {
+    Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountIdentifier, orgIdentifier, null);
     return ResponseDTO.newResponse(
-        aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, identifier));
+        aggregateProjectService.getProjectAggregateDTO(accountIdentifier, scopeInfo.orElseThrow(), identifier));
   }
 
   @GET

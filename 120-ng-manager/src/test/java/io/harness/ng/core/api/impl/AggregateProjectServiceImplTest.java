@@ -136,7 +136,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
     setupNgUserService();
 
     ProjectAggregateDTO projectAggregateDTO =
-        aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
+        aggregateProjectService.getProjectAggregateDTO(accountIdentifier, scopeInfo, projectIdentifier);
 
     // project
     assertEquals(orgIdentifier, projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier());
@@ -185,7 +185,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
         .thenReturn(Collections.emptyList());
 
     ProjectAggregateDTO projectAggregateDTO =
-        aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
+        aggregateProjectService.getProjectAggregateDTO(accountIdentifier, scopeInfo, projectIdentifier);
 
     // project
     assertEquals(orgIdentifier, projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier());

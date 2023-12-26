@@ -90,9 +90,8 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private OrganizationAggregateDTO buildAggregateDTO(final Organization organization) {
     final String accountId = organization.getAccountIdentifier();
     final String orgId = organization.getIdentifier();
-    Optional<ScopeInfo> scopeInfo = scopeResolverService.getScopeInfo(accountId, orgId, null);
     final int projectsCount =
-        projectService.getProjectsCountPerOrganization(accountId, singletonList(scopeInfo.orElseThrow().getUniqueId()))
+        projectService.getProjectsCountPerOrganization(accountId, singletonList(organization.getUniqueId()))
             .getOrDefault(orgId, 0);
     final long secretsCount = secretServiceV2.count(accountId, orgId, null);
     final long connectorsCount = defaultConnectorService.count(accountId, orgId, null);

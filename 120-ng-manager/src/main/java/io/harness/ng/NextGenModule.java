@@ -178,7 +178,6 @@ import io.harness.ng.chaos.AbstractChaosModule;
 import io.harness.ng.core.AccountOrgProjectHelper;
 import io.harness.ng.core.AccountOrgProjectHelperImpl;
 import io.harness.ng.core.CoreModule;
-import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.DelegateServiceModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
@@ -848,7 +847,6 @@ public class NextGenModule extends AbstractModule {
     install(new CdLicenseUsageCgModule(appConfig.getManagerClientConfig(),
         appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(JooqModule.getInstance());
-    install(new DefaultOrganizationModule());
     install(new ScopeInfoModule());
     install(new NGAggregateModule());
     install(new DelegateServiceModule());
