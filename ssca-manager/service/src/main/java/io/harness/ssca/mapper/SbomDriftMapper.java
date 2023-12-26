@@ -132,7 +132,7 @@ public class SbomDriftMapper {
 
   public LicenseDriftSummary getLicenseDriftSummary(OrchestrationDriftSummary orchestrationDriftSummary) {
     return new LicenseDriftSummary()
-        .total(orchestrationDriftSummary.getComponentDrifts())
+        .total(orchestrationDriftSummary.getLicenseDrifts())
         .added(orchestrationDriftSummary.getLicenseAdded())
         .deleted(orchestrationDriftSummary.getLicenseDeleted());
   }

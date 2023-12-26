@@ -45,11 +45,13 @@ import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.drift.DriftEntity;
 import io.harness.ssca.entities.drift.DriftEntity.DriftEntityBuilder;
 import io.harness.ssca.helpers.SbomDriftCalculator;
+import io.harness.ssca.mapper.SbomDriftMapper;
 import io.harness.ssca.services.ArtifactService;
 import io.harness.ssca.services.BaselineService;
 import io.harness.ssca.services.NormalisedSbomComponentService;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -128,8 +130,8 @@ public class SbomDriftServiceTest extends SSCAManagerTestBase {
             .driftId(DRIFT_ID)
             .tag(TAG)
             .baseTag(BASE_TAG)
-            .totalDrifts(2)
-            .componentDriftSummary(new ComponentDriftSummary().total(1).added(1).deleted(0).modified(0))
+            .totalDrifts(3)
+            .componentDriftSummary(new ComponentDriftSummary().total(2).added(1).deleted(1).modified(0))
             .licenseDriftSummary(new LicenseDriftSummary().total(1).added(1).deleted(0))
             .artifactName("test/image"));
     ArgumentCaptor<DriftEntity> captor = ArgumentCaptor.forClass(DriftEntity.class);
@@ -170,8 +172,8 @@ public class SbomDriftServiceTest extends SSCAManagerTestBase {
             .driftId(DRIFT_ID)
             .tag(TAG)
             .baseTag(BASE_TAG)
-            .totalDrifts(2)
-            .componentDriftSummary(new ComponentDriftSummary().total(1).added(1).deleted(0).modified(0))
+            .totalDrifts(3)
+            .componentDriftSummary(new ComponentDriftSummary().total(2).added(1).deleted(1).modified(0))
             .licenseDriftSummary(new LicenseDriftSummary().total(1).added(1).deleted(0))
             .artifactName("test/image"));
     verify(sbomDriftRepository, never()).save(any());
@@ -220,8 +222,8 @@ public class SbomDriftServiceTest extends SSCAManagerTestBase {
             .driftId(DRIFT_ID)
             .tag(TAG)
             .baseTag(BASE_TAG)
-            .totalDrifts(2)
-            .componentDriftSummary(new ComponentDriftSummary().total(1).added(1).deleted(0).modified(0))
+            .totalDrifts(3)
+            .componentDriftSummary(new ComponentDriftSummary().total(2).added(1).deleted(1).modified(0))
             .licenseDriftSummary(new LicenseDriftSummary().total(1).added(1).deleted(0))
             .artifactName("test/image"));
     ArgumentCaptor<DriftEntity> captor = ArgumentCaptor.forClass(DriftEntity.class);
@@ -270,8 +272,8 @@ public class SbomDriftServiceTest extends SSCAManagerTestBase {
             .driftId(DRIFT_ID)
             .tag(TAG)
             .baseTag(BASE_TAG)
-            .totalDrifts(2)
-            .componentDriftSummary(new ComponentDriftSummary().total(1).added(1).deleted(0).modified(0))
+            .totalDrifts(3)
+            .componentDriftSummary(new ComponentDriftSummary().total(2).added(1).deleted(1).modified(0))
             .licenseDriftSummary(new LicenseDriftSummary().total(1).added(1).deleted(0))
             .artifactName("test/image"));
     ArgumentCaptor<DriftEntity> captor = ArgumentCaptor.forClass(DriftEntity.class);
@@ -387,22 +389,63 @@ public class SbomDriftServiceTest extends SSCAManagerTestBase {
         sbomDriftService.getSbomDriftSummary(ACCOUNT_ID, ORG_ID, PROJECT_ID, ORCHESTRATION_ID);
 
     assertThat(sbomDriftSummary.getBaseTag()).isEqualTo(BASE_TAG);
-    assertThat(sbomDriftSummary.getTotalDrifts()).isEqualTo(2);
-    assertThat(sbomDriftSummary.getComponentDrifts()).isEqualTo(1);
+    assertThat(sbomDriftSummary.getTotalDrifts()).isEqualTo(3);
+    assertThat(sbomDriftSummary.getComponentDrifts()).isEqualTo(2);
     assertThat(sbomDriftSummary.getLicenseDrifts()).isEqualTo(1);
     assertThat(sbomDriftSummary.getComponentsAdded()).isEqualTo(1);
-    assertThat(sbomDriftSummary.getComponentsDeleted()).isEqualTo(0);
+    assertThat(sbomDriftSummary.getComponentsDeleted()).isEqualTo(1);
     assertThat(sbomDriftSummary.getComponentsModified()).isEqualTo(0);
     assertThat(sbomDriftSummary.getLicenseAdded()).isEqualTo(1);
     assertThat(sbomDriftSummary.getLicenseDeleted()).isEqualTo(0);
   }
 
+  @Test
+  @Owner(developers = SHASHWAT_SACHAN)
+  @Category(UnitTests.class)
+  public void testgetComponentDriftSummary() {
+    when(sbomDriftRepository.findOne(any())).thenReturn(getDriftEntityBuilder().base(DriftBase.BASELINE).build());
+
+    OrchestrationDriftSummary sbomDriftSummary =
+        sbomDriftService.getSbomDriftSummary(ACCOUNT_ID, ORG_ID, PROJECT_ID, ORCHESTRATION_ID);
+
+    ComponentDriftSummary componentDriftSummary = SbomDriftMapper.getComponentDriftSummary(sbomDriftSummary);
+
+    assertThat(componentDriftSummary.getTotal()).isEqualTo(2);
+    assertThat(componentDriftSummary.getAdded()).isEqualTo(1);
+    assertThat(componentDriftSummary.getDeleted()).isEqualTo(1);
+    assertThat(componentDriftSummary.getModified()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SHASHWAT_SACHAN)
+  @Category(UnitTests.class)
+  public void testgetLicenseDriftSummary() {
+    when(sbomDriftRepository.findOne(any())).thenReturn(getDriftEntityBuilder().base(DriftBase.BASELINE).build());
+
+    OrchestrationDriftSummary sbomDriftSummary =
+        sbomDriftService.getSbomDriftSummary(ACCOUNT_ID, ORG_ID, PROJECT_ID, ORCHESTRATION_ID);
+
+    LicenseDriftSummary licenseDriftSummary = SbomDriftMapper.getLicenseDriftSummary(sbomDriftSummary);
+
+    assertThat(licenseDriftSummary.getTotal()).isEqualTo(1);
+    assertThat(licenseDriftSummary.getAdded()).isEqualTo(1);
+    assertThat(licenseDriftSummary.getDeleted()).isEqualTo(0);
+  }
+
   private List<ComponentDrift> getComponentDrifts() {
-    ComponentDrift componentDrift = ComponentDrift.builder()
-                                        .status(ComponentDriftStatus.ADDED)
-                                        .newComponent(ComponentSummary.builder().packageName("name").build())
-                                        .build();
-    return List.of(componentDrift);
+    List<ComponentDrift> componentDrifts = new ArrayList<>();
+
+    componentDrifts.add(ComponentDrift.builder()
+                            .status(ComponentDriftStatus.ADDED)
+                            .newComponent(ComponentSummary.builder().packageName("name").build())
+                            .build());
+
+    componentDrifts.add(ComponentDrift.builder()
+                            .status(ComponentDriftStatus.DELETED)
+                            .newComponent(ComponentSummary.builder().packageName("name").build())
+                            .build());
+
+    return componentDrifts;
   }
 
   private List<LicenseDrift> getLicenseDrifts() {
