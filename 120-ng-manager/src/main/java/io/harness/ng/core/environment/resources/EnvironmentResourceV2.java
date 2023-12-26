@@ -7,6 +7,7 @@
 
 package io.harness.ng.core.environment.resources;
 
+import static io.harness.NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY;
 import static io.harness.NGCommonEntityConstants.FORCE_DELETE_MESSAGE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -66,6 +67,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.gitaware.helper.MoveConfigOperationType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
@@ -82,6 +84,9 @@ import io.harness.ng.core.environment.beans.EnvironmentFilterPropertiesDTO;
 import io.harness.ng.core.environment.beans.EnvironmentInputSetYamlAndServiceOverridesMetadataDTO;
 import io.harness.ng.core.environment.beans.EnvironmentInputsMergedResponseDto;
 import io.harness.ng.core.environment.beans.EnvironmentInputsetYamlAndServiceOverridesMetadataInput;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigOperationDTO;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigRequestDTO;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigResponse;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.ScopedEnvironmentRequestDTO;
@@ -1186,6 +1191,47 @@ public class EnvironmentResourceV2 {
       @QueryParam("envIdentifiers") List<String> envIdentifiers) {
     return ResponseDTO.newResponse(
         environmentService.getAttributes(accountId, orgIdentifier, projectIdentifier, envIdentifiers));
+  }
+
+  @POST
+  @Path("/move-config/{environmentIdentifier}")
+  @ApiOperation(value = "Move environment YAML from inline to remote", nickname = "moveEnvironmentConfigs")
+  @Operation(operationId = "moveEnvironmentConfigs", summary = "Move environment YAML from inline to remote",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Move environment YAML from inline to remote")
+      })
+  public ResponseDTO<EnvironmentMoveConfigResponse>
+  moveConfig(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                 NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = ENVIRONMENT_PARAM_MESSAGE) @PathParam(
+          ENVIRONMENT_IDENTIFIER_KEY) @ResourceIdentifier String environmentIdentifier,
+      @BeanParam EnvironmentMoveConfigRequestDTO environmentRequestDTO) {
+    // check for environment update permission
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(ENVIRONMENT, environmentIdentifier), ENVIRONMENT_UPDATE_PERMISSION);
+
+    EnvironmentMoveConfigOperationDTO moveConfigOperationDTO =
+        EnvironmentMoveConfigOperationDTO.builder()
+            .repoName(environmentRequestDTO.getRepoName())
+            .branch(environmentRequestDTO.getBranch())
+            .moveConfigOperationType(
+                MoveConfigOperationType.getMoveConfigType(environmentRequestDTO.getMoveConfigOperationType()))
+            .connectorRef(environmentRequestDTO.getConnectorRef())
+            .baseBranch(environmentRequestDTO.getBaseBranch())
+            .commitMessage(environmentRequestDTO.getCommitMsg())
+            .isNewBranch(environmentRequestDTO.getIsNewBranch())
+            .filePath(environmentRequestDTO.getFilePath())
+            .build();
+
+    EnvironmentMoveConfigResponse environmentMoveConfigResponse = environmentService.moveEnvironment(
+        accountIdentifier, orgIdentifier, projectIdentifier, environmentIdentifier, moveConfigOperationDTO);
+    return ResponseDTO.newResponse(environmentMoveConfigResponse);
   }
 
   private void checkAccessForListingAtScope(

@@ -13,6 +13,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.pms.pipeline.MoveConfigOperationType.INLINE_TO_REMOTE;
 import static io.harness.springdata.PersistenceUtils.DEFAULT_RETRY_POLICY;
 import static io.harness.utils.IdentifierRefHelper.MAX_RESULT_THRESHOLD_FOR_SPLIT;
 
@@ -49,9 +50,12 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ReferencedEntityException;
 import io.harness.exception.ScmException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.gitaware.helper.GitAwareContextHelper;
 import io.harness.gitsync.beans.StoreType;
+import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitx.GitXSettingsHelper;
 import io.harness.gitx.GitXTransientBranchGuard;
 import io.harness.ng.core.EntityDetail;
@@ -62,6 +66,8 @@ import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.ng.core.environment.beans.EnvironmentInputSetYamlAndServiceOverridesMetadata;
 import io.harness.ng.core.environment.beans.EnvironmentInputSetYamlAndServiceOverridesMetadataDTO;
 import io.harness.ng.core.environment.beans.EnvironmentInputsMergedResponseDto;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigOperationDTO;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigResponse;
 import io.harness.ng.core.environment.beans.ServiceOverridesMetadata;
 import io.harness.ng.core.environment.dto.ScopedEnvironmentRequestDTO;
 import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
@@ -78,6 +84,8 @@ import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ng.core.service.services.impl.InputSetMergeUtility;
 import io.harness.ng.core.serviceoverride.services.ServiceOverrideService;
 import io.harness.ng.core.serviceoverridev2.service.ServiceOverridesServiceV2;
+import io.harness.ng.core.utils.CDGitXService;
+import io.harness.ng.core.utils.GitXUtils;
 import io.harness.ng.core.utils.ServiceOverrideV2ValidationHelper;
 import io.harness.ngsettings.SettingIdentifiers;
 import io.harness.ngsettings.client.remote.NGSettingsClient;
@@ -90,6 +98,7 @@ import io.harness.repositories.UpsertOptions;
 import io.harness.repositories.environment.spring.EnvironmentRepository;
 import io.harness.scope.ScopeHelper;
 import io.harness.setupusage.EnvironmentEntitySetupUsageHelper;
+import io.harness.utils.ExceptionCreationUtils;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.utils.YamlPipelineUtils;
 
@@ -156,6 +165,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   private final EnvironmentEntitySetupUsageHelper environmentEntitySetupUsageHelper;
   private final EnvironmentFilterHelper environmentFilterHelper;
   private final GitXSettingsHelper gitXSettingsHelper;
+  private final CDGitXService cdGitXService;
 
   @Inject
   public EnvironmentServiceImpl(EnvironmentRepository environmentRepository,
@@ -166,7 +176,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
       ServiceEntityService serviceEntityService, AccountClient accountClient, NGSettingsClient settingsClient,
       EnvironmentEntitySetupUsageHelper environmentEntitySetupUsageHelper,
       ServiceOverrideV2ValidationHelper overrideV2ValidationHelper, EnvironmentFilterHelper environmentFilterHelper,
-      GitXSettingsHelper gitXSettingsHelper) {
+      GitXSettingsHelper gitXSettingsHelper, CDGitXService cdGitXService) {
     this.environmentRepository = environmentRepository;
     this.entitySetupUsageService = entitySetupUsageService;
     this.eventProducer = eventProducer;
@@ -183,6 +193,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     this.overrideV2ValidationHelper = overrideV2ValidationHelper;
     this.environmentFilterHelper = environmentFilterHelper;
     this.gitXSettingsHelper = gitXSettingsHelper;
+    this.cdGitXService = cdGitXService;
   }
 
   @Override
@@ -1092,6 +1103,64 @@ public class EnvironmentServiceImpl implements EnvironmentService {
           .build();
     } catch (Exception ex) {
       throw new InvalidRequestException("Error occurred while merging old and new environment inputs", ex);
+    }
+  }
+
+  @Override
+  public EnvironmentMoveConfigResponse moveEnvironment(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String environmentIdentifier,
+      EnvironmentMoveConfigOperationDTO moveConfigOperationDTO) {
+    validateMoveConfigRequest(moveConfigOperationDTO);
+    setupGitContext(moveConfigOperationDTO);
+    applyGitXSettingsIfApplicable(accountIdentifier, orgIdentifier, projectIdentifier);
+    if (!cdGitXService.isNewGitXEnabled(accountIdentifier, orgIdentifier, projectIdentifier)) {
+      throw new InvalidRequestException(
+          GitXUtils.getErrorMessageForGitSimplificationNotEnabled(orgIdentifier, projectIdentifier));
+    }
+
+    Optional<Environment> optionalEnvironment =
+        getMetadata(accountIdentifier, orgIdentifier, projectIdentifier, environmentIdentifier, false);
+
+    if (optionalEnvironment.isEmpty()) {
+      throw new InvalidRequestException(
+          String.format("Environment with the given identifier: %s does not exist", environmentIdentifier));
+    }
+
+    Environment environment = optionalEnvironment.get();
+    if (StoreType.REMOTE.equals(environment.getStoreType())
+        && INLINE_TO_REMOTE.equals(moveConfigOperationDTO.getMoveConfigOperationType())) {
+      throw new InvalidRequestException(
+          String.format("Environment with the given identifier: %s is already remote", environmentIdentifier));
+    }
+
+    Environment movedEntity = environmentRepository.moveEnvironment(moveConfigOperationDTO, environment);
+    return EnvironmentMoveConfigResponse.builder().identifier(movedEntity.getIdentifier()).success(true).build();
+  }
+
+  private void setupGitContext(EnvironmentMoveConfigOperationDTO moveConfigDTO) {
+    if (INLINE_TO_REMOTE.equals(moveConfigDTO.getMoveConfigOperationType())) {
+      GitAwareContextHelper.populateGitDetails(
+          GitEntityInfo.builder()
+              .branch(moveConfigDTO.getBranch())
+              .filePath(moveConfigDTO.getFilePath())
+              .commitMsg(moveConfigDTO.getCommitMessage())
+              .isNewBranch(isNotEmpty(moveConfigDTO.getBranch()) && isNotEmpty(moveConfigDTO.getBaseBranch()))
+              .baseBranch(moveConfigDTO.getBaseBranch())
+              .connectorRef(moveConfigDTO.getConnectorRef())
+              .storeType(StoreType.REMOTE)
+              .repoName(moveConfigDTO.getRepoName())
+              .build());
+    }
+  }
+
+  private void validateMoveConfigRequest(EnvironmentMoveConfigOperationDTO moveConfigOperationDTO) {
+    if (INLINE_TO_REMOTE.equals(moveConfigOperationDTO.getMoveConfigOperationType())) {
+      if (isEmpty(moveConfigOperationDTO.getFilePath())) {
+        ExceptionCreationUtils.throwInvalidRequestForEmptyField("filePath");
+      }
+    } else {
+      throw new UnsupportedOperationException(String.format(
+          "Move operation: [%s] not supported for environments", moveConfigOperationDTO.getMoveConfigOperationType()));
     }
   }
 

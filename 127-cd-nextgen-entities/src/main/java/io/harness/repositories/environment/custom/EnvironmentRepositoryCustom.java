@@ -11,6 +11,7 @@ import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.ng.core.environment.beans.Environment;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigOperationDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,4 +50,6 @@ public interface EnvironmentRepositoryCustom {
 
   Environment getRemoteEnvironmentWithYaml(
       Environment environment, boolean loadFromCache, boolean loadFromFallbackBranch);
+
+  Environment moveEnvironment(EnvironmentMoveConfigOperationDTO moveConfigOperationDTO, Environment environment);
 }

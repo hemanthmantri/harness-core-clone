@@ -13,6 +13,8 @@ import io.harness.annotations.dev.ProductModule;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentInputSetYamlAndServiceOverridesMetadataDTO;
 import io.harness.ng.core.environment.beans.EnvironmentInputsMergedResponseDto;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigOperationDTO;
+import io.harness.ng.core.environment.beans.EnvironmentMoveConfigResponse;
 import io.harness.ng.core.environment.dto.ScopedEnvironmentRequestDTO;
 import io.harness.repositories.UpsertOptions;
 
@@ -97,4 +99,7 @@ public interface EnvironmentService {
 
   EnvironmentInputsMergedResponseDto mergeEnvironmentInputs(
       String accountId, String orgId, String projectId, String serviceId, String oldEnvironmentInputsYaml);
+
+  EnvironmentMoveConfigResponse moveEnvironment(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String environmentIdentifier, EnvironmentMoveConfigOperationDTO moveConfigOperationDTO);
 }

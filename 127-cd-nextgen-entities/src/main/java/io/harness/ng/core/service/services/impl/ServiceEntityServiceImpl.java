@@ -106,6 +106,7 @@ import io.harness.repositories.service.spring.ServiceRepository;
 import io.harness.spec.server.ng.v1.model.ManifestsResponseDTO;
 import io.harness.template.remote.TemplateResourceClient;
 import io.harness.template.yaml.TemplateRefHelper;
+import io.harness.utils.ExceptionCreationUtils;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.utils.NGFeatureFlagHelperService;
 import io.harness.utils.PageUtils;
@@ -1508,24 +1509,20 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
 
   private void validateMoveConfigRequest(ServiceMoveConfigOperationDTO moveConfigOperationDTO) {
     if (isEmpty(moveConfigOperationDTO.getConnectorRef())) {
-      throwInvalidRequestForEmptyField("connectorRef");
+      ExceptionCreationUtils.throwInvalidRequestForEmptyField("connectorRef");
     }
 
     if (isEmpty(moveConfigOperationDTO.getFilePath())) {
-      throwInvalidRequestForEmptyField("filePath");
+      ExceptionCreationUtils.throwInvalidRequestForEmptyField("filePath");
     }
 
     if (isEmpty(moveConfigOperationDTO.getRepoName())) {
-      throwInvalidRequestForEmptyField("repoName");
+      ExceptionCreationUtils.throwInvalidRequestForEmptyField("repoName");
     }
 
     if (moveConfigOperationDTO.getMoveConfigOperationType() == null) {
-      throwInvalidRequestForEmptyField("moveConfigOperationType");
+      ExceptionCreationUtils.throwInvalidRequestForEmptyField("moveConfigOperationType");
     }
-  }
-
-  private void throwInvalidRequestForEmptyField(String fieldName) {
-    throw new InvalidRequestException(String.format("Error: %s cannot be empty", fieldName));
   }
 
   private void applyGitXSettingsIfApplicable(String accountIdentifier, String orgIdentifier, String projIdentifier) {
