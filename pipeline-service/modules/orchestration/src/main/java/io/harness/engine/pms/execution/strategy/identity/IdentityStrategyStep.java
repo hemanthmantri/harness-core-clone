@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.util.CloseableIterator;
 
 @Slf4j
@@ -57,7 +58,8 @@ public class IdentityStrategyStep implements ChildrenExecutable<IdentityStepPara
              // planExecutionId(ambiance.getPlanExecutionId)
         nodeExecutionService.fetchChildrenNodeExecutionsIterator(
             originalStrategyNodeExecution.getAmbiance().getPlanExecutionId(),
-            stepParameters.getOriginalNodeExecutionId(), NodeProjectionUtils.fieldsForIdentityStrategyStep)) {
+            stepParameters.getOriginalNodeExecutionId(), Direction.ASC,
+            NodeProjectionUtils.fieldsForIdentityStrategyStep)) {
       while (iterator.hasNext()) {
         NodeExecution next = iterator.next();
         // Don't want to include retried nodeIds
@@ -71,7 +73,13 @@ public class IdentityStrategyStep implements ChildrenExecutable<IdentityStepPara
     long maxConcurrency =
         originalStrategyNodeExecution.getExecutableResponses().get(0).getChildren().getMaxConcurrency();
 
-    return ChildrenExecutableResponse.newBuilder().addAllChildren(children).setMaxConcurrency(maxConcurrency).build();
+    boolean shouldProceedIfFailed =
+        originalStrategyNodeExecution.getExecutableResponses().get(0).getChildren().getShouldProceedIfFailed();
+    return ChildrenExecutableResponse.newBuilder()
+        .addAllChildren(children)
+        .setShouldProceedIfFailed(shouldProceedIfFailed)
+        .setMaxConcurrency(maxConcurrency)
+        .build();
   }
 
   @Override

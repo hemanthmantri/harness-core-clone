@@ -60,6 +60,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.util.CloseableIterator;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -170,8 +171,8 @@ public class IdentityStrategyStepTest extends CategoryTest {
 
     doReturn(iterator)
         .when(nodeExecutionService)
-        .fetchChildrenNodeExecutionsIterator(
-            ORIGINAL_PLAN_EXECUTION_ID, originalNodeExecutionId, NodeProjectionUtils.fieldsForIdentityStrategyStep);
+        .fetchChildrenNodeExecutionsIterator(ORIGINAL_PLAN_EXECUTION_ID, originalNodeExecutionId, Direction.ASC,
+            NodeProjectionUtils.fieldsForIdentityStrategyStep);
 
     ArgumentCaptor<List> identityNodesCaptor = ArgumentCaptor.forClass(List.class);
 
@@ -190,6 +191,7 @@ public class IdentityStrategyStepTest extends CategoryTest {
                 ExecutableResponse.newBuilder()
                     .setChildren(
                         ChildrenExecutableResponse.newBuilder()
+                            .setShouldProceedIfFailed(false)
                             .setMaxConcurrency(2)
                             .addChildren(
                                 ChildrenExecutableResponse.Child.newBuilder().setChildNodeId("childId").build())
@@ -204,13 +206,14 @@ public class IdentityStrategyStepTest extends CategoryTest {
     iterator = OrchestrationStepsTestHelper.createCloseableIterator(childrenNodeExecutions.iterator());
     doReturn(iterator)
         .when(nodeExecutionService)
-        .fetchChildrenNodeExecutionsIterator(
-            ORIGINAL_PLAN_EXECUTION_ID, originalNodeExecutionId, NodeProjectionUtils.fieldsForIdentityStrategyStep);
+        .fetchChildrenNodeExecutionsIterator(ORIGINAL_PLAN_EXECUTION_ID, originalNodeExecutionId, Direction.ASC,
+            NodeProjectionUtils.fieldsForIdentityStrategyStep);
 
     doReturn(strategyNodeExecution).when(nodeExecutionService).get(originalNodeExecutionId);
     response = identityStrategyStep.obtainChildren(newAmbiance, stepParameters, null);
     // -1 to exclude strategy node execution.
     assertEquals(response.getChildrenCount(), childrenNodeExecutions.size());
+    assertEquals(response.getShouldProceedIfFailed(), false);
     assertEquals(response.getMaxConcurrency(), 2);
     verify(planService, times(2)).saveIdentityNodesForMatrix(identityNodesCaptor.capture(), any());
     assertChildrenResponse(response, identityNodesCaptor.getValue(), childrenNodeExecutions);
@@ -223,6 +226,7 @@ public class IdentityStrategyStepTest extends CategoryTest {
                 ExecutableResponse.newBuilder()
                     .setChildren(
                         ChildrenExecutableResponse.newBuilder()
+                            .setShouldProceedIfFailed(true)
                             .setMaxConcurrency(4)
                             .addChildren(
                                 ChildrenExecutableResponse.Child.newBuilder().setChildNodeId("childId").build())
@@ -236,13 +240,14 @@ public class IdentityStrategyStepTest extends CategoryTest {
     iterator = OrchestrationStepsTestHelper.createCloseableIterator(childrenNodeExecutions.iterator());
     doReturn(iterator)
         .when(nodeExecutionService)
-        .fetchChildrenNodeExecutionsIterator(
-            ORIGINAL_PLAN_EXECUTION_ID, originalNodeExecutionId, NodeProjectionUtils.fieldsForIdentityStrategyStep);
+        .fetchChildrenNodeExecutionsIterator(ORIGINAL_PLAN_EXECUTION_ID, originalNodeExecutionId, Direction.ASC,
+            NodeProjectionUtils.fieldsForIdentityStrategyStep);
 
     doReturn(strategyNodeExecution).when(nodeExecutionService).get(originalNodeExecutionId);
     response = identityStrategyStep.obtainChildren(newAmbiance, stepParameters, null);
     // -1 to exclude strategy node execution.
     assertEquals(response.getChildrenCount(), childrenNodeExecutions.size());
+    assertEquals(response.getShouldProceedIfFailed(), true);
     assertEquals(response.getMaxConcurrency(), 4);
     verify(planService, times(3)).saveIdentityNodesForMatrix(identityNodesCaptor.capture(), any());
     assertChildrenResponse(response, identityNodesCaptor.getValue(), childrenNodeExecutions);
