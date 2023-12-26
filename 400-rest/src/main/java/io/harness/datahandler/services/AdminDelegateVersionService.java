@@ -7,6 +7,7 @@
 
 package io.harness.datahandler.services;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.VersionOverrideType.DELEGATE_CUSTOM_IMAGE_TAG;
 import static io.harness.delegate.beans.VersionOverrideType.DELEGATE_IMAGE_TAG;
 import static io.harness.delegate.beans.VersionOverrideType.DELEGATE_JAR;
@@ -15,7 +16,11 @@ import static io.harness.delegate.beans.VersionOverrideType.WATCHER_JAR;
 
 import io.harness.delegate.beans.VersionOverride;
 import io.harness.delegate.beans.VersionOverride.VersionOverrideKeys;
+import io.harness.delegate.beans.VersionOverrideDTO;
 import io.harness.delegate.beans.VersionOverrideType;
+import io.harness.delegate.events.DelegateVersionOverrideEvent;
+import io.harness.delegate.events.DelegateVersionOverrideEvent.DelegateVersionOverrideEventBuilder;
+import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -29,6 +34,7 @@ import org.joda.time.DateTime;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class AdminDelegateVersionService {
   private final HPersistence persistence;
+  private final OutboxService outboxService;
 
   public String setDelegateImageTag(
       final String delegateTag, final String accountId, final boolean validTillNextRelease, final int validFor) {
@@ -72,6 +78,17 @@ public class AdminDelegateVersionService {
       updateOperation.set(VersionOverrideKeys.validUntil, validity.toDate());
       log.info("Setting {} with {} for accountID, will be valid till {} days ", overrideType, overrideValue, validFor);
     }
-    return persistence.upsert(filter, updateOperation, HPersistence.upsertReturnNewOptions).getVersion();
+    VersionOverride versionOverride = persistence.upsert(filter, updateOperation, HPersistence.upsertReturnOldOptions);
+
+    String oldVersion = versionOverride != null ? versionOverride.getVersion() : "";
+
+    DelegateVersionOverrideEventBuilder delegateVersionOverrideEventBuilder =
+        DelegateVersionOverrideEvent.builder().accountIdentifier(accountId).versionOverride(
+            VersionOverrideDTO.builder().version(overrideValue).build());
+    if (isNotEmpty(oldVersion)) {
+      delegateVersionOverrideEventBuilder.versionOverrideOld(VersionOverrideDTO.builder().version(oldVersion).build());
+    }
+    outboxService.save(delegateVersionOverrideEventBuilder.build());
+    return overrideValue;
   }
 }

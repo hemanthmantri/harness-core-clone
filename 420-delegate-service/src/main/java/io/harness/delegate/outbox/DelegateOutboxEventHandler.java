@@ -13,6 +13,7 @@ import static io.harness.delegate.utils.DelegateOutboxEventConstants.DELEGATE_TO
 import static io.harness.delegate.utils.DelegateOutboxEventConstants.DELEGATE_TOKEN_REVOKE_EVENT;
 import static io.harness.delegate.utils.DelegateOutboxEventConstants.DELEGATE_UNREGISTER_EVENT;
 import static io.harness.delegate.utils.DelegateOutboxEventConstants.DELEGATE_UPSERT_EVENT;
+import static io.harness.delegate.utils.DelegateOutboxEventConstants.DELEGATE_VERSION_OVERRIDE_EVENT;
 import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
 
 import io.harness.ModuleType;
@@ -30,6 +31,7 @@ import io.harness.delegate.events.DelegateNgTokenRevokeEvent;
 import io.harness.delegate.events.DelegateRegisterEvent;
 import io.harness.delegate.events.DelegateUnregisterEvent;
 import io.harness.delegate.events.DelegateUpsertEvent;
+import io.harness.delegate.events.DelegateVersionOverrideEvent;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 
@@ -67,6 +69,8 @@ public class DelegateOutboxEventHandler implements OutboxEventHandler {
           return handleDelegateRegisterEvent(outboxEvent);
         case DELEGATE_UNREGISTER_EVENT:
           return handleDelegateUnRegisterEvent(outboxEvent);
+        case DELEGATE_VERSION_OVERRIDE_EVENT:
+          return handleDelegateVersionOverrideEvent(outboxEvent);
         default:
           return false;
       }
@@ -170,6 +174,24 @@ public class DelegateOutboxEventHandler implements OutboxEventHandler {
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
                                 .newYaml(getYamlString(delegateUnRegisterEvent.getDelegateSetupDetails()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .build();
+    return auditClientService.publishAudit(auditEntry, globalContext);
+  }
+
+  @VisibleForTesting
+  protected boolean handleDelegateVersionOverrideEvent(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    DelegateVersionOverrideEvent delegateVersionOverrideEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), DelegateVersionOverrideEvent.class);
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.UPSERT)
+                                .module(ModuleType.CORE)
+                                .newYaml(getYamlString(delegateVersionOverrideEvent.getVersionOverride()))
+                                .oldYaml(getYamlString(delegateVersionOverrideEvent.getVersionOverrideOld()))
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
