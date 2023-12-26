@@ -18,21 +18,28 @@ import lombok.experimental.UtilityClass;
 public class ArtifactConfigHelper {
   public void checkTagAndTagRegex(ParameterField<String> parameterField1, ParameterField<String> parameterField2) {
     if (checkBothNullOrInput(parameterField1, parameterField2)) {
-      throw new InvalidRequestException("value for tag and tagRegex is empty or not provided");
+      throw new InvalidRequestException("Artifact configuration: value for tag and tagRegex is empty or not provided");
     }
   }
 
   public void checkVersionAndVersionRegex(
       ParameterField<String> parameterField1, ParameterField<String> parameterField2) {
     if (checkBothNullOrInput(parameterField1, parameterField2)) {
-      throw new InvalidRequestException("value for version and versionRegex is empty or not provided");
+      throw new InvalidRequestException(
+          "Artifact configuration: value for version and versionRegex is empty or not provided");
     }
   }
 
+  public void checkParameter(ParameterField<String> parameterField, String field) {
+    if (checkNullOrInput(parameterField)) {
+      throw new InvalidRequestException("Artifact configuration: value for " + field + " is empty or not provided");
+    }
+  }
   public void checkFilePathAndFilePathRegex(
       ParameterField<String> parameterField1, ParameterField<String> parameterField2) {
     if (checkBothNullOrInput(parameterField1, parameterField2)) {
-      throw new InvalidRequestException("value for filePath and filePathRegex is empty or not provided");
+      throw new InvalidRequestException(
+          "Artifact configuration: value for filePath and filePathRegex is empty or not provided");
     }
   }
 

@@ -12,6 +12,7 @@ import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
@@ -128,6 +129,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable, WithC
 
   @Override
   public void validate() {
+    ArtifactConfigHelper.checkParameter(imagePath, ArtifactMetadataKeys.IMAGE_PATH);
     ArtifactConfigHelper.checkTagAndTagRegex(tag, tagRegex);
   }
 }

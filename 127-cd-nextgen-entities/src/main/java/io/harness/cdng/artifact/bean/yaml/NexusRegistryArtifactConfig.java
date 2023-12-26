@@ -16,6 +16,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.nexusartifact.NexusRegistryConfigSpec;
@@ -162,6 +163,7 @@ public class NexusRegistryArtifactConfig implements ArtifactConfig, Visitable, W
 
   @Override
   public void validate() {
+    ArtifactConfigHelper.checkParameter(repository, ArtifactMetadataKeys.repository);
     ArtifactConfigHelper.checkTagAndTagRegex(tag, tagRegex);
   }
 }

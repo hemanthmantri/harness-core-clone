@@ -26,6 +26,15 @@ public interface ArtifactMetadataKeys {
   String artifactProject = "artifactProject";
   String artifactRepositoryName = "artifactRepositoryName";
   String artifactRegion = "artifactRegion";
+  String bucketName = "bucketName";
+  String subscriptionId = "subscriptionId";
+  String registry = "registry";
+  String repository = "repository";
+  String Package = "package";
+  String packageType = "packageType";
+  String feed = "feed";
+  String region = "region";
+  String project = "project";
 
   String FILE_NAME = "fileName";
   String IMAGE_PATH = "imagePath";

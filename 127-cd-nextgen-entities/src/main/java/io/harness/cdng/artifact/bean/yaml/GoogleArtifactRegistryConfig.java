@@ -12,6 +12,7 @@ import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GOOGLE_
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
@@ -147,6 +148,10 @@ public class GoogleArtifactRegistryConfig implements ArtifactConfig, Visitable, 
 
   @Override
   public void validate() {
+    ArtifactConfigHelper.checkParameter(project, ArtifactMetadataKeys.project);
+    ArtifactConfigHelper.checkParameter(region, ArtifactMetadataKeys.region);
+    ArtifactConfigHelper.checkParameter(repositoryName, ArtifactMetadataKeys.repository);
+    ArtifactConfigHelper.checkParameter(pkg, ArtifactMetadataKeys.Package);
     ArtifactConfigHelper.checkVersionAndVersionRegex(version, versionRegex);
   }
 }

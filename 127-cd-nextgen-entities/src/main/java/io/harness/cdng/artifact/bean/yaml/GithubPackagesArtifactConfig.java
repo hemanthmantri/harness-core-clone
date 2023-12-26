@@ -14,6 +14,7 @@ import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
+import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
@@ -182,6 +183,8 @@ public class GithubPackagesArtifactConfig implements ArtifactConfig, Visitable, 
 
   @Override
   public void validate() {
+    ArtifactConfigHelper.checkParameter(packageType, ArtifactMetadataKeys.packageType);
+    ArtifactConfigHelper.checkParameter(packageName, ArtifactMetadataKeys.Package);
     ArtifactConfigHelper.checkVersionAndVersionRegex(version, versionRegex);
   }
 }

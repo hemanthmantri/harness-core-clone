@@ -32,11 +32,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.AMIArtifactConfig;
@@ -162,7 +162,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 
 @OwnedBy(HarnessTeam.CDC)
-public class ArtifactsStepV2Test extends CDNGTestBase {
+public class ArtifactsStepV2Test extends CategoryTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   @Mock private NGLogCallback mockNgLogCallback;
   @Mock private ServiceStepsHelper serviceStepsHelper;
@@ -170,8 +170,6 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
   @Mock private ExecutionSweepingOutputService mockSweepingOutputService;
   @Mock private CDStepHelper cdStepHelper = Mockito.spy(CDStepHelper.class);
   @Mock private CDExpressionResolver expressionResolver;
-  @Mock private KryoSerializer kryoSerializer;
-  @Mock private TemplateResourceClient templateResourceClient;
   @Mock EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
   @Mock private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Mock private SecretRuntimeUsageService secretRuntimeUsageService;
@@ -181,7 +179,8 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
   private final ArtifactStepHelper stepHelper = new ArtifactStepHelper();
   @Mock private ConnectorService connectorService;
   @Mock private SecretManagerClientService secretManagerClientService;
-
+  @Mock private KryoSerializer kryoSerializer;
+  @Mock private TemplateResourceClient templateResourceClient;
   @Mock private DelegateMetricsService delegateMetricsService;
 
   @Mock private SecretManagerClientService ngSecretService;
@@ -202,12 +201,45 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
   private final ArtifactTaskResponse successResponse = sampleArtifactTaskResponse();
   private final ErrorNotifyResponseData errorNotifyResponse = sampleErrorNotifyResponse();
 
-  private static final String NULL_TAG_TAG_REGEX_MESSAGE = "value for tag and tagRegex is empty or not provided";
+  private static final String NULL_TAG_TAG_REGEX_MESSAGE =
+      "Artifact configuration: value for tag and tagRegex is empty or not provided";
+  private static final String NULL_REGISTRY_HOST_NAME_MESSAGE =
+      "Artifact configuration: value for registryHostname is empty or not provided";
+  private static final String NULL_IMAGE_PATH_MESSAGE =
+      "Artifact configuration: value for imagePath is empty or not provided";
+  private static final String NULL_PACKAGE_TYPE_MESSAGE =
+      "Artifact configuration: value for packageType is empty or not provided";
+  private static final String NULL_FEED_MESSAGE = "Artifact configuration: value for feed is empty or not provided";
+  private static final String NULL_REPOSITORY_MESSAGE =
+      "Artifact configuration: value for repository is empty or not provided";
+  private static final String NULL_REGION_MESSAGE = "Artifact configuration: value for region is empty or not provided";
+  private static final String NULL_PACKAGE_MESSAGE =
+      "Artifact configuration: value for package is empty or not provided";
+  private static final String NULL_PROJECT_MESSAGE =
+      "Artifact configuration: value for project is empty or not provided";
   private static final String NULL_VERSION_VERSION_REGEX_MESSAGE =
-      "value for version and versionRegex is empty or not provided";
+      "Artifact configuration: value for version and versionRegex is empty or not provided";
+  private static final String NULL_SUBSCRIPTION_ID_MESSAGE =
+      "Artifact configuration: value for subscriptionId is empty or not provided";
+  private static final String NULL_REGISTRY_MESSAGE =
+      "Artifact configuration: value for registry is empty or not provided";
   private static final String NULL_FILEPATH_FILEPATH_REGEX_MESSAGE =
-      "value for filePath and filePathRegex is empty or not provided";
+      "Artifact configuration: value for filePath and filePathRegex is empty or not provided";
+  private static final String NULL_BUCKET_NAME_MESSAGE =
+      "Artifact configuration: value for bucketName is empty or not provided";
   private static final ParameterField<String> CONNECTOR = ParameterField.createValueField("connector");
+  private static final ParameterField<String> BUCKET_NAME = ParameterField.createValueField("bucketName");
+  private static final ParameterField<String> REGION = ParameterField.createValueField("region");
+  private static final ParameterField<String> PROJECT = ParameterField.createValueField("project");
+  private static final ParameterField<String> IMAGE_PATH = ParameterField.createValueField("imagePath");
+  private static final ParameterField<String> PACKAGE_TYPE = ParameterField.createValueField("packageType");
+  private static final ParameterField<String> PACKAGE = ParameterField.createValueField("package");
+  private static final ParameterField<String> FEED = ParameterField.createValueField("feed");
+  private static final ParameterField<String> PACKAGE_NAME = ParameterField.createValueField("packageName");
+  private static final ParameterField<String> SUBSCRIPTION_ID = ParameterField.createValueField("subscriptionId");
+  private static final ParameterField<String> REGISTRY = ParameterField.createValueField("registry");
+  private static final ParameterField<String> REGISTRY_HOST_NAME = ParameterField.createValueField("regsitryHostName");
+  private static final ParameterField<String> REPOSITORY = ParameterField.createValueField("repository");
   private static final ParameterField<String> TAG_NULL = ParameterField.createValueField(null);
   private static final ParameterField<String> TAG_EMPTY = ParameterField.createValueField("");
   private static final ParameterField<String> TAG_INPUT = ParameterField.createValueField("<+input>");
@@ -290,159 +322,6 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
     doReturn(true)
         .when(ngFeatureFlagHelperService)
         .isEnabled(anyString(), eq(CDS_SERVICE_AND_INFRA_STEP_DELEGATE_SELECTOR_PRECEDENCE));
-  }
-
-  private List<ArtifactSourceType> getArtifactSourceTypesHavingTagField() {
-    List<ArtifactSourceType> artifactSourceList = new ArrayList<>();
-    artifactSourceList.add(ArtifactSourceType.DOCKER_REGISTRY);
-    artifactSourceList.add(ArtifactSourceType.ACR);
-    artifactSourceList.add(ArtifactSourceType.ECR);
-    artifactSourceList.add(ArtifactSourceType.GCR);
-    artifactSourceList.add(ArtifactSourceType.NEXUS3_REGISTRY);
-
-    return artifactSourceList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigTagNull() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_NULL).build());
-    artifactConfigList.add(AcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_NULL).build());
-    artifactConfigList.add(EcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_NULL).build());
-    artifactConfigList.add(GcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_NULL).build());
-    artifactConfigList.add(NexusRegistryArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_NULL).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigTagEmpty() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_EMPTY).build());
-    artifactConfigList.add(AcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_EMPTY).build());
-    artifactConfigList.add(EcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_EMPTY).build());
-    artifactConfigList.add(GcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_EMPTY).build());
-    artifactConfigList.add(NexusRegistryArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_EMPTY).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigTagRegexNull() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_NULL).build());
-    artifactConfigList.add(AcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_NULL).build());
-    artifactConfigList.add(EcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_NULL).build());
-    artifactConfigList.add(GcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_NULL).build());
-    artifactConfigList.add(NexusRegistryArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_NULL).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigTagRegexEmpty() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_EMPTY).build());
-    artifactConfigList.add(AcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_EMPTY).build());
-    artifactConfigList.add(EcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_EMPTY).build());
-    artifactConfigList.add(GcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_EMPTY).build());
-    artifactConfigList.add(NexusRegistryArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_EMPTY).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigTagInput() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_INPUT).build());
-    artifactConfigList.add(AcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_INPUT).build());
-    artifactConfigList.add(EcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_INPUT).build());
-    artifactConfigList.add(GcrArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_INPUT).build());
-    artifactConfigList.add(NexusRegistryArtifactConfig.builder().connectorRef(CONNECTOR).tag(TAG_INPUT).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigTagRegexInput() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_INPUT).build());
-    artifactConfigList.add(AcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_INPUT).build());
-    artifactConfigList.add(EcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_INPUT).build());
-    artifactConfigList.add(GcrArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_INPUT).build());
-    artifactConfigList.add(NexusRegistryArtifactConfig.builder().connectorRef(CONNECTOR).tagRegex(TAG_INPUT).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactSourceType> getArtifactSourceTypesHavingVersionField() {
-    List<ArtifactSourceType> artifactSourceList = new ArrayList<>();
-    artifactSourceList.add(ArtifactSourceType.AMI);
-    artifactSourceList.add(ArtifactSourceType.AZURE_ARTIFACTS);
-    artifactSourceList.add(ArtifactSourceType.GITHUB_PACKAGES);
-    artifactSourceList.add(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY);
-
-    return artifactSourceList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigVersionNull() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(AMIArtifactConfig.builder().connectorRef(CONNECTOR).version(TAG_NULL).build());
-    artifactConfigList.add(AzureArtifactsConfig.builder().connectorRef(CONNECTOR).version(TAG_NULL).build());
-    artifactConfigList.add(GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).version(TAG_NULL).build());
-    artifactConfigList.add(GoogleArtifactRegistryConfig.builder().connectorRef(CONNECTOR).version(TAG_NULL).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigVersionEmpty() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(AMIArtifactConfig.builder().connectorRef(CONNECTOR).version(TAG_EMPTY).build());
-    artifactConfigList.add(AzureArtifactsConfig.builder().connectorRef(CONNECTOR).version(TAG_EMPTY).build());
-    artifactConfigList.add(GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).version(TAG_EMPTY).build());
-    artifactConfigList.add(GoogleArtifactRegistryConfig.builder().connectorRef(CONNECTOR).version(TAG_EMPTY).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigVersionInput() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(AMIArtifactConfig.builder().connectorRef(CONNECTOR).version(TAG_INPUT).build());
-    artifactConfigList.add(AzureArtifactsConfig.builder().connectorRef(CONNECTOR).version(TAG_INPUT).build());
-    artifactConfigList.add(GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).version(TAG_INPUT).build());
-    artifactConfigList.add(GoogleArtifactRegistryConfig.builder().connectorRef(CONNECTOR).version(TAG_INPUT).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigVersionRegexNull() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(AMIArtifactConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_NULL).build());
-    artifactConfigList.add(AzureArtifactsConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_NULL).build());
-    artifactConfigList.add(
-        GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_NULL).build());
-    artifactConfigList.add(
-        GoogleArtifactRegistryConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_NULL).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigVersionRegexEmpty() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(AMIArtifactConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_EMPTY).build());
-    artifactConfigList.add(AzureArtifactsConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_EMPTY).build());
-    artifactConfigList.add(
-        GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_EMPTY).build());
-    artifactConfigList.add(
-        GoogleArtifactRegistryConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_EMPTY).build());
-
-    return artifactConfigList;
-  }
-
-  private List<ArtifactConfig> getArtifactConfigVersionRegexInput() {
-    List<ArtifactConfig> artifactConfigList = new ArrayList<>();
-    artifactConfigList.add(AMIArtifactConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_INPUT).build());
-    artifactConfigList.add(AzureArtifactsConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_INPUT).build());
-    artifactConfigList.add(
-        GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_INPUT).build());
-    artifactConfigList.add(
-        GoogleArtifactRegistryConfig.builder().connectorRef(CONNECTOR).versionRegex(TAG_INPUT).build());
-
-    return artifactConfigList;
   }
 
   private void checkResponse(ArtifactSource source1, String message) {
@@ -1694,78 +1573,9 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
   @Test
   @Owner(developers = OwnerRule.ABHISHEK)
   @Category(UnitTests.class)
-  public void validateArtifactConfig_Tag() {
-    // Prepare test data
-
-    List<ArtifactSourceType> artifactSourceTypes = getArtifactSourceTypesHavingTagField();
-    List<ArtifactConfig> artifactConfigListNull = getArtifactConfigTagNull();
-    List<ArtifactConfig> artifactConfigListEmpty = getArtifactConfigTagEmpty();
-    List<ArtifactConfig> artifactConfigListInput = getArtifactConfigTagInput();
-    List<ArtifactConfig> artifactConfigListNullRegex = getArtifactConfigTagRegexNull();
-    List<ArtifactConfig> artifactConfigListEmptyRegex = getArtifactConfigTagRegexEmpty();
-    List<ArtifactConfig> artifactConfigListInputRegex = getArtifactConfigTagRegexInput();
-
-    for (int i = 0; i < artifactSourceTypes.size(); i++) {
-      ArtifactSource source1 = ArtifactSource.builder()
-                                   .identifier("source1-id")
-                                   .sourceType(artifactSourceTypes.get(i))
-                                   .spec(artifactConfigListNull.get(i))
-                                   .build();
-
-      checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListEmpty.get(i));
-      checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListInput.get(i));
-      checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListInputRegex.get(i));
-      checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListNullRegex.get(i));
-      checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListEmptyRegex.get(i));
-      checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
-    }
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ABHISHEK)
-  @Category(UnitTests.class)
-  public void validateArtifactConfig_Version() {
-    // Prepare test data
-
-    List<ArtifactSourceType> artifactSourceTypes = getArtifactSourceTypesHavingVersionField();
-    List<ArtifactConfig> artifactConfigListNull = getArtifactConfigVersionNull();
-    List<ArtifactConfig> artifactConfigListEmpty = getArtifactConfigVersionEmpty();
-    List<ArtifactConfig> artifactConfigListInput = getArtifactConfigVersionInput();
-    List<ArtifactConfig> artifactConfigListNullRegex = getArtifactConfigVersionRegexNull();
-    List<ArtifactConfig> artifactConfigListEmptyRegex = getArtifactConfigVersionRegexEmpty();
-    List<ArtifactConfig> artifactConfigListInputRegex = getArtifactConfigVersionRegexInput();
-
-    for (int i = 0; i < artifactSourceTypes.size(); i++) {
-      ArtifactSource source1 = ArtifactSource.builder()
-                                   .identifier("source1-id")
-                                   .sourceType(artifactSourceTypes.get(i))
-                                   .spec(artifactConfigListNull.get(i))
-                                   .build();
-      checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListEmpty.get(i));
-      checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListInput.get(i));
-      checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListInputRegex.get(i));
-      checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListNullRegex.get(i));
-      checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
-      source1.setSpec(artifactConfigListEmptyRegex.get(i));
-      checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
-    }
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ABHISHEK)
-  @Category(UnitTests.class)
-  public void validateAmazonS3HubArtifactConfig_NullTag() {
+  public void validateAmazonS3HubArtifactConfig_NullFilePath() {
     AmazonS3ArtifactConfig amazonS3ArtifactConfig =
-        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).filePath(TAG_NULL).build();
+        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).bucketName(BUCKET_NAME).filePath(TAG_NULL).build();
 
     // Prepare test data
     ArtifactSource source1 = ArtifactSource.builder()
@@ -1789,7 +1599,7 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
   @Category(UnitTests.class)
   public void validateAmazonS3ArtifactConfig_InputFilePath() {
     AmazonS3ArtifactConfig amazonS3ArtifactConfig =
-        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).filePath(TAG_INPUT).build();
+        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).bucketName(BUCKET_NAME).filePath(TAG_INPUT).build();
 
     // Prepare test data
     ArtifactSource source1 = ArtifactSource.builder()
@@ -1813,11 +1623,8 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
   @Category(UnitTests.class)
   public void validateAmazonS3ArtifactConfig_EmptyFilePath() {
     AmazonS3ArtifactConfig amazonS3ArtifactConfig =
-        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).filePath(TAG_EMPTY).build();
+        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).bucketName(BUCKET_NAME).filePath(TAG_EMPTY).build();
 
-    // Prepare test data
-
-    //    doReturn("").when(serviceEntityService).resolveArtifactSourceTemplateRefs(any(),any(),any(),any());
     ArtifactSource source1 = ArtifactSource.builder()
                                  .identifier("source1-id")
                                  .sourceType(ArtifactSourceType.AMAZONS3)
@@ -1832,5 +1639,1498 @@ public class ArtifactsStepV2Test extends CDNGTestBase {
     source1.setSpec(amazonS3ArtifactConfig);
 
     checkResponse(source1, NULL_FILEPATH_FILEPATH_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAmazonS3HubArtifactConfig_NullBucketName() {
+    AmazonS3ArtifactConfig amazonS3ArtifactConfig =
+        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).bucketName(TAG_NULL).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMAZONS3)
+                                 .spec(amazonS3ArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_BUCKET_NAME_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAmazonS3ArtifactConfig_InputBucketName() {
+    AmazonS3ArtifactConfig amazonS3ArtifactConfig =
+        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).bucketName(TAG_INPUT).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMAZONS3)
+                                 .spec(amazonS3ArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_BUCKET_NAME_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAmazonS3ArtifactConfig_EmptyBucketName() {
+    AmazonS3ArtifactConfig amazonS3ArtifactConfig =
+        AmazonS3ArtifactConfig.builder().connectorRef(CONNECTOR).bucketName(TAG_EMPTY).build();
+
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMAZONS3)
+                                 .spec(amazonS3ArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_BUCKET_NAME_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAMIArtifactConfig_NullRegion() {
+    AMIArtifactConfig amiArtifactConfig = AMIArtifactConfig.builder().connectorRef(CONNECTOR).region(TAG_NULL).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMI)
+                                 .spec(amiArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAMIArtifactConfig_EmptyRegion() {
+    AMIArtifactConfig amiArtifactConfig = AMIArtifactConfig.builder().connectorRef(CONNECTOR).region(TAG_EMPTY).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMI)
+                                 .spec(amiArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAMIArtifactConfig_InputRegion() {
+    AMIArtifactConfig amiArtifactConfig = AMIArtifactConfig.builder().connectorRef(CONNECTOR).region(TAG_INPUT).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMI)
+                                 .spec(amiArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAMIArtifactConfig_NullVersion_VersionRegex() {
+    AMIArtifactConfig amiArtifactConfig =
+        AMIArtifactConfig.builder().connectorRef(CONNECTOR).region(REGION).version(TAG_NULL).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMI)
+                                 .spec(amiArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+    amiArtifactConfig.setVersion(null);
+    amiArtifactConfig.setVersionRegex(TAG_NULL);
+    source1.setSpec(amiArtifactConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAMIArtifactConfig_EmptyVersion_VersionRegex() {
+    AMIArtifactConfig amiArtifactConfig =
+        AMIArtifactConfig.builder().connectorRef(CONNECTOR).region(REGION).version(TAG_EMPTY).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMI)
+                                 .spec(amiArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+    amiArtifactConfig.setVersionRegex(TAG_EMPTY);
+    source1.setSpec(amiArtifactConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAMIArtifactConfig_InputVersion_VersionRegex() {
+    AMIArtifactConfig amiArtifactConfig =
+        AMIArtifactConfig.builder().connectorRef(CONNECTOR).region(REGION).version(TAG_INPUT).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AMI)
+                                 .spec(amiArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+    amiArtifactConfig.setVersionRegex(TAG_INPUT);
+    source1.setSpec(amiArtifactConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateDockerHubArtifactConfig_NullImagePath() {
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).imagePath(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
+                                 .spec(dockerHubArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateDockerHubArtifactConfig_EmptyImagePath() {
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).imagePath(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
+                                 .spec(dockerHubArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateDockerHubArtifactConfig_InputImagePath() {
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).imagePath(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
+                                 .spec(dockerHubArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateDockerHubArtifactConfig_NullTag_TagRegex() {
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).imagePath(IMAGE_PATH).tag(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
+                                 .spec(dockerHubArtifactConfig)
+                                 .build();
+
+    source1.setSpec(dockerHubArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+    dockerHubArtifactConfig.setTag(null);
+    dockerHubArtifactConfig.setTagRegex(TAG_NULL);
+    source1.setSpec(dockerHubArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateDockerHubArtifactConfig_EmptyTag_TagRegex() {
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).imagePath(IMAGE_PATH).tag(TAG_EMPTY).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
+                                 .spec(dockerHubArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+    dockerHubArtifactConfig.setTag(null);
+    dockerHubArtifactConfig.setTagRegex(TAG_EMPTY);
+    source1.setSpec(dockerHubArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateDockerHubArtifactConfig_InputTag_TagRegex() {
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder().connectorRef(CONNECTOR).imagePath(IMAGE_PATH).tag(TAG_INPUT).build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
+                                 .spec(dockerHubArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+    dockerHubArtifactConfig.setTag(null);
+    dockerHubArtifactConfig.setTagRegex(TAG_INPUT);
+    source1.setSpec(dockerHubArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_NullPackageType() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig =
+        GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).packageType(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_PACKAGE_TYPE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_EmptyPackageType() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig =
+        GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).packageType(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_PACKAGE_TYPE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_InputPackageType() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig =
+        GithubPackagesArtifactConfig.builder().connectorRef(CONNECTOR).packageType(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_PACKAGE_TYPE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_NullPackageName() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig = GithubPackagesArtifactConfig.builder()
+                                                                    .connectorRef(CONNECTOR)
+                                                                    .packageType(PACKAGE_TYPE)
+                                                                    .packageName(TAG_NULL)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_EmptyPackageName() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig = GithubPackagesArtifactConfig.builder()
+                                                                    .connectorRef(CONNECTOR)
+                                                                    .packageType(PACKAGE_TYPE)
+                                                                    .packageName(TAG_EMPTY)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_InputPackageName() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig = GithubPackagesArtifactConfig.builder()
+                                                                    .connectorRef(CONNECTOR)
+                                                                    .packageType(PACKAGE_TYPE)
+                                                                    .packageName(TAG_INPUT)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_NullVersion() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig = GithubPackagesArtifactConfig.builder()
+                                                                    .connectorRef(CONNECTOR)
+                                                                    .packageType(PACKAGE_TYPE)
+                                                                    .packageName(PACKAGE_NAME)
+                                                                    .version(TAG_NULL)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    githubPackagesArtifactConfig.setVersion(null);
+    githubPackagesArtifactConfig.setVersionRegex(TAG_NULL);
+
+    source1.setSpec(githubPackagesArtifactConfig);
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_EmptyVersion() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig = GithubPackagesArtifactConfig.builder()
+                                                                    .connectorRef(CONNECTOR)
+                                                                    .packageType(PACKAGE_TYPE)
+                                                                    .packageName(PACKAGE_NAME)
+                                                                    .version(TAG_EMPTY)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    githubPackagesArtifactConfig.setVersion(null);
+    githubPackagesArtifactConfig.setVersionRegex(TAG_EMPTY);
+
+    source1.setSpec(githubPackagesArtifactConfig);
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGithubPackagesArtifactConfig_InputVersion() {
+    GithubPackagesArtifactConfig githubPackagesArtifactConfig = GithubPackagesArtifactConfig.builder()
+                                                                    .connectorRef(CONNECTOR)
+                                                                    .packageType(PACKAGE_TYPE)
+                                                                    .packageName(PACKAGE_NAME)
+                                                                    .version(TAG_INPUT)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GITHUB_PACKAGES)
+                                 .spec(githubPackagesArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    githubPackagesArtifactConfig.setVersion(null);
+    githubPackagesArtifactConfig.setVersionRegex(TAG_INPUT);
+
+    source1.setSpec(githubPackagesArtifactConfig);
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_NullSubscriptionId() {
+    AcrArtifactConfig acrArtifactConfig = AcrArtifactConfig.builder().subscriptionId(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_SUBSCRIPTION_ID_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_EmptySubscriptionId() {
+    AcrArtifactConfig acrArtifactConfig = AcrArtifactConfig.builder().subscriptionId(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_SUBSCRIPTION_ID_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_InputSubscriptionId() {
+    AcrArtifactConfig acrArtifactConfig = AcrArtifactConfig.builder().subscriptionId(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_SUBSCRIPTION_ID_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_NullRegistry() {
+    AcrArtifactConfig acrArtifactConfig =
+        AcrArtifactConfig.builder().subscriptionId(SUBSCRIPTION_ID).registry(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGISTRY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_EmptyRegistry() {
+    AcrArtifactConfig acrArtifactConfig =
+        AcrArtifactConfig.builder().subscriptionId(SUBSCRIPTION_ID).registry(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGISTRY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_InputRegistry() {
+    AcrArtifactConfig acrArtifactConfig =
+        AcrArtifactConfig.builder().subscriptionId(SUBSCRIPTION_ID).registry(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGISTRY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_NullRepository() {
+    AcrArtifactConfig acrArtifactConfig =
+        AcrArtifactConfig.builder().subscriptionId(SUBSCRIPTION_ID).registry(REGISTRY).repository(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_EmptyRepository() {
+    AcrArtifactConfig acrArtifactConfig =
+        AcrArtifactConfig.builder().subscriptionId(SUBSCRIPTION_ID).registry(REGISTRY).repository(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_InputRepository() {
+    AcrArtifactConfig acrArtifactConfig =
+        AcrArtifactConfig.builder().subscriptionId(SUBSCRIPTION_ID).registry(REGISTRY).repository(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_NullTag_TagRegex() {
+    AcrArtifactConfig acrArtifactConfig = AcrArtifactConfig.builder()
+                                              .subscriptionId(SUBSCRIPTION_ID)
+                                              .registry(REGISTRY)
+                                              .repository(REPOSITORY)
+                                              .tag(TAG_NULL)
+                                              .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    acrArtifactConfig.setTag(null);
+    acrArtifactConfig.setTagRegex(TAG_NULL);
+
+    source1.setSpec(acrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_EmptyTag_TagRegex() {
+    AcrArtifactConfig acrArtifactConfig = AcrArtifactConfig.builder()
+                                              .subscriptionId(SUBSCRIPTION_ID)
+                                              .registry(REGISTRY)
+                                              .repository(REPOSITORY)
+                                              .tag(TAG_EMPTY)
+                                              .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    acrArtifactConfig.setTag(null);
+    acrArtifactConfig.setTagRegex(TAG_EMPTY);
+
+    source1.setSpec(acrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateACRArtifactConfig_InputTag_TagRegex() {
+    AcrArtifactConfig acrArtifactConfig = AcrArtifactConfig.builder()
+                                              .subscriptionId(SUBSCRIPTION_ID)
+                                              .registry(REGISTRY)
+                                              .repository(REPOSITORY)
+                                              .tag(TAG_INPUT)
+                                              .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ACR)
+                                 .spec(acrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    acrArtifactConfig.setTag(null);
+    acrArtifactConfig.setTagRegex(TAG_INPUT);
+
+    source1.setSpec(acrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_NullImagePath() {
+    GcrArtifactConfig gcrArtifactConfig =
+        GcrArtifactConfig.builder().registryHostname(REGISTRY_HOST_NAME).imagePath(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_EmptyImagePath() {
+    GcrArtifactConfig gcrArtifactConfig =
+        GcrArtifactConfig.builder().registryHostname(REGISTRY_HOST_NAME).imagePath(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_InputImagePath() {
+    GcrArtifactConfig gcrArtifactConfig =
+        GcrArtifactConfig.builder().registryHostname(REGISTRY_HOST_NAME).imagePath(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_NullRegistryHostName() {
+    GcrArtifactConfig gcrArtifactConfig = GcrArtifactConfig.builder().registryHostname(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGISTRY_HOST_NAME_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_EmptyRegistryHostName() {
+    GcrArtifactConfig gcrArtifactConfig = GcrArtifactConfig.builder().registryHostname(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGISTRY_HOST_NAME_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_InputRegistryHostName() {
+    GcrArtifactConfig gcrArtifactConfig = GcrArtifactConfig.builder().registryHostname(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGISTRY_HOST_NAME_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_NullTag_TagRegex() {
+    GcrArtifactConfig gcrArtifactConfig =
+        GcrArtifactConfig.builder().imagePath(IMAGE_PATH).registryHostname(REGISTRY_HOST_NAME).tag(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    gcrArtifactConfig.setTag(null);
+    gcrArtifactConfig.setTagRegex(TAG_NULL);
+
+    source1.setSpec(gcrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_EmptyTag_TagRegex() {
+    GcrArtifactConfig gcrArtifactConfig =
+        GcrArtifactConfig.builder().imagePath(IMAGE_PATH).registryHostname(REGISTRY_HOST_NAME).tag(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    gcrArtifactConfig.setTag(null);
+    gcrArtifactConfig.setTagRegex(TAG_EMPTY);
+
+    source1.setSpec(gcrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGcrArtifactConfig_InputTag_TagRegex() {
+    GcrArtifactConfig gcrArtifactConfig =
+        GcrArtifactConfig.builder().imagePath(IMAGE_PATH).registryHostname(REGISTRY_HOST_NAME).tag(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GCR)
+                                 .spec(gcrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    gcrArtifactConfig.setTag(null);
+    gcrArtifactConfig.setTagRegex(TAG_INPUT);
+
+    source1.setSpec(gcrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_NullImagePath() {
+    EcrArtifactConfig ecrArtifactConfig = EcrArtifactConfig.builder().region(REGION).imagePath(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_EmptyImagePath() {
+    EcrArtifactConfig ecrArtifactConfig = EcrArtifactConfig.builder().region(REGION).imagePath(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_IputImagePath() {
+    EcrArtifactConfig ecrArtifactConfig = EcrArtifactConfig.builder().region(REGION).imagePath(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_IMAGE_PATH_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_NullRegion() {
+    EcrArtifactConfig ecrArtifactConfig = EcrArtifactConfig.builder().region(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_EmptyRegion() {
+    EcrArtifactConfig ecrArtifactConfig = EcrArtifactConfig.builder().region(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_InputRegion() {
+    EcrArtifactConfig ecrArtifactConfig = EcrArtifactConfig.builder().region(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_NullTag_TagRegex() {
+    EcrArtifactConfig ecrArtifactConfig =
+        EcrArtifactConfig.builder().imagePath(IMAGE_PATH).region(REGION).tag(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    ecrArtifactConfig.setTag(null);
+    ecrArtifactConfig.setTagRegex(TAG_NULL);
+
+    source1.setSpec(ecrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_EmptyTag_TagRegex() {
+    EcrArtifactConfig ecrArtifactConfig =
+        EcrArtifactConfig.builder().imagePath(IMAGE_PATH).region(REGION).tag(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    ecrArtifactConfig.setTag(null);
+    ecrArtifactConfig.setTagRegex(TAG_EMPTY);
+
+    source1.setSpec(ecrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateEcrArtifactConfig_InputTag_TagRegex() {
+    EcrArtifactConfig ecrArtifactConfig =
+        EcrArtifactConfig.builder().imagePath(IMAGE_PATH).region(REGION).tag(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.ECR)
+                                 .spec(ecrArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    ecrArtifactConfig.setTag(null);
+    ecrArtifactConfig.setTagRegex(TAG_INPUT);
+
+    source1.setSpec(ecrArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_NullPackageName() {
+    AzureArtifactsConfig azureArtifactsConfig =
+        AzureArtifactsConfig.builder().feed(FEED).packageType(PACKAGE_TYPE).packageName(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_EmptyPackageName() {
+    AzureArtifactsConfig azureArtifactsConfig =
+        AzureArtifactsConfig.builder().feed(FEED).packageType(PACKAGE_TYPE).packageName(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_InputPackageName() {
+    AzureArtifactsConfig azureArtifactsConfig =
+        AzureArtifactsConfig.builder().feed(FEED).packageType(PACKAGE_TYPE).packageName(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_NullPackageType() {
+    AzureArtifactsConfig azureArtifactsConfig = AzureArtifactsConfig.builder().feed(FEED).packageType(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_TYPE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_EmptyPackageType() {
+    AzureArtifactsConfig azureArtifactsConfig =
+        AzureArtifactsConfig.builder().feed(FEED).packageType(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_TYPE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_InputPackageType() {
+    AzureArtifactsConfig azureArtifactsConfig =
+        AzureArtifactsConfig.builder().feed(FEED).packageType(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_TYPE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_NullFeed() {
+    AzureArtifactsConfig azureArtifactsConfig = AzureArtifactsConfig.builder().feed(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_FEED_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_EmptyFeed() {
+    AzureArtifactsConfig azureArtifactsConfig = AzureArtifactsConfig.builder().feed(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_FEED_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_InputFeed() {
+    AzureArtifactsConfig azureArtifactsConfig = AzureArtifactsConfig.builder().feed(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+    checkResponse(source1, NULL_FEED_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_NullVersion_VersionRegex() {
+    AzureArtifactsConfig azureArtifactsConfig = AzureArtifactsConfig.builder()
+                                                    .packageName(PACKAGE_NAME)
+                                                    .packageType(PACKAGE_TYPE)
+                                                    .feed(FEED)
+                                                    .version(TAG_NULL)
+                                                    .build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    azureArtifactsConfig.setVersion(null);
+    azureArtifactsConfig.setVersionRegex(TAG_NULL);
+
+    source1.setSpec(azureArtifactsConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_EmptyVersion_VersionRegex() {
+    AzureArtifactsConfig azureArtifactsConfig = AzureArtifactsConfig.builder()
+                                                    .packageName(PACKAGE_NAME)
+                                                    .packageType(PACKAGE_TYPE)
+                                                    .feed(FEED)
+                                                    .version(TAG_EMPTY)
+                                                    .build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    azureArtifactsConfig.setVersion(null);
+    azureArtifactsConfig.setVersionRegex(TAG_EMPTY);
+
+    source1.setSpec(azureArtifactsConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateAzureArtifactConfig_InputVersion_VersionRegex() {
+    AzureArtifactsConfig azureArtifactsConfig = AzureArtifactsConfig.builder()
+                                                    .packageName(PACKAGE_NAME)
+                                                    .packageType(PACKAGE_TYPE)
+                                                    .feed(FEED)
+                                                    .version(TAG_INPUT)
+                                                    .build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.AZURE_ARTIFACTS)
+                                 .spec(azureArtifactsConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    azureArtifactsConfig.setVersion(null);
+    azureArtifactsConfig.setVersionRegex(TAG_INPUT);
+
+    source1.setSpec(azureArtifactsConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_NullRegion() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().project(PROJECT).region(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_EmptyRegion() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().project(PROJECT).region(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_InputRegion() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().project(PROJECT).region(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_REGION_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_NullProject() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().project(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_PROJECT_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_EmptyProject() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().project(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_PROJECT_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_InputProject() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().project(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_PROJECT_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_NullRepositoryName() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().region(REGION).project(PROJECT).repositoryName(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_EmptyRepositoryName() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().region(REGION).project(PROJECT).repositoryName(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_InputRepositoryName() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig =
+        GoogleArtifactRegistryConfig.builder().region(REGION).project(PROJECT).repositoryName(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_NullPackage() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig = GoogleArtifactRegistryConfig.builder()
+                                                                    .region(REGION)
+                                                                    .project(PROJECT)
+                                                                    .repositoryName(REPOSITORY)
+                                                                    .pkg(TAG_NULL)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_EmptyPackage() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig = GoogleArtifactRegistryConfig.builder()
+                                                                    .region(REGION)
+                                                                    .project(PROJECT)
+                                                                    .repositoryName(REPOSITORY)
+                                                                    .pkg(TAG_EMPTY)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_InputPackage() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig = GoogleArtifactRegistryConfig.builder()
+                                                                    .region(REGION)
+                                                                    .project(PROJECT)
+                                                                    .repositoryName(REPOSITORY)
+                                                                    .pkg(TAG_INPUT)
+                                                                    .build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+    checkResponse(source1, NULL_PACKAGE_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_NullVersion_VersionRegex() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig = GoogleArtifactRegistryConfig.builder()
+                                                                    .region(REGION)
+                                                                    .project(PROJECT)
+                                                                    .repositoryName(REPOSITORY)
+                                                                    .pkg(PACKAGE)
+                                                                    .version(TAG_NULL)
+                                                                    .build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    googleArtifactRegistryConfig.setVersion(null);
+    googleArtifactRegistryConfig.setVersionRegex(TAG_NULL);
+
+    source1.setSpec(googleArtifactRegistryConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_EmptyVersion_VersionRegex() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig = GoogleArtifactRegistryConfig.builder()
+                                                                    .region(REGION)
+                                                                    .project(PROJECT)
+                                                                    .repositoryName(REPOSITORY)
+                                                                    .pkg(PACKAGE)
+                                                                    .version(TAG_EMPTY)
+                                                                    .build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    googleArtifactRegistryConfig.setVersion(null);
+    googleArtifactRegistryConfig.setVersionRegex(TAG_EMPTY);
+
+    source1.setSpec(googleArtifactRegistryConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateGoogleArtifactRegistryArtifactConfig_InputVersion_VersionRegex() {
+    GoogleArtifactRegistryConfig googleArtifactRegistryConfig = GoogleArtifactRegistryConfig.builder()
+                                                                    .region(REGION)
+                                                                    .project(PROJECT)
+                                                                    .repositoryName(REPOSITORY)
+                                                                    .pkg(PACKAGE)
+                                                                    .version(TAG_INPUT)
+                                                                    .build();
+
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.GOOGLE_ARTIFACT_REGISTRY)
+                                 .spec(googleArtifactRegistryConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+
+    googleArtifactRegistryConfig.setVersion(null);
+    googleArtifactRegistryConfig.setVersionRegex(TAG_INPUT);
+
+    source1.setSpec(googleArtifactRegistryConfig);
+    checkResponse(source1, NULL_VERSION_VERSION_REGEX_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateNexusRegistryArtifactConfig_NullRepository() {
+    NexusRegistryArtifactConfig nexusRegistryArtifactConfig =
+        NexusRegistryArtifactConfig.builder().repository(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.NEXUS3_REGISTRY)
+                                 .spec(nexusRegistryArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateNexusRegistryArtifactConfig_EmptyRepository() {
+    NexusRegistryArtifactConfig nexusRegistryArtifactConfig =
+        NexusRegistryArtifactConfig.builder().repository(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.NEXUS3_REGISTRY)
+                                 .spec(nexusRegistryArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateNexusRegistryArtifactConfig_InputRepository() {
+    NexusRegistryArtifactConfig nexusRegistryArtifactConfig =
+        NexusRegistryArtifactConfig.builder().repository(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.NEXUS3_REGISTRY)
+                                 .spec(nexusRegistryArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_REPOSITORY_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateNexusRegistryArtifactConfig_NullTag_TagRegex() {
+    NexusRegistryArtifactConfig nexusRegistryArtifactConfig =
+        NexusRegistryArtifactConfig.builder().repository(REPOSITORY).tag(TAG_NULL).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.NEXUS3_REGISTRY)
+                                 .spec(nexusRegistryArtifactConfig)
+                                 .build();
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+    nexusRegistryArtifactConfig.setTag(null);
+    nexusRegistryArtifactConfig.setTagRegex(TAG_NULL);
+
+    source1.setSpec(nexusRegistryArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateNexusArtifactConfig_EmptyTag_TagRegex() {
+    NexusRegistryArtifactConfig nexusRegistryArtifactConfig =
+        NexusRegistryArtifactConfig.builder().repository(REPOSITORY).tag(TAG_EMPTY).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.NEXUS3_REGISTRY)
+                                 .spec(nexusRegistryArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    nexusRegistryArtifactConfig.setTag(null);
+    nexusRegistryArtifactConfig.setTagRegex(TAG_EMPTY);
+
+    source1.setSpec(nexusRegistryArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.RAKSHIT_AGARWAL)
+  @Category(UnitTests.class)
+  public void validateNexusArtifactConfig_InputTag_TagRegex() {
+    NexusRegistryArtifactConfig nexusRegistryArtifactConfig =
+        NexusRegistryArtifactConfig.builder().repository(REPOSITORY).tag(TAG_INPUT).build();
+    // Prepare test data
+    ArtifactSource source1 = ArtifactSource.builder()
+                                 .identifier("source1-id")
+                                 .sourceType(ArtifactSourceType.NEXUS3_REGISTRY)
+                                 .spec(nexusRegistryArtifactConfig)
+                                 .build();
+
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
+
+    nexusRegistryArtifactConfig.setTag(null);
+    nexusRegistryArtifactConfig.setTagRegex(TAG_INPUT);
+
+    source1.setSpec(nexusRegistryArtifactConfig);
+    checkResponse(source1, NULL_TAG_TAG_REGEX_MESSAGE);
   }
 }

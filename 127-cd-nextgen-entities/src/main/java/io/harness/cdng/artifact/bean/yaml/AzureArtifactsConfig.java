@@ -12,6 +12,7 @@ import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.AZURE_A
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
@@ -191,6 +192,9 @@ public class AzureArtifactsConfig implements ArtifactConfig, Visitable, WithConn
 
   @Override
   public void validate() {
+    ArtifactConfigHelper.checkParameter(feed, ArtifactMetadataKeys.feed);
+    ArtifactConfigHelper.checkParameter(packageType, ArtifactMetadataKeys.packageType);
+    ArtifactConfigHelper.checkParameter(packageName, ArtifactMetadataKeys.Package);
     ArtifactConfigHelper.checkVersionAndVersionRegex(version, versionRegex);
   }
 }
