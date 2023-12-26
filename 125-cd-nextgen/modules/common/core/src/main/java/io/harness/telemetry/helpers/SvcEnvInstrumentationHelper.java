@@ -17,9 +17,7 @@ import static io.harness.telemetry.helpers.InstrumentationConstants.STAGE_IDENTI
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.telemetry.entity.SvcEnvTelemetryInfo;
-import io.harness.telemetry.TelemetryReporter;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -37,8 +35,6 @@ public class SvcEnvInstrumentationHelper extends InstrumentationHelper {
   private static final String ENVIRONMENT_GROUP_PRESENT = "environment_group_present";
   private static final String ENVIRONMENT_FILTERS_PRESENT = "environment_filters_present";
   private static final String SVC_ENV_EVENT = "svc_env";
-
-  @Inject TelemetryReporter telemetryReporter;
 
   public CompletableFuture<Void> sendSvcEnvEvent(SvcEnvTelemetryInfo svcEnvTelemetryInfo) {
     return publishSvcEnvInfo(svcEnvTelemetryInfo, SVC_ENV_EVENT);

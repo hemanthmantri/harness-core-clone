@@ -34,6 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(HarnessTeam.CDC)
 public class ArtifactSourceInstrumentationHelper extends InstrumentationHelper {
+  private static final String LAST_PUBLISHED_TAG_EVENT_NAME = "last_published_tag";
+  private static final String ARTIFACTS_SOURCE_API_USAGE_EVENT_NAME = "artifacts_source_api_usage";
+  private static final String ARTIFACT_DEPLOYMENT_EVENT_NAME = "artifact_deployment";
+
   private CompletableFuture<Void> publishArtifactInfo(
       ArtifactConfig artifactConfig, String accountId, String orgId, String projectId, String eventName) {
     HashMap<String, Object> eventPropertiesMap = new HashMap<>();
@@ -48,7 +52,7 @@ public class ArtifactSourceInstrumentationHelper extends InstrumentationHelper {
 
   public CompletableFuture<Void> sendLastPublishedTagExpressionEvent(
       ArtifactConfig artifactConfig, String accountId, String orgId, String projectId) {
-    return publishArtifactInfo(artifactConfig, accountId, orgId, projectId, "last_published_tag");
+    return publishArtifactInfo(artifactConfig, accountId, orgId, projectId, LAST_PUBLISHED_TAG_EVENT_NAME);
   }
 
   private CompletableFuture<Void> publishArtifactApiInfo(ArtifactSourceType artifactSourceType, String accountId,
@@ -72,7 +76,7 @@ public class ArtifactSourceInstrumentationHelper extends InstrumentationHelper {
       String orgId, String projectId, String apiType, long timeTaken, int count, Boolean isServiceV2,
       Boolean isServiceRemote) {
     return publishArtifactApiInfo(artifactSourceType, accountId, orgId, projectId, apiType, timeTaken, count,
-        isServiceV2, isServiceRemote, "artifacts_source_api_usage");
+        isServiceV2, isServiceRemote, ARTIFACTS_SOURCE_API_USAGE_EVENT_NAME);
   }
 
   private CompletableFuture<Void> publishArtifactDeploymentInfo(ArtifactConfig artifactConfig, String accountId,
@@ -92,6 +96,6 @@ public class ArtifactSourceInstrumentationHelper extends InstrumentationHelper {
   public CompletableFuture<Void> sendArtifactDeploymentEvent(ArtifactConfig artifactConfig, String accountId,
       String orgId, String projectId, String deploymentType, Boolean isServiceV2) {
     return publishArtifactDeploymentInfo(
-        artifactConfig, accountId, orgId, projectId, "artifact_deployment", deploymentType, isServiceV2);
+        artifactConfig, accountId, orgId, projectId, ARTIFACT_DEPLOYMENT_EVENT_NAME, deploymentType, isServiceV2);
   }
 }
