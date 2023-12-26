@@ -18,9 +18,11 @@ import static io.harness.rule.OwnerRule.VLICA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -32,11 +34,14 @@ import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.exception.GitClientException;
+import io.harness.exception.HintException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.logging.LogCallback;
+import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.rule.Owner;
 import io.harness.service.ScmServiceClient;
 
@@ -319,6 +324,68 @@ public class ScmFetchFilesHelperNGTest extends CategoryTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
+  public void testShouldDownloadFilesUsingScmByFolderCommitNotFound() {
+    ScmFetchFilesHelperNG spyScmFetchFilesHelperNG = spy(scmFetchFilesHelperNG);
+    LogCallback logCallback = mock(NGDelegateLogCallback.class);
+    GitStoreDelegateConfig gitStoreDelegateConfig = GitStoreDelegateConfig.builder()
+                                                        .paths(Collections.singletonList("test"))
+                                                        .fetchType(FetchType.COMMIT)
+                                                        .branch("commitId")
+                                                        .build();
+    doReturn(FindCommitResponse.newBuilder().setCommit(Commit.newBuilder().setSha("").build()).build())
+        .when(scmDelegateClient)
+        .processScmRequest(any());
+
+    assertThatExceptionOfType(HintException.class)
+        .isThrownBy(()
+                        -> spyScmFetchFilesHelperNG.downloadFilesUsingScm(
+                            "manifests", gitStoreDelegateConfig, logCallback, false));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testShouldDownloadFilesUsingScmByFolderWithFailedFiles() {
+    ScmFetchFilesHelperNG spyScmFetchFilesHelperNG = spy(scmFetchFilesHelperNG);
+    LogCallback logCallback = mock(NGDelegateLogCallback.class);
+    GitStoreDelegateConfig gitStoreDelegateConfig = GitStoreDelegateConfig.builder()
+                                                        .paths(Collections.singletonList("test"))
+                                                        .fetchType(FetchType.BRANCH)
+                                                        .branch("branch")
+                                                        .build();
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                               .addFileContents(FileContent.newBuilder()
+                                                                    .setStatus(200)
+                                                                    .setContent("content")
+                                                                    .setPath("test/test2/path.txt")
+                                                                    .build())
+                                               .addFileContents(FileContent.newBuilder()
+                                                                    .setStatus(400)
+                                                                    .setError("Error")
+                                                                    .setPath("test/test3/path.txt")
+                                                                    .build())
+                                               .addFileContents(FileContent.newBuilder()
+                                                                    .setStatus(500)
+                                                                    .setError("Error")
+                                                                    .setPath("test/test4/path.txt")
+                                                                    .build())
+                                               .build())
+                 .build())
+        .when(scmDelegateClient)
+        .processScmRequest(any());
+
+    spyScmFetchFilesHelperNG.downloadFilesUsingScm("manifests", gitStoreDelegateConfig, logCallback, false);
+
+    verify(logCallback).saveExecutionLog(eq("test/test3/path.txt: 400 - Error"));
+    verify(logCallback).saveExecutionLog(eq("test/test4/path.txt: 500 - Error"));
+    File file = new File("manifests/test2/path.txt");
+    assertThat(file.exists()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
   public void testShouldDownloadFilesUsingScmByFolderRootPath() {
     ScmFetchFilesHelperNG spyScmFetchFilesHelperNG = spy(scmFetchFilesHelperNG);
     LogCallback logCallback = mock(NGDelegateLogCallback.class);
@@ -423,6 +490,30 @@ public class ScmFetchFilesHelperNGTest extends CategoryTest {
 
     File file = new File("manifests/test/test2/path.txt");
     assertThat(file.exists()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testShouldDownloadFilesUsingScmByFilepathCommitNotFound() {
+    ScmFetchFilesHelperNG spyScmFetchFilesHelperNG = spy(scmFetchFilesHelperNG);
+    LogCallback logCallback = mock(NGDelegateLogCallback.class);
+    GitStoreDelegateConfig gitStoreDelegateConfig = GitStoreDelegateConfig.builder()
+                                                        .paths(Collections.singletonList("test/test2/path.txt"))
+                                                        .fetchType(FetchType.COMMIT)
+                                                        .branch("commitId")
+                                                        .build();
+    when(scmDelegateClient.processScmRequest(any()))
+        .thenReturn(FindCommitResponse.newBuilder().setCommit(Commit.newBuilder().setSha("commitId").build()).build())
+        .thenReturn(FileContentBatchResponse.builder()
+                        .fileBatchContentResponse(FileBatchContentResponse.newBuilder().build())
+                        .build())
+        .thenReturn(FindCommitResponse.newBuilder().setCommit(Commit.newBuilder().setSha("").build()).build());
+
+    assertThatExceptionOfType(HintException.class)
+        .isThrownBy(()
+                        -> spyScmFetchFilesHelperNG.downloadFilesUsingScm(
+                            "manifests", gitStoreDelegateConfig, logCallback, false));
   }
 
   @Test

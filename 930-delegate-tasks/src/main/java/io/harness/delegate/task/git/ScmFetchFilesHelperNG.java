@@ -13,6 +13,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.git.Constants.DEFAULT_FETCH_IDENTIFIER;
 import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.WARN;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -30,6 +31,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.GitClientException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.git.GitFetchMetadataLocalThread;
@@ -42,6 +44,7 @@ import io.harness.logging.LogCallback;
 import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.service.ScmServiceClient;
 
@@ -71,6 +74,8 @@ public class ScmFetchFilesHelperNG {
   @Inject private ScmServiceClient scmServiceClient;
   private static final List<String> ROOT_DIRECTORY_PATHS = Arrays.asList(".", "/");
   private static final Pattern regexStartSlash = Pattern.compile("^/+");
+  private static final String CHECK_COMMIT_HINT = "Check if specified commit SHA is correct";
+  private static final String COMMIT_NOT_FOUND_EXPLANATION = "Unable to find commit: %s";
 
   public FetchFilesResult fetchFilesFromRepoWithScm(
       GitStoreDelegateConfig gitStoreDelegateConfig, List<String> filePathList) {
@@ -264,8 +269,15 @@ public class ScmFetchFilesHelperNG {
       fileBatchContentResponse = scmDelegateClient.processScmRequest(
           c -> scmServiceClient.listFilesByFilePaths(scmConnector, filePathList, branch, SCMGrpc.newBlockingStub(c)));
     } else {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(
-          c -> scmServiceClient.listFilesByCommitId(scmConnector, filePathList, commitId, SCMGrpc.newBlockingStub(c)));
+      FindCommitResponse findCommitResponse = scmDelegateClient.processScmRequest(
+          c -> scmServiceClient.findCommit(scmConnector, commitId, SCMGrpc.newBlockingStub(c)));
+      if (isNotEmpty(findCommitResponse.getCommit().getSha())) {
+        fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.listFilesByCommitId(scmConnector, filePathList, commitId, SCMGrpc.newBlockingStub(c)));
+      } else {
+        throw NestedExceptionUtils.hintWithExplanationException(
+            CHECK_COMMIT_HINT, String.format(COMMIT_NOT_FOUND_EXPLANATION, commitId));
+      }
     }
     return fileBatchContentResponse;
   }
@@ -290,6 +302,16 @@ public class ScmFetchFilesHelperNG {
                                          .stream()
                                          .filter(fileContent -> fileContent.getStatus() == 200)
                                          .collect(toList());
+
+    fileBatchContentResponse.getFileBatchContentResponse()
+        .getFileContentsList()
+        .stream()
+        .filter(fileContent -> fileContent.getStatus() != 200)
+        .collect(toList())
+        .forEach(fileContent
+            -> executionLogCallback.saveExecutionLog(String.format(
+                "%s: %s - %s", fileContent.getPath(), fileContent.getStatus(), fileContent.getError(), WARN)));
+
     if (fileContents.isEmpty()) {
       throw new YamlException(
           new StringBuilder()
@@ -339,9 +361,17 @@ public class ScmFetchFilesHelperNG {
           -> scmServiceClient.listFilesV2(
               scmConnector, filePaths, gitStoreDelegateConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
     } else {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFoldersFilesByCommitId(
-              scmConnector, filePaths, gitStoreDelegateConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
+      FindCommitResponse findCommitResponse = scmDelegateClient.processScmRequest(c
+          -> scmServiceClient.findCommit(
+              scmConnector, gitStoreDelegateConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
+      if (isNotEmpty(findCommitResponse.getCommit().getSha())) {
+        fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.listFoldersFilesByCommitId(
+                scmConnector, filePaths, gitStoreDelegateConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
+      } else {
+        throw NestedExceptionUtils.hintWithExplanationException(
+            CHECK_COMMIT_HINT, String.format(COMMIT_NOT_FOUND_EXPLANATION, gitStoreDelegateConfig.getCommitId()));
+      }
     }
     return fileBatchContentResponse;
   }
