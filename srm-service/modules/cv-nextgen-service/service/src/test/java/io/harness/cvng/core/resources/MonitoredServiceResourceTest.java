@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.KARAN_SARASWAT;
 import static io.harness.rule.OwnerRule.VARSHA_LALWANI;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTestBase;
@@ -49,6 +50,7 @@ import io.harness.cvng.notification.beans.NotificationRuleDTO;
 import io.harness.cvng.notification.beans.NotificationRuleResponse;
 import io.harness.cvng.notification.beans.NotificationRuleType;
 import io.harness.cvng.notification.services.api.NotificationRuleService;
+import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -489,8 +491,9 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .post(Entity.json(convertToJson(monitoredServiceYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
-        .contains("{\"field\":\"metricDefinitions\",\"message\":\"same identifier is used by multiple entities\"}");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
+        .isEqualTo("metricDefinitions : same identifier is used by multiple entities");
   }
 
   @Test
@@ -506,7 +509,10 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .post(Entity.json(convertToJson(monitoredServiceYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class)).contains("\"field\":\"identifier\",\"message\":\"cannot be empty\"");
+    List<String> list = asList("identifier : cannot be empty", "identifier : may not be empty");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(list).contains(errorDTO.getResponseMessages().get(0).getMessage());
+    assertThat(list).contains(errorDTO.getResponseMessages().get(1).getMessage());
   }
 
   @Test
@@ -522,7 +528,8 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .post(Entity.json(convertToJson(monitoredServiceYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
+    ErrorDTO errorDTO = response.readEntity(ErrorDTO.class);
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
         .contains(
             "{\"field\":\"identifier\",\"message\":\"can be 64 characters long and can only contain alphanumeric, underscore and $ characters, and not start with a number\"}");
   }
@@ -1190,8 +1197,8 @@ public class MonitoredServiceResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
-        .contains("\"field\":\"projectIdentifier\",\"message\":\"must not be null\"");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage()).contains("projectIdentifier : must not be null");
   }
 
   @Test

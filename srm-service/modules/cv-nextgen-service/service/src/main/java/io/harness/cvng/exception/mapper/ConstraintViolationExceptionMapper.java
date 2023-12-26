@@ -7,8 +7,14 @@
 
 package io.harness.cvng.exception.mapper;
 
-import io.harness.cvng.exception.ValidationError;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
+import io.harness.ng.core.Status;
+import io.harness.ng.core.dto.ErrorDTO;
 
 import com.google.common.collect.Iterables;
 import java.lang.annotation.Annotation;
@@ -40,6 +46,7 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 @Slf4j
 @Provider
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
+  public static final String FIELD_ERROR_MESSAGE_SEPERATOR = " : ";
   @Context ResourceInfo resourceInfo;
 
   /**
@@ -98,19 +105,29 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
   public Response toResponse(ConstraintViolationException exception) {
     log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     Set<ConstraintViolation<?>> constraintViolations = exception.getConstraintViolations();
-
-    List<ValidationError> errors = new ArrayList<>();
+    List<ResponseMessage> responseMessages = new ArrayList<>();
     constraintViolations.forEach(constraintViolation -> {
       Optional<String> field = getMemberName(constraintViolation);
 
       // handling situations when @Valid annotation is used
-      if (!field.isPresent()) {
+      if (field.isEmpty()) {
         for (Path.Node node : constraintViolation.getPropertyPath()) {
           field = Optional.of(node.getName());
         }
       }
-      errors.add(new ValidationError(field.get(), constraintViolation.getMessage()));
+      field.ifPresent(fieldStr
+          -> responseMessages.add(errorMessageToResponseMessage(
+              fieldStr + FIELD_ERROR_MESSAGE_SEPERATOR + constraintViolation.getMessage())));
     });
-    return Response.status(Response.Status.BAD_REQUEST).entity(errors).type(MediaType.APPLICATION_JSON).build();
+
+    ErrorDTO errorBody = ErrorDTO.newError(Status.ERROR, ErrorCode.INVALID_REQUEST, exception.getMessage());
+    errorBody.setResponseMessages(responseMessages);
+    errorBody.setMessage(exception.getMessage());
+
+    return Response.status(Response.Status.BAD_REQUEST).entity(errorBody).type(MediaType.APPLICATION_JSON).build();
+  }
+
+  private ResponseMessage errorMessageToResponseMessage(String s) {
+    return ResponseMessage.builder().code(INVALID_ARGUMENT).level(Level.ERROR).message(s).build();
   }
 }

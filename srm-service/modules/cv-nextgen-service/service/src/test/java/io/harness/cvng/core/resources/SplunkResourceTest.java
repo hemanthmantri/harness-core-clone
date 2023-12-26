@@ -21,7 +21,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.SplunkService;
-import io.harness.cvng.exception.ValidationError;
+import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.ResourceTestRule;
 
@@ -91,13 +91,11 @@ public class SplunkResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    List<ValidationError> validationError = response.readEntity(new GenericType<List<ValidationError>>() {});
-    assertThat(validationError).hasSize(2);
-    assertThat(validationError.get(0).getField()).isEqualTo("query");
-    assertThat(validationError.get(1).getField()).isEqualTo("query");
-
-    assertThat(asList(validationError.get(0).getMessage(), validationError.get(1).getMessage()))
-        .containsAll(asList("must not be null", "may not be empty"));
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages()).hasSize(2);
+    List<String> list = asList("query : must not be null", "query : may not be empty");
+    assertThat(list).contains(errorDTO.getResponseMessages().get(0).getMessage());
+    assertThat(list).contains(errorDTO.getResponseMessages().get(1).getMessage());
   }
 
   @Test
@@ -115,9 +113,9 @@ public class SplunkResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    List<ValidationError> validationError = response.readEntity(new GenericType<List<ValidationError>>() {});
-    assertThat(validationError.get(0).getField()).isEqualTo("query");
-    assertThat(validationError.get(0).getMessage()).isEqualTo("may not be empty");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getMessage()).isEqualTo("getSampleData.query: may not be empty");
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage()).isEqualTo("query : may not be empty");
   }
 
   @Test
@@ -152,13 +150,11 @@ public class SplunkResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    List<ValidationError> validationError = response.readEntity(new GenericType<List<ValidationError>>() {});
-    assertThat(validationError).hasSize(2);
-    assertThat(validationError.get(0).getField()).isEqualTo("query");
-    assertThat(validationError.get(1).getField()).isEqualTo("query");
-
-    assertThat(asList(validationError.get(0).getMessage(), validationError.get(1).getMessage()))
-        .containsAll(asList("must not be null", "may not be empty"));
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages()).hasSize(2);
+    List<String> list = asList("query : must not be null", "query : may not be empty");
+    assertThat(list).contains(errorDTO.getResponseMessages().get(0).getMessage());
+    assertThat(list).contains(errorDTO.getResponseMessages().get(1).getMessage());
   }
 
   @Test
@@ -176,8 +172,8 @@ public class SplunkResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    List<ValidationError> validationError = response.readEntity(new GenericType<List<ValidationError>>() {});
-    assertThat(validationError.get(0).getField()).isEqualTo("query");
-    assertThat(validationError.get(0).getMessage()).isEqualTo("may not be empty");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getMessage()).isEqualTo("getLatestHistogram.query: may not be empty");
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage()).isEqualTo("query : may not be empty");
   }
 }

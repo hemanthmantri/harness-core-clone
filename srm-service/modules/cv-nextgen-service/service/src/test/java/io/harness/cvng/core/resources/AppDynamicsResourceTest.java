@@ -10,6 +10,7 @@ package io.harness.cvng.core.resources;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABHIJITH;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -35,7 +36,9 @@ import io.harness.cvng.core.services.api.AppDynamicsServiceimplTest;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.ng.core.CorrelationContext;
+import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.ResourceTestRule;
 import io.harness.serializer.JsonUtils;
@@ -87,9 +90,10 @@ public class AppDynamicsResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    String responseJson = response.readEntity(String.class);
-    assertThat(responseJson).contains("{\"field\":\"appName\",\"message\":\"must not be null\"}");
-    assertThat(responseJson).contains("{\"field\":\"connectorIdentifier\",\"message\":\"must not be null\"}");
+    List<String> list = asList("appName : must not be null", "connectorIdentifier : must not be null");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(list).contains(errorDTO.getResponseMessages().get(0).getMessage());
+    assertThat(list).contains(errorDTO.getResponseMessages().get(1).getMessage());
   }
 
   @SneakyThrows
@@ -102,11 +106,13 @@ public class AppDynamicsResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    String responseJson = response.readEntity(String.class);
-    assertThat(responseJson).contains("{\"field\":\"appName\",\"message\":\"must not be null\"}");
-    assertThat(responseJson).contains("{\"field\":\"connectorIdentifier\",\"message\":\"must not be null\"}");
-    assertThat(responseJson).contains("{\"field\":\"tier\",\"message\":\"must not be null\"}");
-    assertThat(responseJson).contains("{\"field\":\"baseFolder\",\"message\":\"must not be null\"}");
+    List<String> list = asList("appName : must not be null", "connectorIdentifier : must not be null",
+        "metricPath : must not be null", "tier : must not be null", "baseFolder : must not be null");
+    ErrorDTO restResponse = response.readEntity(new GenericType<>() {});
+    assertThat(list).contains(restResponse.getResponseMessages().get(0).getMessage());
+    assertThat(list).contains(restResponse.getResponseMessages().get(1).getMessage());
+    assertThat(list).contains(restResponse.getResponseMessages().get(2).getMessage());
+    assertThat(list).contains(restResponse.getResponseMessages().get(3).getMessage());
   }
 
   @SneakyThrows
@@ -119,11 +125,13 @@ public class AppDynamicsResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
-    String responseJson = response.readEntity(String.class);
-    assertThat(responseJson).contains("{\"field\":\"appName\",\"message\":\"must not be null\"}");
-    assertThat(responseJson).contains("{\"field\":\"connectorIdentifier\",\"message\":\"must not be null\"}");
-    assertThat(responseJson).contains("{\"field\":\"tier\",\"message\":\"must not be null\"}");
-    assertThat(responseJson).contains("{\"field\":\"baseFolder\",\"message\":\"must not be null\"}");
+    List<String> list = asList("appName : must not be null", "connectorIdentifier : must not be null",
+        "metricPath : must not be null", "tier : must not be null", "baseFolder : must not be null");
+    RestResponse<List<String>> restResponse = response.readEntity(new GenericType<>() {});
+    assertThat(list).contains(restResponse.getResponseMessages().get(0).getMessage());
+    assertThat(list).contains(restResponse.getResponseMessages().get(1).getMessage());
+    assertThat(list).contains(restResponse.getResponseMessages().get(2).getMessage());
+    assertThat(list).contains(restResponse.getResponseMessages().get(3).getMessage());
   }
 
   @SneakyThrows

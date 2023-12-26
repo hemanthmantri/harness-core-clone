@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.exception.mapper.BadRequestExceptionMapper;
-import io.harness.eraro.ResponseMessage;
+import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.rule.Owner;
 
 import javax.ws.rs.BadRequestException;
@@ -37,7 +37,7 @@ public class BadRequestExceptionMapperTest extends CategoryTest {
   public void testToResponse() {
     BadRequestException exception = new BadRequestException();
     Response response = badRequestExceptionMapper.toResponse(exception);
-    assertThat(response.getEntity()).isInstanceOf(ResponseMessage.class);
+    assertThat(response.getEntity()).isInstanceOf(ErrorDTO.class);
     assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
   }
 }

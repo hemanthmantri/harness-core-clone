@@ -14,10 +14,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.exception.mapper.ConstraintViolationExceptionMapper;
+import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.rule.Owner;
 
 import java.util.HashSet;
-import java.util.List;
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.core.Response;
 import org.junit.Before;
@@ -39,6 +39,6 @@ public class ConstraintViolationExceptionMapperTest extends CategoryTest {
     ConstraintViolationException constraintViolationException = new ConstraintViolationException(new HashSet<>());
     Response response = constraintViolationExceptionMapper.toResponse(constraintViolationException);
     assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-    assertThat(response.getEntity()).isInstanceOf(List.class);
+    assertThat(response.getEntity()).isInstanceOf(ErrorDTO.class);
   }
 }

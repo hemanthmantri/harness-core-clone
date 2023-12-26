@@ -8,7 +8,8 @@
 package io.harness.cvng.exception.mapper;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.eraro.ResponseMessage;
+import io.harness.ng.core.Status;
+import io.harness.ng.core.dto.ErrorDTO;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ResourceInfo;
@@ -26,9 +27,7 @@ public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestExce
 
   @Override
   public Response toResponse(BadRequestException exception) {
-    return Response.status(Response.Status.BAD_REQUEST)
-        .entity(ResponseMessage.builder().message(exception.toString()).code(ErrorCode.INVALID_REQUEST).build())
-        .type(MediaType.APPLICATION_JSON)
-        .build();
+    ErrorDTO errorBody = ErrorDTO.newError(Status.ERROR, ErrorCode.INVALID_REQUEST, exception.getMessage());
+    return Response.status(Response.Status.BAD_REQUEST).entity(errorBody).type(MediaType.APPLICATION_JSON).build();
   }
 }

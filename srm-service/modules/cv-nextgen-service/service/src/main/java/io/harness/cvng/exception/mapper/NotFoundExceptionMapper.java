@@ -8,8 +8,9 @@
 package io.harness.cvng.exception.mapper;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
+import io.harness.ng.core.Status;
+import io.harness.ng.core.dto.ErrorDTO;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.container.ResourceInfo;
@@ -31,9 +32,7 @@ public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundExceptio
   @Override
   public Response toResponse(NotFoundException exception) {
     log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
-    return Response.status(Response.Status.NOT_FOUND)
-        .entity(ResponseMessage.builder().message(exception.toString()).code(ErrorCode.RESOURCE_NOT_FOUND).build())
-        .type(MediaType.APPLICATION_JSON)
-        .build();
+    ErrorDTO errorBody = ErrorDTO.newError(Status.ERROR, ErrorCode.RESOURCE_NOT_FOUND, exception.toString());
+    return Response.status(Response.Status.NOT_FOUND).entity(errorBody).type(MediaType.APPLICATION_JSON).build();
   }
 }

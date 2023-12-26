@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ARPITJ;
 import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.KAPIL;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTestBase;
@@ -24,6 +25,7 @@ import io.harness.cvng.notification.beans.NotificationRuleRefDTO;
 import io.harness.cvng.notification.beans.NotificationRuleResponse;
 import io.harness.cvng.notification.beans.NotificationRuleType;
 import io.harness.cvng.notification.services.api.NotificationRuleService;
+import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.ResourceTestRule;
@@ -32,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -136,7 +139,10 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class)).contains("\"field\":\"conditions\",\"message\":\"must not be null\"");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getMessage())
+        .isEqualTo("saveNotificationRuleData.notificationRuleDTO.conditions: must not be null");
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage()).isEqualTo("conditions : must not be null");
   }
 
   @Test
@@ -150,8 +156,11 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
-        .contains("\"field\":\"notificationMethod\",\"message\":\"must not be null\"");
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages()).hasSize(2);
+    List<String> list = asList("notificationMethod : must not be null", "conditions : must not be null");
+    assertThat(list).contains(errorDTO.getResponseMessages().get(0).getMessage());
+    assertThat(list).contains(errorDTO.getResponseMessages().get(1).getMessage());
   }
 
   @Test
@@ -285,9 +294,9 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
-        .contains("[{\"field\":\"threshold\",\"message\":\"must be greater than or equal to 0\"}]");
-
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
+        .isEqualTo("threshold : must be greater than or equal to 0");
     notificationYaml = getYAML("notification/notification-rule-slo-invalid-threshold.yaml");
     notificationYaml = notificationYaml.replace("$RemainingPercentageThreshold", "10");
     notificationYaml = notificationYaml.replace("$RemainingMinutesThreshold", "20");
@@ -299,9 +308,9 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                    .request(MediaType.APPLICATION_JSON_TYPE)
                    .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
-        .contains("[{\"field\":\"threshold\",\"message\":\"must be greater than or equal to 0\"}]");
-
+    errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
+        .isEqualTo("threshold : must be greater than or equal to 0");
     notificationYaml = getYAML("notification/notification-rule-slo-invalid-threshold.yaml");
     notificationYaml = notificationYaml.replace("$RemainingPercentageThreshold", "10");
     notificationYaml = notificationYaml.replace("$RemainingMinutesThreshold", "20");
@@ -313,8 +322,9 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                    .request(MediaType.APPLICATION_JSON_TYPE)
                    .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(500);
-    assertThat(response.readEntity(String.class))
-        .contains("\"message\":\"java.lang.IllegalArgumentException: duration cannot be a negative value\"");
+    errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
+        .isEqualTo("java.lang.IllegalArgumentException: duration cannot be a negative value");
   }
 
   @Test
@@ -332,9 +342,9 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
-        .contains("[{\"field\":\"threshold\",\"message\":\"must be greater than or equal to 0\"}]");
-
+    ErrorDTO errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
+        .isEqualTo("threshold : must be greater than or equal to 0");
     notificationYaml = getYAML("notification/notification-rule-monitored-service-invalid-threshold.yaml");
     notificationYaml = notificationYaml.replace("$ChangeImpactThreshold", "10");
     notificationYaml = notificationYaml.replace("$ChangeImpactDuration", "20m");
@@ -346,8 +356,9 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                    .request(MediaType.APPLICATION_JSON_TYPE)
                    .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(400);
-    assertThat(response.readEntity(String.class))
-        .contains("[{\"field\":\"threshold\",\"message\":\"must be less than or equal to 100\"}]");
+    errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
+        .isEqualTo("threshold : must be less than or equal to 100");
 
     notificationYaml = getYAML("notification/notification-rule-monitored-service-invalid-threshold.yaml");
     notificationYaml = notificationYaml.replace("$ChangeImpactThreshold", "10");
@@ -360,8 +371,9 @@ public class NotificationRuleResourceTest extends CvNextGenTestBase {
                    .request(MediaType.APPLICATION_JSON_TYPE)
                    .post(Entity.json(convertToJson(notificationYaml)));
     assertThat(response.getStatus()).isEqualTo(500);
-    assertThat(response.readEntity(String.class))
-        .contains("\"message\":\"java.lang.IllegalArgumentException: duration cannot be a negative value\"");
+    errorDTO = response.readEntity(new GenericType<>() {});
+    assertThat(errorDTO.getResponseMessages().get(0).getMessage())
+        .isEqualTo("java.lang.IllegalArgumentException: duration cannot be a negative value");
   }
 
   private String getYAML(String filePath, String monitoredServiceIdentifier) throws IOException {
