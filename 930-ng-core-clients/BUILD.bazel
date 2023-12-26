@@ -14,7 +14,6 @@ java_library(
     deps = [
         "//:lombok",
         "//120-ng-manager/contracts/openapi/v1:ng-manager-server-spec-module",
-        "//930-oidc-core:module",
         "//940-secret-manager-client:module",
         "//947-scim-core:module",
         "//950-delegate-tasks-beans:module",
@@ -31,6 +30,7 @@ java_library(
         "//980-commons:module",
         "//999-annotations:module",
         "//clients/notification:module",
+        "//oidc-core:module",
     ],
 )
 

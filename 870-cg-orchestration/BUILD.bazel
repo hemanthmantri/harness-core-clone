@@ -18,7 +18,6 @@ java_library(
         "//920-delegate-agent-beans:module",
         "//920-delegate-service-beans:module",
         "//930-delegate-tasks:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/entities:module",
         "//940-cg-audit-service:module",
         "//950-delegate-tasks-beans:module",
         "//950-events-framework:module",
@@ -36,6 +35,7 @@ java_library(
         "//970-watcher-beans:module",
         "//980-commons:module",
         "//999-annotations:module",
+        "//oidc-core/src/main/java/io/harness/oidc/entities:module",
     ],
 )
 

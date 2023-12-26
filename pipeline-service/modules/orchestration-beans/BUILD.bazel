@@ -17,12 +17,12 @@ java_library(
     ],
     deps = [
         "//:lombok",
-        "//930-oidc-core/src/main/java/io/harness/oidc/entities:module",
         "//959-timeout-engine:module",
         "//960-ng-license-beans:module",
         "//960-persistence:module",
         "//980-commons:module",
         "//clients/pipeline-service/pms-sdk:module",
+        "//oidc-core/src/main/java/io/harness/oidc/entities:module",
         "//pipeline-service/modules/orchestration-beans/contracts:module",
         "//pipeline-service/modules/pms-contracts:module",
         "@maven//:com_esotericsoftware_kryo",

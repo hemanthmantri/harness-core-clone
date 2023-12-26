@@ -11,15 +11,12 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//:lombok",
-        "//930-oidc-core/src/main/java/io/harness/oidc/exception:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/constants:module",
-        "//980-commons/src/main/java/io/harness/network:module",
+        "//oidc-core/src/main/java/io/harness/oidc/accesstoken:module",
+        "//oidc-core/src/main/java/io/harness/oidc/exception:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/constants:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/dto:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/utility:module",
         "@maven//:com_google_inject_guice",
-        "@maven//:com_intellij_annotations",
-        "@maven//:com_squareup_okhttp3_okhttp",
-        "@maven//:com_squareup_retrofit2_converter_gson",
-        "@maven//:com_squareup_retrofit2_retrofit",
     ],
 )
 

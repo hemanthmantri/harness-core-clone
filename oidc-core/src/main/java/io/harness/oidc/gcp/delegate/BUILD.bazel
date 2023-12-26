@@ -12,8 +12,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//930-oidc-core/src/main/java/io/harness/oidc/config:module",
-        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "//oidc-core/src/main/java/io/harness/oidc/accesstoken:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/accesstoken:module",
     ],
 )
 

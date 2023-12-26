@@ -11,11 +11,11 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//930-oidc-core/src/main/java/io/harness/oidc/accesstoken:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/delegate:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/dto:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/utility:module",
         "//954-connector-beans:module",
+        "//oidc-core/src/main/java/io/harness/oidc/accesstoken:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/delegate:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/dto:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/utility:module",
         "@maven//:com_google_inject_guice",
     ],
 )

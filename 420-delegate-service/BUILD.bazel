@@ -19,7 +19,7 @@ java_library(
         "//:mapstruct",
         "//867-polling-contracts:module",
         "//870-cg-orchestration:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/entities:module",
+        "//oidc-core/src/main/java/io/harness/oidc/entities:module",
         "//940-feature-flag:module",
         "//952-remote-observers:module",
         "//955-outbox-sdk:module",

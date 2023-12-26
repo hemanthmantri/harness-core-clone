@@ -11,12 +11,9 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//930-oidc-core/src/main/java/io/harness/oidc/accesstoken:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/exception:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/constants:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/dto:module",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/utility:module",
-        "@maven//:com_google_inject_guice",
+        "//:lombok",
+        "//oidc-core/src/main/java/io/harness/oidc/config:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     ],
 )
 

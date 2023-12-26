@@ -13,7 +13,6 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//930-oidc-core/src/main/java/io/harness/oidc/gcp/connector:module",
         "//940-secret-manager-client:module",
         "//950-delegate-tasks-beans:module",
         "//952-scm-java-client:module",
@@ -58,6 +57,7 @@ java_library(
         "//980-commons/src/main/java/io/harness/network:module",
         "//980-commons/src/main/java/io/harness/utils:module",
         "//999-annotations/src/main/java/io/harness/annotations/dev:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/connector:module",
         "@maven//:com_amazonaws_aws_java_sdk_core",
         "@maven//:com_github_mwiede_jsch",
         "@maven//:com_google_guava_guava",

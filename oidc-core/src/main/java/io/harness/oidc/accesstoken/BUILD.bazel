@@ -12,8 +12,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//930-oidc-core/src/main/java/io/harness/oidc/exception:module",
         "//999-annotations/src/main/java/io/harness/annotations/dev:module",
+        "//oidc-core/src/main/java/io/harness/oidc/exception:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_retrofit2_converter_gson",
