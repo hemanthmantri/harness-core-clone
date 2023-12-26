@@ -68,13 +68,12 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
   private static final String ACCOUNT_ID = "accountId";
   private static final String DELEGATE_ID = "delegateId";
   private static final String INFRA_ID = "infraId";
-  private static final String INIT_INFRA_RESPONSE_URL =
-      String.format("/executions/response/%s/infra-setup?accountId=%s&delegateId=%s", TASK_ID, ACCOUNT_ID, DELEGATE_ID);
+  private static final String INIT_INFRA_RESPONSE_URL = String.format(
+      "/executions/%s/infra-setup/%s?accountId=%s&delegateId=%s", TASK_ID, TASK_ID, ACCOUNT_ID, DELEGATE_ID);
   private static final String EXECUTION_RESPONSE_URL =
       String.format("/executions/%s/status?accountId=%s&delegateId=%s", TASK_ID, ACCOUNT_ID, DELEGATE_ID);
-  private static final String CLEANUP_INFRA_RESPONSE_URL =
-      String.format("/executions/response/%s/infra-cleanup/%s?accountId=%s&delegateId=%s", TASK_ID, INFRA_ID,
-          ACCOUNT_ID, DELEGATE_ID);
+  private static final String CLEANUP_INFRA_RESPONSE_URL = String.format(
+      "/executions/%s/infra-cleanup/%s?accountId=%s&delegateId=%s", TASK_ID, INFRA_ID, ACCOUNT_ID, DELEGATE_ID);
   private static final String DELEGATE_NAME = "delegate_name";
   private static final String RUNNER_TYPE = "K8S";
   @Mock private HttpServletRequest httpServletRequest;

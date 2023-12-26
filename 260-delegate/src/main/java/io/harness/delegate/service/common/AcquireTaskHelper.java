@@ -45,7 +45,7 @@ public class AcquireTaskHelper {
     try {
       log.debug("Try to acquire DelegateTask - accountId: {}", accountId);
       Call<AcquireTasksResponse> acquireCall =
-          managerClient.acquireTaskPayload(taskId, delegateId, accountId, delegateInstanceId);
+          managerClient.acquireTaskPayload(taskId, accountId, delegateId, delegateInstanceId);
 
       return ManagerCallHelper.executeAcquireCallWithRetry(
           acquireCall, String.format("Failed acquiring delegate task %s by delegate %s", taskId, delegateId), handler);

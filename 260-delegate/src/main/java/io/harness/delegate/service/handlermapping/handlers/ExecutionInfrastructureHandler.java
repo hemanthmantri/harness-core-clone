@@ -7,7 +7,6 @@
 
 package io.harness.delegate.service.handlermapping.handlers;
 
-import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.core.beans.ExecutionInfraInfo;
 import io.harness.delegate.core.beans.ResponseCode;
 import io.harness.delegate.core.beans.SetupInfraResponse;
@@ -50,8 +49,8 @@ public class ExecutionInfrastructureHandler implements Handler {
       log.error("init infra by runner {} failed with exception ", runner, e);
       response = SetupInfraResponse.newBuilder().setResponseCode(ResponseCode.RESPONSE_FAILED).build();
     }
-    var call = managerClient.sendSetupInfraResponse(
-        taskPayload.getId(), context.get(Context.DELEGATE_ID), context.get(Context.ACCOUNT_ID), response);
+    var call = managerClient.sendSetupInfraResponse(taskPayload.getId(), taskPayload.getId(),
+        context.get(Context.ACCOUNT_ID), context.get(Context.DELEGATE_ID), response);
     String failureMessage = String.format("Failed to send init infra response by runner %s", runnerType);
     ManagerCallHelper.executeCallWithBackOffRetry(call, 5, failureMessage);
   }
