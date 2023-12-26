@@ -82,7 +82,7 @@ public class JiraStepExecutionHandlerTest extends CategoryTest {
     final List<String> sqls = queryCaptor.getAllValues();
     assertThat(sqls.get(0))
         .isEqualTo(
-            "INSERT INTO jira_step_execution (ticket_status,issue_type,jira_url,id,type) VALUES('To Do','Task','https://harness.atlassian.net/browse/TJI-150479','TnTzF1TmTZ-J9TTuEaFX4w','JiraApproval')");
+            "INSERT INTO jira_step_execution (ticket_status,issue_type,jira_url,id,type) VALUES('To Do','Task','https://harness.atlassian.net/browse/TJI-150479','TnTzF1TmTZ-J9TTuEaFX4w','JiraApproval') ON CONFLICT (id) Do UPDATE  SET ticket_status='To Do',issue_type='Task',jira_url='https://harness.atlassian.net/browse/TJI-150479',id='TnTzF1TmTZ-J9TTuEaFX4w',type='JiraApproval'");
   }
 
   @Test
@@ -104,7 +104,7 @@ public class JiraStepExecutionHandlerTest extends CategoryTest {
     final List<String> sqls = queryCaptor.getAllValues();
     assertThat(sqls.get(0))
         .isEqualTo(
-            "INSERT INTO jira_step_execution (ticket_status,issue_type,jira_url,id,type) VALUES('To Do','Task','https://harness.atlassian.net/browse/TJI-150479','pHuYeYzxTeaon6b67Jh1nw','JiraUpdate')");
+            "INSERT INTO jira_step_execution (ticket_status,issue_type,jira_url,id,type) VALUES('To Do','Task','https://harness.atlassian.net/browse/TJI-150479','pHuYeYzxTeaon6b67Jh1nw','JiraUpdate') ON CONFLICT (id) Do UPDATE  SET ticket_status='To Do',issue_type='Task',jira_url='https://harness.atlassian.net/browse/TJI-150479',id='pHuYeYzxTeaon6b67Jh1nw',type='JiraUpdate'");
   }
 
   @Test
@@ -126,7 +126,7 @@ public class JiraStepExecutionHandlerTest extends CategoryTest {
     final List<String> sqls = queryCaptor.getAllValues();
     assertThat(sqls.get(0))
         .isEqualTo(
-            "INSERT INTO jira_step_execution (ticket_status,issue_type,jira_url,id,type) VALUES('To Do','Task','https://harness.atlassian.net/browse/TJI-150479','UbKdWRBJRaG-t3KcSbq5rA','JiraCreate')");
+            "INSERT INTO jira_step_execution (ticket_status,issue_type,jira_url,id,type) VALUES('To Do','Task','https://harness.atlassian.net/browse/TJI-150479','UbKdWRBJRaG-t3KcSbq5rA','JiraCreate') ON CONFLICT (id) Do UPDATE  SET ticket_status='To Do',issue_type='Task',jira_url='https://harness.atlassian.net/browse/TJI-150479',id='UbKdWRBJRaG-t3KcSbq5rA',type='JiraCreate'");
   }
 
   @Test

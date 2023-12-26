@@ -63,15 +63,6 @@ public class PlanExecutionSummaryCdChangeServiceInfraChangeDataHandlerNew implem
       columnValueMapping = getColumnValueMapping(changeEvent);
       switch (changeEvent.getChangeType()) {
         case INSERT:
-          if (columnValueMapping != null && columnValueMapping.size() > 0) {
-            columnValueMapping.forEach(column -> {
-              if (column.containsKey(PlanExecutionSummaryCDConstants.SERVICE_START_TS)
-                  && !column.get(PlanExecutionSummaryCDConstants.SERVICE_START_TS).equals("")) {
-                dbOperation(insertSQL(tableName, column));
-              }
-            });
-          }
-          break;
         case UPDATE:
           if (columnValueMapping != null && columnValueMapping.size() > 0) {
             columnValueMapping.forEach(column -> {
