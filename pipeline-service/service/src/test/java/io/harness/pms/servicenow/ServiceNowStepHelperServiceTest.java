@@ -8,6 +8,7 @@
 package io.harness.pms.servicenow;
 
 import static io.harness.rule.OwnerRule.ABHISHEK;
+import static io.harness.rule.OwnerRule.APOORV_ARORA;
 import static io.harness.rule.OwnerRule.NAMANG;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.steps.StepUtils.PIE_SIMPLIFY_LOG_BASE_KEY;
@@ -54,8 +55,11 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoSerializer;
+import io.harness.servicenow.ServiceNowFieldValueNG;
 import io.harness.servicenow.ServiceNowImportSetResponseNG;
 import io.harness.servicenow.ServiceNowImportSetTransformMapResult;
+import io.harness.servicenow.ServiceNowTicketNG;
+import io.harness.steps.servicenow.ServiceNowTicketOutcome;
 import io.harness.steps.servicenow.importset.ServiceNowImportSetOutcome;
 import io.harness.steps.servicenow.importset.ServiceNowImportSetSpecParameters;
 
@@ -63,7 +67,9 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.groovy.util.Maps;
 import org.junit.Before;
@@ -97,6 +103,12 @@ public class ServiceNowStepHelperServiceTest extends CategoryTest {
   private static final String CONNECTOR = "connector";
   private static final String TASK_NAME = "task";
   private static final String TIME_OUT = "10m";
+  private static final String TICKET_URL =
+      "https://ven03171.service-now.com/nav_to.do?uri=/change_task.do?sysparm_query=number=CTASK0011398";
+  private static final String TICKET_NUMBER = "CTASK0011398";
+  private static final String TICKET_URL_1 =
+      "https://ven03171.service-now.com/nav_to.do?uri=/change_task.do?sysparm_query=number=CTASK0011399";
+  private static final String TICKET_NUMBER_1 = "CTASK0011399";
 
   private static final ParameterField DELEGATE_SELECTORS = ParameterField.createValueField(List.of(TASK_SELECTOR_YAML));
 
@@ -132,6 +144,7 @@ public class ServiceNowStepHelperServiceTest extends CategoryTest {
   private ServiceNowImportSetTransformMapResult errorResultWhenNoTransformMap;
   private ServiceNowImportSetTransformMapResult invalidResultWithoutStatus;
   private ServiceNowImportSetTransformMapResult invalidResultWithoutTransformMap;
+  private ServiceNowFieldValueNG result;
 
   @Mock private ConnectorResourceClient connectorResourceClient;
   @Mock private SecretManagerClientService secretManagerClientService;
@@ -252,6 +265,72 @@ public class ServiceNowStepHelperServiceTest extends CategoryTest {
         .isInstanceOf(ServiceNowException.class);
   }
 
+  @Test
+  @Owner(developers = APOORV_ARORA)
+  @Category(UnitTests.class)
+  public void testPrepareStepResponse_TaskResponseNotNull() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    result = ServiceNowFieldValueNG.builder().value("value").displayValue("displayValue").build();
+
+    Map<String, ServiceNowFieldValueNG> fieldsMap = new HashMap<>();
+    fieldsMap.put("field1", result);
+
+    ServiceNowTaskNGResponse serviceNowTaskNGResponse =
+        ServiceNowTaskNGResponse.builder()
+            .ticket(ServiceNowTicketNG.builder().url(TICKET_URL).number(TICKET_NUMBER).fields(fieldsMap).build())
+            .build();
+
+    ServiceNowTicketOutcome stepOutcome =
+        (ServiceNowTicketOutcome) serviceNowStepHelperService.prepareStepResponse(() -> serviceNowTaskNGResponse)
+            .getStepOutcomes()
+            .iterator()
+            .next()
+            .getOutcome();
+    assertThat(stepOutcome.getTicketNumber()).isEqualTo(TICKET_NUMBER);
+    assertThat(stepOutcome.getTicketUrl()).isEqualTo(TICKET_URL);
+    assertThat(stepOutcome.getMultipleOutcomeList()).isEqualTo(null);
+    assertThat(stepOutcome.getFields().size()).isEqualTo(1);
+    assertThat(stepOutcome.getFields().get("field1")).isEqualTo("displayValue");
+  }
+  @Test
+  @Owner(developers = APOORV_ARORA)
+  @Category(UnitTests.class)
+  public void testPrepareStepResponse_TaskResponseNotEmpty() throws Exception {
+    ServiceNowTaskNGResponse serviceNowTaskNGResponseMultiTickets =
+        ServiceNowTaskNGResponse.builder()
+            .tickets(Arrays.asList(
+                ServiceNowTicketNG.builder().url(TICKET_URL).number(TICKET_NUMBER).fields(new HashMap<>()).build(),
+                ServiceNowTicketNG.builder().url(TICKET_URL_1).number(TICKET_NUMBER_1).fields(new HashMap<>()).build()))
+            .build();
+
+    ServiceNowTicketOutcome stepOutcomeMultiTickets =
+        (ServiceNowTicketOutcome) serviceNowStepHelperService
+            .prepareStepResponse(() -> serviceNowTaskNGResponseMultiTickets)
+            .getStepOutcomes()
+            .iterator()
+            .next()
+            .getOutcome();
+
+    assertThat(stepOutcomeMultiTickets.getMultipleOutcomeList().get(0).getTicketUrl()).isEqualTo(TICKET_URL);
+    assertThat(stepOutcomeMultiTickets.getMultipleOutcomeList().get(0).getTicketNumber()).isEqualTo(TICKET_NUMBER);
+    assertThat(stepOutcomeMultiTickets.getMultipleOutcomeList().get(1).getTicketUrl()).isEqualTo(TICKET_URL_1);
+    assertThat(stepOutcomeMultiTickets.getMultipleOutcomeList().get(1).getTicketNumber()).isEqualTo(TICKET_NUMBER_1);
+  }
+  @Test
+  @Owner(developers = APOORV_ARORA)
+  @Category(UnitTests.class)
+  public void testPrepareStepResponse_NoChangeTaskToUpdate() throws Exception {
+    ServiceNowTaskNGResponse serviceNowTaskNGResponseTickets =
+        ServiceNowTaskNGResponse.builder().tickets(Arrays.asList()).build();
+
+    ServiceNowTicketOutcome stepOutcomeTickets =
+        (ServiceNowTicketOutcome) serviceNowStepHelperService.prepareStepResponse(() -> serviceNowTaskNGResponseTickets)
+            .getStepOutcomes()
+            .iterator()
+            .next()
+            .getOutcome();
+    assertThat(stepOutcomeTickets.getMessage()).isEqualTo("No change tasks to update");
+  }
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
