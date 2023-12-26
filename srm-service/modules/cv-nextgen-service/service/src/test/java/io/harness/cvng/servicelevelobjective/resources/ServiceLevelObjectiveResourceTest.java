@@ -30,6 +30,8 @@ import io.harness.cvng.notification.beans.NotificationRuleResponse;
 import io.harness.cvng.notification.beans.NotificationRuleType;
 import io.harness.cvng.notification.services.api.NotificationRuleService;
 import io.harness.cvng.servicelevelobjective.beans.CompositeSLOFormulaType;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetBurnDownDTO;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetBurnDownResponse;
 import io.harness.cvng.servicelevelobjective.beans.SLOHealthListView;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDetailsDTO;
@@ -51,6 +53,7 @@ import io.harness.rule.ResourceTestRule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.io.IOException;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,6 +79,7 @@ public class ServiceLevelObjectiveResourceTest extends CvNextGenTestBase {
   @Inject CVNGLogService cvngLogService;
   @Inject NotificationRuleService notificationRuleService;
   @Inject HPersistence hPersistence;
+  @Inject Clock clock;
   private MonitoredServiceDTO monitoredServiceDTO;
   private BuilderFactory builderFactory;
   private static final ServiceLevelObjectiveResource serviceLevelObjectiveResource =
@@ -96,11 +100,18 @@ public class ServiceLevelObjectiveResourceTest extends CvNextGenTestBase {
   @ClassRule
   public static final ResourceTestRule RESOURCES_DASHBOARD =
       ResourceTestRule.builder().addResource(sloDashboardResource).build();
+
+  private static final ErrorBudgetBurnDownResource errorBudgetBurnDownResource = new ErrorBudgetBurnDownResource();
+
+  @ClassRule
+  public static final ResourceTestRule ERROR_BUDGET_RESOURCE =
+      ResourceTestRule.builder().addResource(errorBudgetBurnDownResource).build();
   @Before
   public void setup() {
     injector.injectMembers(serviceLevelObjectiveResource);
     injector.injectMembers(serviceLevelObjectiveV2Resource);
     injector.injectMembers(sloDashboardResource);
+    injector.injectMembers(errorBudgetBurnDownResource);
     builderFactory = BuilderFactory.getDefault();
     builderFactory.getContext().setProjectIdentifier("project");
     builderFactory.getContext().setOrgIdentifier("orgIdentifier");
@@ -569,5 +580,174 @@ public class ServiceLevelObjectiveResourceTest extends CvNextGenTestBase {
                               .build()))
                   .build())
         .build();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testAddErrorBudgetBurnDown() {
+    ServiceLevelObjectiveV2DTO sloDTO = builderFactory.getSimpleServiceLevelObjectiveV2DTOBuilder().build();
+    ((SimpleServiceLevelObjectiveSpec) sloDTO.getSpec())
+        .setServiceLevelIndicators(
+            Collections.singletonList(builderFactory.getMetricLessServiceLevelIndicatorDTOBuilder().build()));
+    serviceLevelObjectiveV2Service.create(builderFactory.getProjectParams(), sloDTO);
+    long startTime = clock.millis();
+    long endTime = clock.millis() + 2 * 60 * 60 * 1000L;
+    ErrorBudgetBurnDownDTO errorBudgetBurnDownDTO =
+        ErrorBudgetBurnDownDTO.builder()
+            .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
+            .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
+            .startTime(startTime)
+            .sloIdentifier(sloDTO.getIdentifier())
+            .endTime(endTime)
+            .message("test")
+            .build();
+
+    String path = "http://localhost:9998"
+        + "/account/" + builderFactory.getContext().getAccountId() + "/org/"
+        + builderFactory.getContext().getOrgIdentifier() + "/project/"
+        + builderFactory.getContext().getProjectIdentifier() + "/error-budget-burn-down";
+    Response response = ERROR_BUDGET_RESOURCE.client()
+                            .target(path)
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(errorBudgetBurnDownDTO));
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    RestResponse<ErrorBudgetBurnDownResponse> restResponse =
+        response.readEntity(new GenericType<RestResponse<ErrorBudgetBurnDownResponse>>() {});
+    assertThat(restResponse.getResource().getErrorBudgetBurnDownDTO()).isEqualTo(errorBudgetBurnDownDTO);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testGetErrorBudgetBurnDown() {
+    ServiceLevelObjectiveV2DTO sloDTO = builderFactory.getSimpleServiceLevelObjectiveV2DTOBuilder().build();
+    ((SimpleServiceLevelObjectiveSpec) sloDTO.getSpec())
+        .setServiceLevelIndicators(
+            Collections.singletonList(builderFactory.getMetricLessServiceLevelIndicatorDTOBuilder().build()));
+    serviceLevelObjectiveV2Service.create(builderFactory.getProjectParams(), sloDTO);
+    long startTime = clock.millis();
+    long endTime = clock.millis() + 2 * 60 * 60 * 1000L;
+    ErrorBudgetBurnDownDTO errorBudgetBurnDownDTO =
+        ErrorBudgetBurnDownDTO.builder()
+            .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
+            .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
+            .startTime(startTime)
+            .sloIdentifier(sloDTO.getIdentifier())
+            .endTime(endTime)
+            .message("test")
+            .build();
+
+    String savePath = "http://localhost:9998"
+        + "/account/" + builderFactory.getContext().getAccountId() + "/org/"
+        + builderFactory.getContext().getOrgIdentifier() + "/project/"
+        + builderFactory.getContext().getProjectIdentifier() + "/error-budget-burn-down";
+    Response response = ERROR_BUDGET_RESOURCE.client()
+                            .target(savePath)
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(errorBudgetBurnDownDTO));
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    RestResponse<ErrorBudgetBurnDownResponse> restResponse =
+        response.readEntity(new GenericType<RestResponse<ErrorBudgetBurnDownResponse>>() {});
+    assertThat(restResponse.getResource().getErrorBudgetBurnDownDTO()).isEqualTo(errorBudgetBurnDownDTO);
+
+    String getPath = "http://localhost:9998"
+        + "/account/" + builderFactory.getContext().getAccountId() + "/org/"
+        + builderFactory.getContext().getOrgIdentifier() + "/project/"
+        + builderFactory.getContext().getProjectIdentifier() + "/error-budget-burn-down/identifier/"
+        + errorBudgetBurnDownDTO.getSloIdentifier();
+    response = ERROR_BUDGET_RESOURCE.client().target(getPath).request(MediaType.APPLICATION_JSON_TYPE).get();
+
+    assertThat(response.getStatus()).isEqualTo(200);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testDeleteErrorBudgetBurnDown() {
+    ServiceLevelObjectiveV2DTO sloDTO = builderFactory.getSimpleServiceLevelObjectiveV2DTOBuilder().build();
+    ((SimpleServiceLevelObjectiveSpec) sloDTO.getSpec())
+        .setServiceLevelIndicators(
+            Collections.singletonList(builderFactory.getMetricLessServiceLevelIndicatorDTOBuilder().build()));
+    serviceLevelObjectiveV2Service.create(builderFactory.getProjectParams(), sloDTO);
+    long startTime = clock.millis();
+    long endTime = clock.millis() + 2 * 60 * 60 * 1000L;
+    ErrorBudgetBurnDownDTO errorBudgetBurnDownDTO =
+        ErrorBudgetBurnDownDTO.builder()
+            .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
+            .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
+            .startTime(startTime)
+            .sloIdentifier(sloDTO.getIdentifier())
+            .endTime(endTime)
+            .message("test")
+            .build();
+
+    String savePath = "http://localhost:9998"
+        + "/account/" + builderFactory.getContext().getAccountId() + "/org/"
+        + builderFactory.getContext().getOrgIdentifier() + "/project/"
+        + builderFactory.getContext().getProjectIdentifier() + "/error-budget-burn-down";
+    Response response = ERROR_BUDGET_RESOURCE.client()
+                            .target(savePath)
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(errorBudgetBurnDownDTO));
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    RestResponse<ErrorBudgetBurnDownResponse> restResponse =
+        response.readEntity(new GenericType<RestResponse<ErrorBudgetBurnDownResponse>>() {});
+    assertThat(restResponse.getResource().getErrorBudgetBurnDownDTO()).isEqualTo(errorBudgetBurnDownDTO);
+
+    String deletePath = "http://localhost:9998"
+        + "/account/" + builderFactory.getContext().getAccountId() + "/org/"
+        + builderFactory.getContext().getOrgIdentifier() + "/project/"
+        + builderFactory.getContext().getProjectIdentifier() + "/error-budget-burn-down/"
+        + errorBudgetBurnDownDTO.getUuid();
+    response = ERROR_BUDGET_RESOURCE.client().target(deletePath).request(MediaType.APPLICATION_JSON_TYPE).delete();
+
+    assertThat(response.getStatus()).isEqualTo(200);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testAddOverlappingErrorBudgetBurnDown() {
+    ServiceLevelObjectiveV2DTO sloDTO = builderFactory.getSimpleServiceLevelObjectiveV2DTOBuilder().build();
+    ((SimpleServiceLevelObjectiveSpec) sloDTO.getSpec())
+        .setServiceLevelIndicators(
+            Collections.singletonList(builderFactory.getMetricLessServiceLevelIndicatorDTOBuilder().build()));
+    serviceLevelObjectiveV2Service.create(builderFactory.getProjectParams(), sloDTO);
+    long startTime = clock.millis();
+    long endTime = clock.millis() + 2 * 60 * 60 * 1000L;
+    ErrorBudgetBurnDownDTO errorBudgetBurnDownDTO =
+        ErrorBudgetBurnDownDTO.builder()
+            .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
+            .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
+            .startTime(startTime)
+            .sloIdentifier(sloDTO.getIdentifier())
+            .endTime(endTime)
+            .message("test")
+            .build();
+
+    String savePath = "http://localhost:9998"
+        + "/account/" + builderFactory.getContext().getAccountId() + "/org/"
+        + builderFactory.getContext().getOrgIdentifier() + "/project/"
+        + builderFactory.getContext().getProjectIdentifier() + "/error-budget-burn-down";
+    Response response = ERROR_BUDGET_RESOURCE.client()
+                            .target(savePath)
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(errorBudgetBurnDownDTO));
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    RestResponse<ErrorBudgetBurnDownResponse> restResponse =
+        response.readEntity(new GenericType<RestResponse<ErrorBudgetBurnDownResponse>>() {});
+    assertThat(restResponse.getResource().getErrorBudgetBurnDownDTO()).isEqualTo(errorBudgetBurnDownDTO);
+
+    response = ERROR_BUDGET_RESOURCE.client()
+                   .target(savePath)
+                   .request(MediaType.APPLICATION_JSON_TYPE)
+                   .post(Entity.json(errorBudgetBurnDownDTO));
+
+    assertThat(response.getStatus()).isEqualTo(500);
   }
 }

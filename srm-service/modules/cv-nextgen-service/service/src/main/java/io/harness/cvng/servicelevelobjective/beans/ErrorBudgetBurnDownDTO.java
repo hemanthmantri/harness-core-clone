@@ -11,7 +11,9 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.gitsync.beans.YamlDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -42,4 +44,5 @@ public class ErrorBudgetBurnDownDTO implements YamlDTO {
   String message;
   @ApiModelProperty(required = true) @NotNull long startTime;
   @ApiModelProperty(required = true) @NotNull long endTime;
+  @Hidden @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) String uuid;
 }

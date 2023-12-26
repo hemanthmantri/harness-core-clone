@@ -22,4 +22,6 @@ public interface ErrorBudgetBurnDownService {
 
   List<ErrorBudgetBurnDown> getByStartTimeAndEndTime(
       ProjectParams projectParams, String sloIdentifier, Long startTime, Long endTime);
+
+  Boolean deleteErrorBudgetBurnDown(String uuid);
 }
