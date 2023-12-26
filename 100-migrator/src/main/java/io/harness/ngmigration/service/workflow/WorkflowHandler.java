@@ -645,16 +645,24 @@ public abstract class WorkflowHandler {
   // We can infer the type based on the service, infra & sometimes based on the steps used.
   ServiceDefinitionType inferServiceDefinitionType(WorkflowMigrationContext context) {
     List<GraphNode> steps = MigratorUtility.getSteps(context.getWorkflow());
-    return inferServiceDefinitionType(context, steps);
+    return inferServiceDefinitionType(context, steps, null);
   }
 
   ServiceDefinitionType inferServiceDefinitionType(WorkflowMigrationContext context, WorkflowPhase phase) {
     List<GraphNode> steps = MigratorUtility.getStepsFromPhases(Collections.singletonList(phase));
-    return inferServiceDefinitionType(context, steps);
+    return inferServiceDefinitionType(context, steps, phase);
   }
 
-  ServiceDefinitionType inferServiceDefinitionType(WorkflowMigrationContext context, List<GraphNode> steps) {
+  ServiceDefinitionType inferServiceDefinitionType(
+      WorkflowMigrationContext context, List<GraphNode> steps, WorkflowPhase phase) {
     OrchestrationWorkflowType workflowType = context.getWorkflow().getOrchestration().getOrchestrationWorkflowType();
+    if (OrchestrationWorkflowType.MULTI_SERVICE.equals(workflowType) && phase != null) {
+      DeploymentType deploymentType = phase.getDeploymentType();
+      if (deploymentType != null) {
+        return ServiceV2Factory.mapDeploymentTypeToServiceDefType(deploymentType);
+      }
+    }
+
     DeploymentType deploymentType = getDeploymentTypeFromPhase(context.getWorkflow());
     if (deploymentType != null) {
       ServiceDefinitionType serviceDefinitionType = ServiceV2Factory.mapDeploymentTypeToServiceDefType(deploymentType);
