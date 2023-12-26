@@ -15,7 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = true, components = {HarnessModuleComponent.CDS_MIGRATOR})
 public class ShellScriptStepFunctor extends StepExpressionFunctor {
-  private StepOutput stepOutput;
+  private final StepOutput stepOutput;
 
   public ShellScriptStepFunctor(StepOutput stepOutput) {
     super(stepOutput);
@@ -24,6 +24,13 @@ public class ShellScriptStepFunctor extends StepExpressionFunctor {
 
   @Override
   public synchronized Object get(Object key) {
+    if (stepOutput.getExportScope() != null && stepOutput.isUseAlias()) {
+      return String.format("<+exportedVariables.getValue(\"%s.%s.%s\")>",
+          Character.toLowerCase(stepOutput.getExportScope().toString().charAt(0))
+              + stepOutput.getExportScope().toString().substring(1),
+          stepOutput.getExpression().replace("context.", ""), key);
+    }
+
     if (StringUtils.equals(stepOutput.getStageIdentifier(), getCurrentStageIdentifier())) {
       return String.format("<+execution.steps.%s.steps.%s.output.outputVariables.%s>",
           stepOutput.getStepGroupIdentifier(), stepOutput.getStepIdentifier(), key);

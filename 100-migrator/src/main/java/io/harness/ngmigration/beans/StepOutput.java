@@ -9,6 +9,7 @@ package io.harness.ngmigration.beans;
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.ProductModule;
+import io.harness.steps.shellscript.ExportScope;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,4 +26,6 @@ public class StepOutput {
   private String stageIdentifier;
   private String stepGroupIdentifier;
   private String expression;
+  private ExportScope exportScope;
+  private boolean useAlias;
 }

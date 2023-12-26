@@ -35,6 +35,7 @@ import io.harness.ngmigration.utils.SecretRefUtils;
 import io.harness.plancreator.steps.AbstractStepNode;
 import io.harness.plancreator.steps.internal.PmsAbstractStepNode;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.shellscript.ExportScope;
 import io.harness.steps.template.TemplateStepNode;
 import io.harness.template.yaml.TemplateLinkConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
@@ -89,8 +90,31 @@ public abstract class StepMapper {
 
   public String getSweepingOutputName(GraphNode graphNode) {
     State state = getState(graphNode);
+    return getSweepingOutputName(state);
+  }
+
+  public String getSweepingOutputName(State state) {
     if (state instanceof SweepingOutputStateMixin) {
       return ((SweepingOutputStateMixin) state).getSweepingOutputName();
+    }
+    return null;
+  }
+
+  public ExportScope getSweepingOutputScope(GraphNode graphNode) {
+    State state = getState(graphNode);
+    return getSweepingOutputScope(state);
+  }
+
+  public ExportScope getSweepingOutputScope(State state) {
+    if (state instanceof SweepingOutputStateMixin) {
+      var cgScope = ((SweepingOutputStateMixin) state).getSweepingOutputScope();
+      if (cgScope != null) {
+        return switch (cgScope) {
+          case PIPELINE -> ExportScope.PIPELINE;
+          case WORKFLOW -> ExportScope.STAGE;
+          case PHASE, STATE -> ExportScope.STEP_GROUP;
+        };
+      }
     }
     return null;
   }
@@ -166,136 +190,137 @@ public abstract class StepMapper {
   }
 
   void baseOverrideTemplateInputs(PhaseStep phaseStep, GraphNode step, JsonNode templateInputs, String skipCondition) {
-    String newSkip = StringUtils.isBlank(skipCondition) ? "true" : "!(" + skipCondition + ")";
-    JsonNode failureStrategies = templateInputs.get("failureStrategies");
-    if (failureStrategies != null) {
-      List<FailureStrategyConfig> strategies =
-          ListUtils.emptyIfNull(WorkflowHandler.getFailureStrategies(phaseStep, step));
-      ((ObjectNode) templateInputs).set("failureStrategies", JsonPipelineUtils.asTree(strategies));
-    }
-    JsonNode condition = templateInputs.get("when");
-    if (condition != null) {
-      ((ObjectNode) condition).put("condition", newSkip);
-    }
-  }
+    String newSkip = StringUtils.isBlank(skipCondition) ? "true" :
+            "!(" + skipCondition + ")";
+            JsonNode failureStrategies = templateInputs.get("failureStrategies");
+            if (failureStrategies != null) {
+              List<FailureStrategyConfig> strategies =
+                  ListUtils.emptyIfNull(WorkflowHandler.getFailureStrategies(phaseStep, step));
+              ((ObjectNode) templateInputs).set("failureStrategies", JsonPipelineUtils.asTree(strategies));
+            }
+            JsonNode condition = templateInputs.get("when");
+            if (condition != null) {
+              ((ObjectNode) condition).put("condition", newSkip);
+            }
+        }
 
-  public void overrideTemplateInputs(MigrationContext migrationContext, WorkflowMigrationContext context,
-      WorkflowPhase phase, GraphNode graphNode, NGYamlFile templateFile, JsonNode templateInputs) {}
+        public void overrideTemplateInputs(MigrationContext migrationContext, WorkflowMigrationContext context,
+            WorkflowPhase phase, GraphNode graphNode, NGYamlFile templateFile, JsonNode templateInputs) {}
 
-  public abstract boolean areSimilar(GraphNode stepYaml1, GraphNode stepYaml2);
+        public abstract boolean areSimilar(GraphNode stepYaml1, GraphNode stepYaml2);
 
-  public List<Variable> getCustomVariables(GraphNode stepYaml) {
-    return new ArrayList<>();
-  }
+        public List<Variable> getCustomVariables(GraphNode stepYaml) {
+          return new ArrayList<>();
+        }
 
-  public ParameterField<Timeout> getTimeout(GraphNode stepYaml) {
-    Map<String, Object> properties = getProperties(stepYaml);
+        public ParameterField<Timeout> getTimeout(GraphNode stepYaml) {
+          Map<String, Object> properties = getProperties(stepYaml);
 
-    String timeoutString = "10m";
-    if (properties.containsKey("timeoutMillis") && properties.get("timeoutMillis") != null) {
-      timeoutString = MigratorUtility.toTimeoutString(Long.parseLong(properties.get("timeoutMillis").toString()));
-    }
-    Object str = properties.getOrDefault("stateTimeoutInMinutes", null);
-    if ((str instanceof Integer || str instanceof String) && StringUtils.isNotBlank(String.valueOf(str))) {
-      timeoutString = str + "m";
-    }
-    return ParameterField.createValueField(Timeout.builder().timeoutString(timeoutString).build());
-  }
+          String timeoutString = "10m";
+          if (properties.containsKey("timeoutMillis") && properties.get("timeoutMillis") != null) {
+            timeoutString = MigratorUtility.toTimeoutString(Long.parseLong(properties.get("timeoutMillis").toString()));
+          }
+          Object str = properties.getOrDefault("stateTimeoutInMinutes", null);
+          if ((str instanceof Integer || str instanceof String) && StringUtils.isNotBlank(String.valueOf(str))) {
+            timeoutString = str + "m";
+          }
+          return ParameterField.createValueField(Timeout.builder().timeoutString(timeoutString).build());
+        }
 
-  public ParameterField<Timeout> getTimeout(State state) {
-    Integer timeoutMillis = state.getTimeoutMillis();
-    if (timeoutMillis != null) {
-      return MigratorUtility.getTimeout(timeoutMillis.longValue());
-    }
-    return MigratorUtility.getTimeout(null);
-  }
+        public ParameterField<Timeout> getTimeout(State state) {
+          Integer timeoutMillis = state.getTimeoutMillis();
+          if (timeoutMillis != null) {
+            return MigratorUtility.getTimeout(timeoutMillis.longValue());
+          }
+          return MigratorUtility.getTimeout(null);
+        }
 
-  public String getDescription(GraphNode stepYaml) {
-    Map<String, Object> properties = getProperties(stepYaml);
-    return properties.getOrDefault("description", "").toString();
-  }
+        public String getDescription(GraphNode stepYaml) {
+          Map<String, Object> properties = getProperties(stepYaml);
+          return properties.getOrDefault("description", "").toString();
+        }
 
-  public Map<String, Object> getProperties(GraphNode stepYaml) {
-    return CollectionUtils.emptyIfNull(stepYaml.getProperties());
-  }
+        public Map<String, Object> getProperties(GraphNode stepYaml) {
+          return CollectionUtils.emptyIfNull(stepYaml.getProperties());
+        }
 
-  public void baseSetup(GraphNode graphNode, AbstractStepNode stepNode, CaseFormat caseFormat) {
-    stepNode.setIdentifier(MigratorUtility.generateIdentifier(graphNode.getName(), caseFormat));
-    stepNode.setName(MigratorUtility.generateName(graphNode.getName()));
-    stepNode.setDescription(getDescription(graphNode));
-    if (stepNode instanceof PmsAbstractStepNode) {
-      PmsAbstractStepNode pmsAbstractStepNode = (PmsAbstractStepNode) stepNode;
-      pmsAbstractStepNode.setTimeout(getTimeout(graphNode));
-    }
-    if (stepNode instanceof CdAbstractStepNode) {
-      CdAbstractStepNode cdAbstractStepNode = (CdAbstractStepNode) stepNode;
-      cdAbstractStepNode.setTimeout(getTimeout(graphNode));
-    }
-  }
+        public void baseSetup(GraphNode graphNode, AbstractStepNode stepNode, CaseFormat caseFormat) {
+          stepNode.setIdentifier(MigratorUtility.generateIdentifier(graphNode.getName(), caseFormat));
+          stepNode.setName(MigratorUtility.generateName(graphNode.getName()));
+          stepNode.setDescription(getDescription(graphNode));
+          if (stepNode instanceof PmsAbstractStepNode) {
+            PmsAbstractStepNode pmsAbstractStepNode = (PmsAbstractStepNode) stepNode;
+            pmsAbstractStepNode.setTimeout(getTimeout(graphNode));
+          }
+          if (stepNode instanceof CdAbstractStepNode) {
+            CdAbstractStepNode cdAbstractStepNode = (CdAbstractStepNode) stepNode;
+            cdAbstractStepNode.setTimeout(getTimeout(graphNode));
+          }
+        }
 
-  public void baseSetup(State state, AbstractStepNode stepNode, CaseFormat caseFormat) {
-    stepNode.setIdentifier(MigratorUtility.generateIdentifier(state.getName(), caseFormat));
-    stepNode.setName(MigratorUtility.generateName(state.getName()));
-    if (stepNode instanceof PmsAbstractStepNode) {
-      PmsAbstractStepNode pmsAbstractStepNode = (PmsAbstractStepNode) stepNode;
-      pmsAbstractStepNode.setTimeout(getTimeout(state));
-    }
-    if (stepNode instanceof CdAbstractStepNode) {
-      CdAbstractStepNode cdAbstractStepNode = (CdAbstractStepNode) stepNode;
-      cdAbstractStepNode.setTimeout(getTimeout(state));
-    }
-  }
+        public void baseSetup(State state, AbstractStepNode stepNode, CaseFormat caseFormat) {
+          stepNode.setIdentifier(MigratorUtility.generateIdentifier(state.getName(), caseFormat));
+          stepNode.setName(MigratorUtility.generateName(state.getName()));
+          if (stepNode instanceof PmsAbstractStepNode) {
+            PmsAbstractStepNode pmsAbstractStepNode = (PmsAbstractStepNode) stepNode;
+            pmsAbstractStepNode.setTimeout(getTimeout(state));
+          }
+          if (stepNode instanceof CdAbstractStepNode) {
+            CdAbstractStepNode cdAbstractStepNode = (CdAbstractStepNode) stepNode;
+            cdAbstractStepNode.setTimeout(getTimeout(state));
+          }
+        }
 
-  public abstract SupportStatus stepSupportStatus(GraphNode graphNode);
+        public abstract SupportStatus stepSupportStatus(GraphNode graphNode);
 
-  public List<NGYamlFile> getChildNGYamlFiles(MigrationInputDTO inputDTO, GraphNode graphNode, String name) {
-    return new ArrayList<>();
-  }
+        public List<NGYamlFile> getChildNGYamlFiles(MigrationInputDTO inputDTO, GraphNode graphNode, String name) {
+          return new ArrayList<>();
+        }
 
-  public boolean loopingSupported() {
-    return false;
-  }
+        public boolean loopingSupported() {
+          return false;
+        }
 
-  protected void overrideTemplateDelegateSelectorInputs(JsonNode templateInputs, List<String> delegateSelectors) {
-    JsonNode delSelectors = templateInputs.at("/spec/delegateSelectors");
-    if (delSelectors instanceof TextNode) {
-      String selectors = delSelectors.asText();
-      if (RUNTIME_INPUT.equals(selectors)) {
-        ((ObjectNode) templateInputs.get("spec"))
-            .putPOJO("delegateSelectors", ListUtils.emptyIfNull(delegateSelectors));
+        protected void overrideTemplateDelegateSelectorInputs(JsonNode templateInputs, List<String> delegateSelectors) {
+          JsonNode delSelectors = templateInputs.at("/spec/delegateSelectors");
+          if (delSelectors instanceof TextNode) {
+            String selectors = delSelectors.asText();
+            if (RUNTIME_INPUT.equals(selectors)) {
+              ((ObjectNode) templateInputs.get("spec"))
+                  .putPOJO("delegateSelectors", ListUtils.emptyIfNull(delegateSelectors));
+            }
+          }
+        }
+
+        protected ParameterField<String> getConnectorRef(WorkflowMigrationContext context, String connectorId) {
+          String connectorRef = NGMigrationConstants.RUNTIME_INPUT;
+          if (!context.isTemplatizeStepParams()) {
+            connectorRef = MigratorUtility.getIdentifierWithScopeDefaults(context.getMigratedEntities(), connectorId,
+                NGMigrationEntityType.CONNECTOR, NGMigrationConstants.RUNTIME_INPUT);
+          }
+          return ParameterField.createValueField(connectorRef);
+        }
+
+        protected ParameterField<String> getConnectorRef(MigrationContext context, String connectorId) {
+          String connectorRef = NGMigrationConstants.RUNTIME_INPUT;
+          if (!context.isTemplatizeStepParams()) {
+            connectorRef = MigratorUtility.getIdentifierWithScopeDefaults(context.getMigratedEntities(), connectorId,
+                NGMigrationEntityType.CONNECTOR, NGMigrationConstants.RUNTIME_INPUT);
+          }
+          return ParameterField.createValueField(connectorRef);
+        }
+
+        protected ParameterField<String> getProvisionerIdentifier(MigrationContext context, String provisionerId) {
+          Map<CgEntityId, CgEntityNode> entities = context.getEntities();
+          CgEntityId provisioner = CgEntityId.builder().id(provisionerId).type(INFRA_PROVISIONER).build();
+          if (!entities.containsKey(provisioner)) {
+            return MigratorUtility.RUNTIME_INPUT;
+          }
+          InfrastructureProvisioner infraProv = (InfrastructureProvisioner) entities.get(provisioner).getEntity();
+          if (infraProv == null || StringUtils.isBlank(infraProv.getName())) {
+            return MigratorUtility.RUNTIME_INPUT;
+          }
+          return ParameterField.createValueField(
+              MigratorUtility.generateIdentifier(infraProv.getName(), CaseFormat.CAMEL_CASE));
+        }
       }
-    }
-  }
-
-  protected ParameterField<String> getConnectorRef(WorkflowMigrationContext context, String connectorId) {
-    String connectorRef = NGMigrationConstants.RUNTIME_INPUT;
-    if (!context.isTemplatizeStepParams()) {
-      connectorRef = MigratorUtility.getIdentifierWithScopeDefaults(context.getMigratedEntities(), connectorId,
-          NGMigrationEntityType.CONNECTOR, NGMigrationConstants.RUNTIME_INPUT);
-    }
-    return ParameterField.createValueField(connectorRef);
-  }
-
-  protected ParameterField<String> getConnectorRef(MigrationContext context, String connectorId) {
-    String connectorRef = NGMigrationConstants.RUNTIME_INPUT;
-    if (!context.isTemplatizeStepParams()) {
-      connectorRef = MigratorUtility.getIdentifierWithScopeDefaults(context.getMigratedEntities(), connectorId,
-          NGMigrationEntityType.CONNECTOR, NGMigrationConstants.RUNTIME_INPUT);
-    }
-    return ParameterField.createValueField(connectorRef);
-  }
-
-  protected ParameterField<String> getProvisionerIdentifier(MigrationContext context, String provisionerId) {
-    Map<CgEntityId, CgEntityNode> entities = context.getEntities();
-    CgEntityId provisioner = CgEntityId.builder().id(provisionerId).type(INFRA_PROVISIONER).build();
-    if (!entities.containsKey(provisioner)) {
-      return MigratorUtility.RUNTIME_INPUT;
-    }
-    InfrastructureProvisioner infraProv = (InfrastructureProvisioner) entities.get(provisioner).getEntity();
-    if (infraProv == null || StringUtils.isBlank(infraProv.getName())) {
-      return MigratorUtility.RUNTIME_INPUT;
-    }
-    return ParameterField.createValueField(
-        MigratorUtility.generateIdentifier(infraProv.getName(), CaseFormat.CAMEL_CASE));
-  }
-}
