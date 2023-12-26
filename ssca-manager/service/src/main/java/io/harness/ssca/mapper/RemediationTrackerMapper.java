@@ -82,8 +82,8 @@ public class RemediationTrackerMapper {
   private VulnerabilitySeverity mapSeverityToVulnerabilitySeverity(
       io.harness.spec.server.ssca.v1.model.VulnerabilitySeverity severity) {
     switch (severity) {
-      case NONE:
-        return VulnerabilitySeverity.NONE;
+      case INFO:
+        return VulnerabilitySeverity.INFO;
       case LOW:
         return VulnerabilitySeverity.LOW;
       case MEDIUM:

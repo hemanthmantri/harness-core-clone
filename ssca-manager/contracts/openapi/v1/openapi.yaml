@@ -1074,7 +1074,7 @@ paths:
         in: path
         required: true
         description: Remediation Tracker Id
-    get:
+    post:
       summary: Get Artifact List for Remediations.
       tags:
         - Remediation
@@ -1105,7 +1105,7 @@ paths:
         in: path
         required: true
         description: Remediation Tracker Id
-    get:
+    post:
       summary: Get Environment List for Remediation.
       tags:
         - Remediation
@@ -1185,7 +1185,7 @@ paths:
         in: path
         required: true
         description: Artifact Id
-    get:
+    post:
       summary: Get Deployments List for Artifact In Remediation.
       tags:
         - Remediation
@@ -2886,7 +2886,7 @@ components:
       x-stoplight:
         id: v47u2xpkx4ijc
       enum:
-        - NONE
+        - INFO
         - LOW
         - MEDIUM
         - HIGH
