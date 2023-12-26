@@ -32,7 +32,7 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class GitXEventsListRequestDTO {
   Scope scope;
-  @Setter String webhookIdentifier;
+  @Setter List<String> webhookIdentifierList;
   Long eventStartTime;
   Long eventEndTime;
   String repoName;

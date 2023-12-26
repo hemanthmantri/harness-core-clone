@@ -62,9 +62,7 @@ public class GitXWebhookLogContext extends AutoLogContext {
   }
 
   public GitXWebhookLogContext(GitXEventsListRequestDTO gitXEventsListRequestDTO) {
-    super(
-        setContextMap(gitXEventsListRequestDTO.getScope(), gitXEventsListRequestDTO.getWebhookIdentifier(), null, null),
-        OverrideBehavior.OVERRIDE_NESTS);
+    super(setContextMap(gitXEventsListRequestDTO.getScope(), null, null, null), OverrideBehavior.OVERRIDE_NESTS);
   }
 
   public GitXWebhookLogContext(UpdateGitXWebhookCriteriaDTO updateGitXWebhookCriteriaDTO,

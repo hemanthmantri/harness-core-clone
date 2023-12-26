@@ -144,7 +144,7 @@ public class GitXWebhookMapper {
     }
     return GitXEventsListRequestDTO.builder()
         .scope(scope)
-        .webhookIdentifier(webhookIdentifier)
+        .webhookIdentifierList(isEmpty(webhookIdentifier) ? null : List.of(webhookIdentifier))
         .eventStartTime(eventStartTime)
         .eventEndTime(eventEndTime)
         .repoName(repoName)
