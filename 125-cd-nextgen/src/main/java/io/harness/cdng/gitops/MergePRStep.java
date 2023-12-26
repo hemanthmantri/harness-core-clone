@@ -25,7 +25,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.beans.FeatureName;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
@@ -177,18 +176,6 @@ public class MergePRStep implements AsyncChainExecutableWithRbac<StepElementPara
     ManifestOutcome releaseRepoOutcome = gitOpsStepHelper.getReleaseRepoOutcome(ambiance);
     ConnectorInfoDTO connectorInfoDTO =
         cdStepHelper.getConnector(releaseRepoOutcome.getStore().getConnectorReference().getValue(), ambiance);
-
-    if (!cdFeatureFlagHelper.isEnabled(
-            AmbianceUtils.getAccountId(ambiance), FeatureName.GITOPS_GITHUB_RESTRAINT_FOR_STEPS)) {
-      String taskId =
-          queueDelegateTask(ambiance, gitOpsSpecParams, releaseRepoOutcome, connectorInfoDTO, stepParameters);
-      return AsyncChainExecutableResponse.newBuilder()
-          .addAllLogKeys(getLogKeys(ambiance, gitOpsSpecParams.getCommandUnits()))
-          .setCallbackId(taskId)
-          .addAllUnits(gitOpsSpecParams.getCommandUnits())
-          .setChainEnd(true)
-          .build();
-    }
 
     String tokenRefIdentifier = GitOpsStepUtils.extractToken(connectorInfoDTO);
     if (tokenRefIdentifier == null) {

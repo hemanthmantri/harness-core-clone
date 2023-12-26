@@ -24,7 +24,6 @@ import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.beans.FeatureName;
 import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.gitops.GitOpsStepUtils;
@@ -172,18 +171,6 @@ public class RevertPRStep implements AsyncChainExecutableWithRbac<StepElementPar
       ManifestOutcome releaseRepoOutcome = gitOpsStepHelper.getReleaseRepoOutcome(ambiance);
       ConnectorInfoDTO connectorInfoDTO =
           cdStepHelper.getConnector(releaseRepoOutcome.getStore().getConnectorReference().getValue(), ambiance);
-
-      if (!cdFeatureFlagHelper.isEnabled(
-              AmbianceUtils.getAccountId(ambiance), FeatureName.GITOPS_GITHUB_RESTRAINT_FOR_STEPS)) {
-        String taskId =
-            queueDelegateTask(ambiance, stepParameters, releaseRepoOutcome, gitOpsSpecParams, connectorInfoDTO);
-        return AsyncChainExecutableResponse.newBuilder()
-            .addAllUnits(gitOpsSpecParams.getCommandUnits())
-            .addAllLogKeys(getLogKeys(ambiance, gitOpsSpecParams.getCommandUnits()))
-            .setCallbackId(taskId)
-            .setChainEnd(true)
-            .build();
-      }
 
       String tokenRefIdentifier = GitOpsStepUtils.extractToken(connectorInfoDTO);
       if (tokenRefIdentifier == null) {
