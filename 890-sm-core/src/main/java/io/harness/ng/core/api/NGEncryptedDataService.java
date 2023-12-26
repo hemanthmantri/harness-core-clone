@@ -28,8 +28,8 @@ public interface NGEncryptedDataService {
       String accountIdentifier, SecretDTOV2 dto, String encryptionKey, String encryptedValue);
   NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 
-  NGEncryptedData createSecretFile(
-      String accountIdentifier, SecretDTOV2 dto, String encryptionKey, String encryptedValue);
+  NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, String encryptionKey,
+      String encryptedValue, String encryptedFileContent);
 
   List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity object);
 

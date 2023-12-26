@@ -75,7 +75,7 @@ public interface NGClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query("encryptionKey") String encryptionKey, @Query("encryptedValue") String encryptedValue,
-      @Part("spec") RequestBody spec);
+      @Part("encryptedFileContent") String encryptedFileContent, @Part("spec") RequestBody spec);
 
   @POST("servicesV2")
   Call<ResponseDTO<ServiceResponse>> createService(@Header(X_API_KEY) String auth,

@@ -146,7 +146,7 @@ public class SecretMigrationService extends NgMigrationService {
               .createSecretFileInternal(inputDTO.getDestinationAuthToken(), inputDTO.getDestinationAccountIdentifier(),
                   secretRequestWrapper.getSecret().getOrgIdentifier(),
                   secretRequestWrapper.getSecret().getProjectIdentifier(), secretRequestWrapper.getEncryptionKey(),
-                  secretRequestWrapper.getEncryptionValue(), spec)
+                  secretRequestWrapper.getEncryptionValue(), null, spec)
               .execute();
       log.info("Secret creation using internal API Response details {} {}", resp.code(), resp.message());
       return handleResp(yamlFile, resp);

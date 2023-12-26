@@ -784,7 +784,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   @SneakyThrows
   @Override
   public SecretResponseWrapper createFile(@NotNull String accountIdentifier, @NotNull SecretDTOV2 dto,
-      @NotNull String encryptionKey, @NotNull String encryptedValue) {
+      @NotNull String encryptionKey, @NotNull String encryptedValue, String encryptedFileContent) {
     SecretResponseWrapper secretResponseWrapper = SecretResponseWrapper.builder().build();
     if (!isOpaPoliciesSatisfied(accountIdentifier, getMaskedDTOForOpa(dto), secretResponseWrapper)) {
       return secretResponseWrapper;
@@ -792,8 +792,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     GovernanceMetadata governanceMetadata = secretResponseWrapper.getGovernanceMetadata();
 
     SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
-    NGEncryptedData encryptedData =
-        encryptedDataService.createSecretFile(accountIdentifier, dto, encryptionKey, encryptedValue);
+    NGEncryptedData encryptedData = encryptedDataService.createSecretFile(
+        accountIdentifier, dto, encryptionKey, encryptedValue, encryptedFileContent);
 
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createSetupUsageForSecretManager(accountIdentifier, dto.getOrgIdentifier(),

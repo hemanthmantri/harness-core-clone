@@ -51,8 +51,8 @@ public interface SecretCrudService {
 
   SecretResponseWrapper createFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 
-  SecretResponseWrapper createFile(
-      String accountIdentifier, SecretDTOV2 dto, String encryptionKey, String encryptedValue);
+  SecretResponseWrapper createFile(String accountIdentifier, SecretDTOV2 dto, String encryptionKey,
+      String encryptedValue, String encryptedFileContent);
 
   SecretResponseWrapper updateFile(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretDTOV2 updateDTO, InputStream inputStream);

@@ -617,6 +617,8 @@ public class NGSecretResourceV2 {
           "encryptionKey") @NotNull String encryptionKey,
       @Parameter(description = "encryptionValue of the file secret from cg") @QueryParam(
           "encryptedValue") @NotNull String encryptedValue,
+      @Parameter(description = "Encrypted file content of secret from cg. This is required for SMP environments.")
+      @FormDataParam("encryptedFileContent") String encryptedFileContent,
       @Parameter(description = "Specification of Secret file") @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
     validateRequestPayload(dto);
@@ -633,8 +635,8 @@ public class NGSecretResourceV2 {
       dto.getSecret().setOwner(SecurityContextBuilder.getPrincipal());
     }
 
-    return ResponseDTO.newResponse(
-        ngSecretService.createFile(accountIdentifier, dto.getSecret(), encryptionKey, encryptedValue));
+    return ResponseDTO.newResponse(ngSecretService.createFile(
+        accountIdentifier, dto.getSecret(), encryptionKey, encryptedValue, encryptedFileContent));
   }
 
   @POST

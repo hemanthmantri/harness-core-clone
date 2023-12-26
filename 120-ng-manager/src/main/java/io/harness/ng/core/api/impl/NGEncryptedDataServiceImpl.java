@@ -60,6 +60,7 @@ import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.DocumentLinksConstants;
 import io.harness.mappers.SecretManagerConfigMapper;
+import io.harness.ng.NextGenConfiguration;
 import io.harness.ng.core.AdditionalMetadataValidationHelper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.api.NGEncryptedDataService;
@@ -87,6 +88,7 @@ import io.harness.security.encryption.SecretManagerType;
 import io.harness.template.remote.TemplateResourceClient;
 import io.harness.utils.featureflaghelper.NGFeatureFlagHelperService;
 
+import software.wings.DataStorageMode;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.CustomSecretNGManagerConfig;
@@ -144,6 +146,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private final DynamicSecretReferenceHelper dynamicSecretReferenceHelper;
   private final TemplateResourceClient templateResourceClient;
   private final NGSecretServiceV2 ngSecretServiceV2;
+  private final NextGenConfiguration nextGenConfiguration;
 
   private static final String ENVIRONMENT_VARIABLES = "environmentVariables";
 
@@ -156,7 +159,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       CustomSecretManagerHelper customSecretManagerHelper, NGEncryptorService ngEncryptorService,
       AdditionalMetadataValidationHelper additionalMetadataValidationHelper,
       DynamicSecretReferenceHelper dynamicSecretReferenceHelper, TemplateResourceClient templateResourceClient,
-      NGSecretServiceV2 ngSecretServiceV2) {
+      NGSecretServiceV2 ngSecretServiceV2, NextGenConfiguration nextGenConfiguration) {
     this.encryptedDataDao = encryptedDataDao;
     this.kmsEncryptorsRegistry = kmsEncryptorsRegistry;
     this.vaultEncryptorsRegistry = vaultEncryptorsRegistry;
@@ -171,6 +174,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     this.dynamicSecretReferenceHelper = dynamicSecretReferenceHelper;
     this.templateResourceClient = templateResourceClient;
     this.ngSecretServiceV2 = ngSecretServiceV2;
+    this.nextGenConfiguration = nextGenConfiguration;
   }
 
   @Override
@@ -384,8 +388,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   }
 
   @Override
-  public NGEncryptedData createSecretFile(
-      String accountIdentifier, SecretDTOV2 dto, String encryptionKey, String encryptedValue) {
+  public NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, String encryptionKey,
+      String encryptedValue, String encryptedFileContent) {
     validateSecretDoesNotExist(
         accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
     SecretFileSpecDTO secret = (SecretFileSpecDTO) dto.getSpec();
@@ -398,9 +402,18 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, READ_ONLY_SECRET_MANAGER_ERROR, USER);
     }
 
+    if (DataStorageMode.MONGO.equals(nextGenConfiguration.getFileServiceConfiguration().getFileStorageMode())
+        && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+        && isNotEmpty(encryptedFileContent)) {
+      String encryptedFileId = secretsFileService.createFile(
+          encryptedData.getName(), encryptedData.getAccountIdentifier(), encryptedFileContent.toCharArray());
+      encryptedData.setEncryptedValue(encryptedFileId.toCharArray());
+    } else {
+      encryptedData.setEncryptedValue(encryptedValue.toCharArray());
+    }
+
     encryptedData.setPath(null);
     encryptedData.setEncryptionKey(encryptionKey);
-    encryptedData.setEncryptedValue(encryptedValue.toCharArray());
     encryptedData.setBase64Encoded(true);
     return encryptedDataDao.save(encryptedData);
   }

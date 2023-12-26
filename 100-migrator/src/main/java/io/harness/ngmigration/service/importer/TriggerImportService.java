@@ -7,7 +7,6 @@
 
 package io.harness.ngmigration.service.importer;
 
-import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
 import static io.harness.ngmigration.utils.NGMigrationConstants.RUNTIME_INPUT;
 
 import static software.wings.ngmigration.NGMigrationEntityType.ARTIFACT_STREAM;
@@ -23,7 +22,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.WorkflowType;
 import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.utils.NGYamlUtils;
@@ -54,7 +52,6 @@ import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
 import io.harness.ngtriggers.beans.source.artifact.ArtifactTriggerConfig;
-import io.harness.ngtriggers.beans.source.artifact.HelmManifestSpec;
 import io.harness.ngtriggers.beans.source.artifact.ManifestTriggerConfig;
 import io.harness.ngtriggers.beans.source.artifact.ManifestTypeSpec;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
