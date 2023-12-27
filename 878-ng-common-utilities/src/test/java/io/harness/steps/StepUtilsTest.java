@@ -9,12 +9,14 @@ package io.harness.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.BRIJESH;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SAMARTH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.steps.StepUtils.PIE_SIMPLIFY_LOG_BASE_KEY;
+import static io.harness.steps.StepUtils.getTimeoutMillis;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -64,6 +66,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -234,9 +237,9 @@ public class StepUtilsTest extends CategoryTest {
     String defaultTimeout = "10s";
     ParameterField<String> timeout = new ParameterField<>();
     timeout.setValue("1s");
-    long millis = StepUtils.getTimeoutMillis(timeout, defaultTimeout);
+    long millis = getTimeoutMillis(timeout, defaultTimeout);
     assertEquals(millis, 1000L);
-    millis = StepUtils.getTimeoutMillis(null, defaultTimeout);
+    millis = getTimeoutMillis(null, defaultTimeout);
     assertEquals(millis, 10000L);
   }
 
@@ -427,6 +430,18 @@ public class StepUtilsTest extends CategoryTest {
     ParameterField<List<TaskSelectorYaml>> delegateSelectorsFromStepGroup =
         StepUtils.delegateSelectorsFromFqn(planCreationContext(), YAMLFieldNameConstants.STEP_GROUP);
     assertEquals(delegateSelectorsFromStepGroup.getValue().get(0).getDelegateSelectors(), "selector_step_group");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillisReturnDuration() {
+    // default time
+    assertThat(getTimeoutMillis(0, Duration.ofMillis(1))).isEqualTo(Duration.ofMillis(1));
+    assertThat(getTimeoutMillis(0, Duration.ofHours(12))).isEqualTo(Duration.ofMillis(43200000));
+
+    assertThat(getTimeoutMillis(2, Duration.ofMillis(1))).isEqualTo(Duration.ofMillis(2));
+    assertThat(getTimeoutMillis(43200000, Duration.ofMillis(1))).isEqualTo(Duration.ofHours(12));
   }
 
   private PlanCreationContext planCreationContext() throws IOException {

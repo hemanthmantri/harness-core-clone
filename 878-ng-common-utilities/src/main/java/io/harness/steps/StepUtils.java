@@ -102,6 +102,7 @@ public class StepUtils {
   private StepUtils() {}
 
   public static final String DEFAULT_STEP_TIMEOUT = "10m";
+  public static final int DEFAULT_CI_STEP_TIMEOUT_IN_HOURS = 12;
 
   public static String PIE_SIMPLIFY_LOG_BASE_KEY = "PIE_SIMPLIFY_LOG_BASE_KEY";
 
@@ -412,6 +413,10 @@ public class StepUtils {
       timeoutString = timeout.getValue();
     }
     return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeoutString);
+  }
+
+  public static java.time.Duration getTimeoutMillis(long timeInMillis, java.time.Duration defaultTime) {
+    return timeInMillis == 0 ? defaultTime : java.time.Duration.ofMillis(timeInMillis);
   }
 
   public static List<TaskSelector> getTaskSelectors(ParameterField<List<String>> delegateSelectors) {
