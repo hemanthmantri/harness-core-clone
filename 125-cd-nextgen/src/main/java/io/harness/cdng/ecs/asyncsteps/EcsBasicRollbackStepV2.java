@@ -7,6 +7,11 @@
 
 package io.harness.cdng.ecs.asyncsteps;
 
+import io.harness.annotations.dev.CodePulse;
+import io.harness.annotations.dev.HarnessModuleComponent;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ProductModule;
 import io.harness.cdng.ecs.EcsBasicRollbackStep;
 import io.harness.cdng.executables.CdAsyncExecutable;
 import io.harness.delegate.task.ecs.response.EcsCommandResponse;
@@ -14,6 +19,8 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 
+@CodePulse(module = ProductModule.CDS, unitCoverageRequired = false, components = {HarnessModuleComponent.CDS_ECS})
+@OwnedBy(HarnessTeam.CDP)
 public class EcsBasicRollbackStepV2 extends CdAsyncExecutable<EcsCommandResponse, EcsBasicRollbackStep> {
   public static final StepType STEP_TYPE = StepType.newBuilder()
                                                .setType(ExecutionNodeType.ECS_BASIC_ROLLBACK_V2.getName())

@@ -7,12 +7,19 @@
 
 package io.harness.cdng.tas.asyncsteps;
 
+import io.harness.annotations.dev.CodePulse;
+import io.harness.annotations.dev.HarnessModuleComponent;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ProductModule;
 import io.harness.cdng.executables.CdAsyncChainExecutable;
 import io.harness.cdng.tas.TasBGAppSetupStep;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 
+@CodePulse(module = ProductModule.CDS, unitCoverageRequired = false, components = {HarnessModuleComponent.CDS_PCF})
+@OwnedBy(HarnessTeam.CDP)
 public class TasBGAppSetupStepV2 extends CdAsyncChainExecutable<TasBGAppSetupStep> {
   public static final StepType STEP_TYPE = StepType.newBuilder()
                                                .setType(ExecutionNodeType.TAS_BG_APP_SETUP_V2.getName())

@@ -7,12 +7,19 @@
 
 package io.harness.cdng.ecs.asyncsteps;
 
+import io.harness.annotations.dev.CodePulse;
+import io.harness.annotations.dev.HarnessModuleComponent;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ProductModule;
 import io.harness.cdng.ecs.EcsBlueGreenCreateServiceStep;
 import io.harness.cdng.executables.CdAsyncChainExecutable;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 
+@CodePulse(module = ProductModule.CDS, unitCoverageRequired = false, components = {HarnessModuleComponent.CDS_ECS})
+@OwnedBy(HarnessTeam.CDP)
 public class EcsBlueGreenCreateServiceStepV2 extends CdAsyncChainExecutable<EcsBlueGreenCreateServiceStep> {
   public static final StepType STEP_TYPE = StepType.newBuilder()
                                                .setType(ExecutionNodeType.ECS_BLUE_GREEN_CREATE_SERVICE_V2.getName())
