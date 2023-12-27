@@ -40,7 +40,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -123,6 +125,20 @@ public class BackstageServiceImpl implements BackstageService {
         backstageCatalogEntities.size(), accountIdentifier, entityUid, action);
     List<Pair<BackstageCatalogEntity, BackstageCatalogEntity>> entitiesList =
         prepareEntitiesForSave(accountIdentifier, backstageCatalogEntities);
+
+    Map<BackstageCatalogEntity, String> entitiesActions = categorizeEntitiesActions(backstageCatalogEntities);
+    for (Map.Entry<BackstageCatalogEntity, String> entry : entitiesActions.entrySet()) {
+      if (BackstageHarnessSyncRequest.ActionEnum.CREATE.toString().equals(entry.getValue())) {
+        String uuid = entry.getKey().getMetadata().getUid();
+        boolean producerResult =
+            idpEntityCrudStreamProducer.publishAsyncScoreComputationChangeEventToRedis(accountIdentifier, null, uuid);
+        if (!producerResult) {
+          log.error(
+              "Error in producing event for async score computation. AccountIdentifier = {} BackstageCatalogEntityUid = {} Action = {}",
+              accountIdentifier, uuid, action);
+        }
+      }
+    }
 
     AtomicReference<Iterable<BackstageCatalogEntity>> savedBackstageCatalogEntities = new AtomicReference<>();
     Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -221,6 +237,19 @@ public class BackstageServiceImpl implements BackstageService {
       backstageCatalogEntity.setYaml(writeObjectAsYaml(backstageCatalogEntity));
     });
     return entitesList;
+  }
+
+  private Map<BackstageCatalogEntity, String> categorizeEntitiesActions(
+      List<BackstageCatalogEntity> backstageCatalogEntities) {
+    Map<BackstageCatalogEntity, String> entitiesActions = new HashMap<>();
+    backstageCatalogEntities.forEach(backstageCatalogEntity -> {
+      if (backstageCatalogEntity.getCreatedAt() == 0) {
+        entitiesActions.put(backstageCatalogEntity, BackstageHarnessSyncRequest.ActionEnum.CREATE.value());
+      } else {
+        entitiesActions.put(backstageCatalogEntity, BackstageHarnessSyncRequest.ActionEnum.UPDATE.value());
+      }
+    });
+    return entitiesActions;
   }
 
   private String getEntityUniqueId(BackstageCatalogEntity backstageCatalogEntity) {
