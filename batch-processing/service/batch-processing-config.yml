@@ -101,7 +101,7 @@ segmentConfig:
 baseUrl: https://localhost:8000
 
 cfClientConfig:
-  apiKey: "2b5bfaef-6dfc-49ac-940a-96ad9e77a4a6"
+  apiKey: "redacted"
   configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
   eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
   analyticsEnabled: true
