@@ -34,6 +34,7 @@ import io.harness.spec.server.ssca.v1.model.ArtifactDetailResponse;
 import io.harness.spec.server.ssca.v1.model.ArtifactListingRequestBody;
 import io.harness.spec.server.ssca.v1.model.ArtifactListingResponse;
 import io.harness.spec.server.ssca.v1.model.ArtifactListingResponse.ActivityEnum;
+import io.harness.spec.server.ssca.v1.model.ArtifactListingResponseScorecard;
 import io.harness.spec.server.ssca.v1.model.ComponentFilter;
 import io.harness.spec.server.ssca.v1.model.LicenseFilter;
 import io.harness.spec.server.ssca.v1.model.SbomProcessRequestBody;
@@ -579,6 +580,11 @@ public class ArtifactServiceImpl implements ArtifactService {
       if (baselineEntityOrchestrationIds.contains(artifact.getOrchestrationId())) {
         baseline = true;
       }
+      ArtifactListingResponseScorecard scorecard = new ArtifactListingResponseScorecard();
+      if (artifact.getScorecard() != null) {
+        scorecard.setAvgScore(artifact.getScorecard().getAvgScore());
+        scorecard.setMaxScore(artifact.getScorecard().getMaxScore());
+      }
 
       responses.add(
           new ArtifactListingResponse()
@@ -598,7 +604,8 @@ public class ArtifactServiceImpl implements ArtifactService {
               .orchestrationId(artifact.getOrchestrationId())
               .buildPipelineId(artifact.getPipelineId())
               .buildPipelineExecutionId(artifact.getPipelineExecutionId())
-              .baseline(baseline));
+              .baseline(baseline)
+              .scorecard(scorecard));
     }
     return responses;
   }
