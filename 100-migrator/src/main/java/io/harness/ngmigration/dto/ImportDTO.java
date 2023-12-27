@@ -6,6 +6,7 @@
  */
 
 package io.harness.ngmigration.dto;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
@@ -21,6 +22,7 @@ import software.wings.ngmigration.NGMigrationEntityType;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.Parameter;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -52,4 +54,9 @@ public class ImportDTO extends MigrationTrackReqPayload {
 
   private String accountIdentifier;
   private Set<Flag> flags;
+
+  // This is used for migrating
+  private Map<String, String> environmentIdentifiers;
+  private Set<NGMigrationEntityType> skipEntities;
+  private boolean shouldMigrateOverrides;
 }

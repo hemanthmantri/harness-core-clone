@@ -6,6 +6,7 @@
  */
 
 package io.harness.ngmigration.beans;
+
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.ProductModule;
@@ -23,7 +24,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BaseProvidedInput {
-  private MigratorInputType migrationStatus;
   private String identifier;
   private String name;
   private Scope scope;

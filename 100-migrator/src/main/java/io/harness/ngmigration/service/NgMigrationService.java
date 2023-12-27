@@ -123,7 +123,7 @@ public abstract class NgMigrationService {
 
   public abstract YamlGenerationDetails generateYaml(MigrationContext migrationContext, CgEntityId entityId);
 
-  public boolean canMigrate(CgEntityId id, CgEntityId root, boolean canMigrateAll) {
+  public boolean canMigrate(MigrationContext migrationContext, CgEntityId id, CgEntityId root, boolean canMigrateAll) {
     return canMigrateAll;
   }
 
@@ -161,7 +161,8 @@ public abstract class NgMigrationService {
 
   public YamlGenerationDetails getYamls(MigrationContext migrationContext, CgEntityId root, CgEntityId entityId) {
     if (!isNGEntityExists(migrationContext)
-        || !canMigrate(entityId, root, migrationContext.getInputDTO().isMigrateReferencedEntities())) {
+        || !canMigrate(
+            migrationContext, entityId, root, migrationContext.getInputDTO().isMigrateReferencedEntities())) {
       return null;
     }
     if (migrationContext.getMigratedEntities().containsKey(entityId)) {

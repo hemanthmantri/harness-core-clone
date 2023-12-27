@@ -231,8 +231,9 @@ public class ConfigFileMigrationService extends NgMigrationService {
   @Override
   protected boolean isNGEntityExists(MigrationContext migrationContext) {
     NGMigrationEntityType rootType = migrationContext.getRoot();
-    return NGMigrationEntityType.APPLICATION == rootType || NGMigrationEntityType.SERVICE == rootType
-        || NGMigrationEntityType.PIPELINE == rootType || NGMigrationEntityType.WORKFLOW == rootType;
+    return migrationContext.getInputDTO().isShouldMigrateOverrides() || NGMigrationEntityType.APPLICATION == rootType
+        || NGMigrationEntityType.SERVICE == rootType || NGMigrationEntityType.PIPELINE == rootType
+        || NGMigrationEntityType.WORKFLOW == rootType;
   }
 
   public List<ConfigFileWrapper> getConfigFiles(MigrationContext migrationContext, Set<CgEntityId> configFileIds) {
@@ -256,7 +257,7 @@ public class ConfigFileMigrationService extends NgMigrationService {
   }
 
   @Override
-  public boolean canMigrate(CgEntityId id, CgEntityId root, boolean migrateAll) {
+  public boolean canMigrate(MigrationContext migrationContext, CgEntityId id, CgEntityId root, boolean migrateAll) {
     return migrateAll || root.getType() == NGMigrationEntityType.SERVICE;
   }
 

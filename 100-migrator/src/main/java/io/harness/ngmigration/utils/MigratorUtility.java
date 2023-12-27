@@ -817,6 +817,8 @@ public class MigratorUtility {
         .identifierCaseFormat(
             importDTO.getIdentifierCaseFormat() == null ? CAMEL_CASE : importDTO.getIdentifierCaseFormat())
         .root(root)
+        .skipEntities(importDTO.getSkipEntities())
+        .shouldMigrateOverrides(importDTO.isShouldMigrateOverrides())
         .build();
   }
 

@@ -192,7 +192,7 @@ public class ElastigroupConfigurationMigrationService extends NgMigrationService
   }
 
   @Override
-  public boolean canMigrate(CgEntityId id, CgEntityId root, boolean migrateAll) {
+  public boolean canMigrate(MigrationContext migrationContext, CgEntityId id, CgEntityId root, boolean migrateAll) {
     return migrateAll || root.getType() == NGMigrationEntityType.INFRA;
   }
 

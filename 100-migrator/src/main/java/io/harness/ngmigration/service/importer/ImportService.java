@@ -6,11 +6,13 @@
  */
 
 package io.harness.ngmigration.service.importer;
+
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
+import io.harness.ngmigration.beans.DiscoveryInput;
 import io.harness.ngmigration.dto.ImportDTO;
 
 import software.wings.ngmigration.DiscoveryResult;
@@ -19,4 +21,8 @@ import software.wings.ngmigration.DiscoveryResult;
 @OwnedBy(HarnessTeam.CDC)
 public interface ImportService {
   DiscoveryResult discover(ImportDTO importConnectorDTO);
+
+  default DiscoveryInput getDiscoveryInput(ImportDTO importConnectorDTO) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
 }

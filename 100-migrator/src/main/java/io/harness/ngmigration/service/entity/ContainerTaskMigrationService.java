@@ -6,6 +6,7 @@
  */
 
 package io.harness.ngmigration.service.entity;
+
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.CodePulse;
@@ -208,7 +209,7 @@ public class ContainerTaskMigrationService extends NgMigrationService {
   }
 
   @Override
-  public boolean canMigrate(CgEntityId id, CgEntityId root, boolean migrateAll) {
+  public boolean canMigrate(MigrationContext migrationContext, CgEntityId id, CgEntityId root, boolean migrateAll) {
     return migrateAll || root.getType() == NGMigrationEntityType.SERVICE;
   }
 

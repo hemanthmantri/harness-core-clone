@@ -6,6 +6,7 @@
  */
 
 package io.harness.ngmigration.service;
+
 import static io.harness.ngmigration.utils.MigratorUtility.getMigrationInput;
 import static io.harness.ngmigration.utils.MigratorUtility.isEnabled;
 
@@ -14,6 +15,7 @@ import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
+import io.harness.ngmigration.beans.DiscoveryInput;
 import io.harness.ngmigration.context.ImportDtoThreadLocal;
 import io.harness.ngmigration.dto.ApplicationFilter;
 import io.harness.ngmigration.dto.ConnectorFilter;
@@ -123,11 +125,22 @@ public class MigrationResourceService {
     return DiscoveryResult.builder().build();
   }
 
+  public SaveSummaryDTO saveServiceWithOverrides(String authToken, DiscoveryInput discoveryInput, ImportDTO importDTO) {
+    DiscoveryResult discoveryResult = discoveryService.discoverMulti(importDTO.getAccountIdentifier(), discoveryInput);
+    return save(authToken, importDTO, discoveryResult);
+  }
+
   public SaveSummaryDTO save(String authToken, ImportDTO importDTO) {
+    ImportDtoThreadLocal.set(importDTO);
+    DiscoveryResult discoveryResult = discover(importDTO);
+    return save(authToken, importDTO, discoveryResult);
+  }
+
+  private SaveSummaryDTO save(String authToken, ImportDTO importDTO, DiscoveryResult discoveryResult) {
     try {
+      importDTO.setMigrateReferencedEntities(true);
       SaveSummaryDTO saveSummaryDTO = null;
       ImportDtoThreadLocal.set(importDTO);
-      DiscoveryResult discoveryResult = discover(importDTO);
       if (discoveryResult == null) {
         return SaveSummaryDTO.builder().build();
       }

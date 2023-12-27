@@ -6,6 +6,7 @@
  */
 
 package io.harness.ngmigration.service.entity;
+
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.HarnessTeam;
@@ -112,7 +113,7 @@ public class FileStoreMigrationService extends NgMigrationService {
   }
 
   @Override
-  public boolean canMigrate(CgEntityId id, CgEntityId root, boolean migrateAll) {
+  public boolean canMigrate(MigrationContext migrationContext, CgEntityId id, CgEntityId root, boolean migrateAll) {
     return true;
   }
 }

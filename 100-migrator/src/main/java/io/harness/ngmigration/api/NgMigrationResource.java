@@ -6,6 +6,7 @@
  */
 
 package io.harness.ngmigration.api;
+
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.security.NextGenAuthenticationFilter.X_API_KEY;
 
@@ -36,6 +37,7 @@ import io.harness.ngmigration.service.CreateProjectService;
 import io.harness.ngmigration.service.DiscoveryService;
 import io.harness.ngmigration.service.MigrationResourceService;
 import io.harness.ngmigration.service.async.AsyncDiscoveryHandler;
+import io.harness.ngmigration.service.async.AsyncServiceUpgradeHandler;
 import io.harness.ngmigration.service.async.AsyncSimilarWorkflowHandler;
 import io.harness.ngmigration.service.async.AsyncUpgradeHandler;
 import io.harness.ngmigration.service.importer.UsergroupImportService;
@@ -86,6 +88,8 @@ public class NgMigrationResource {
   @Inject UsergroupImportService usergroupImportService;
   @Inject AsyncSimilarWorkflowHandler asyncSimilarWorkflowHandler;
   @Inject AsyncUpgradeHandler asyncUpgradeHandler;
+  @Inject AsyncServiceUpgradeHandler asyncServiceUpgradeHandler;
+
   @Inject CreateProjectService projectService;
 
   @POST
@@ -192,6 +196,28 @@ public class NgMigrationResource {
   public RestResponse<MigrationAsyncTracker> getQueuedUpgradeResult(
       @QueryParam("requestId") String reqId, @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     return new RestResponse<>(asyncUpgradeHandler.getTaskResult(accountId, reqId));
+  }
+
+  @POST
+  @Path("/save/service")
+  @Timed
+  @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
+  public RestResponse<Map<String, String>> queueServiceWithOverrides(@HeaderParam(X_API_KEY) String auth,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ImportDTO importDTO) {
+    importDTO.setAccountIdentifier(accountId);
+    String requestId = asyncServiceUpgradeHandler.queue(auth, accountId, importDTO);
+    return new RestResponse<>(ImmutableMap.of("requestId", requestId));
+  }
+
+  @GET
+  @Path("/save/service/async-result")
+  @Timed
+  @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
+  public RestResponse<MigrationAsyncTracker> getQueuedServiceWithOverridesResult(
+      @QueryParam("requestId") String reqId, @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
+    return new RestResponse<>(asyncServiceUpgradeHandler.getTaskResult(accountId, reqId));
   }
 
   @POST
