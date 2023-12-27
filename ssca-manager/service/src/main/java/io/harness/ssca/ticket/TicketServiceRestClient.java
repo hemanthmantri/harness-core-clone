@@ -9,8 +9,11 @@ package io.harness.ssca.ticket;
 import io.harness.ssca.beans.ticket.TicketRequestDto;
 import io.harness.ssca.beans.ticket.TicketResponseDto;
 
+import java.util.List;
+import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
@@ -18,4 +21,9 @@ public interface TicketServiceRestClient {
   @POST("tickets")
   Call<TicketResponseDto> createTicket(@Query("accountId") String accountId, @Query("orgId") String orgId,
       @Query("projectId") String projectId, @Body TicketRequestDto ticketRequestDto);
+
+  @GET("tickets")
+  Call<List<TicketResponseDto>> getTickets(@Query("module") String module,
+      @Query("identifiers") Map<String, List<String>> identifiers, @Query("accountId") String accountId,
+      @Query("orgId") String orgId, @Query("projectId") String projectId);
 }

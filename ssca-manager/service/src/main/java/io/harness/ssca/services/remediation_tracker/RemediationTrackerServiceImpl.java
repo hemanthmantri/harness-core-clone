@@ -14,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.UserProvider;
 import io.harness.repositories.remediation_tracker.RemediationTrackerRepository;
 import io.harness.spec.server.ssca.v1.model.ComponentFilter;
+import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
 import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
 import io.harness.spec.server.ssca.v1.model.NameOperator;
 import io.harness.spec.server.ssca.v1.model.Operator;
@@ -23,6 +24,8 @@ import io.harness.spec.server.ssca.v1.model.RemediationListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerCreateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackersOverallSummaryResponseBody;
 import io.harness.ssca.beans.remediation_tracker.PatchedPendingArtifactEntitiesResult;
+import io.harness.ssca.beans.ticket.TicketRequestDto;
+import io.harness.ssca.beans.ticket.TicketResponseDto;
 import io.harness.ssca.enforcement.executors.mongo.filter.denylist.fields.VersionField;
 import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.CdInstanceSummary;
@@ -40,6 +43,7 @@ import io.harness.ssca.mapper.RemediationTrackerMapper;
 import io.harness.ssca.services.ArtifactService;
 import io.harness.ssca.services.CdInstanceSummaryService;
 import io.harness.ssca.services.NormalisedSbomComponentService;
+import io.harness.ssca.ticket.TicketServiceRestClientService;
 
 import com.google.inject.Inject;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
@@ -57,6 +61,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -67,6 +72,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+@Slf4j
 public class RemediationTrackerServiceImpl implements RemediationTrackerService {
   @Inject RemediationTrackerRepository repository;
 
@@ -79,6 +85,11 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
   @Inject MongoTemplate mongoTemplate;
 
   @Inject UserProvider userProvider;
+
+  @Inject TicketServiceRestClientService ticketServiceRestClientService;
+
+  private static final String module = "SSCA";
+
   @Override
   public String createRemediationTracker(
       String accountId, String orgId, String projectId, RemediationTrackerCreateRequestBody body) {
@@ -221,6 +232,47 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
         mongoTemplate.aggregate(aggregationForRemediationCount, RemediationTrackerEntity.class, RemediationCount.class)
             .getMappedResults());
     return overallSummary;
+  }
+
+  @Override
+  public String createTicket(
+      String projectId, String remediationTrackerId, String orgId, CreateTicketRequestBody body, String accountId) {
+    RemediationTrackerEntity remediationTracker =
+        repository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
+                accountId, orgId, projectId, new ObjectId(remediationTrackerId))
+            .orElseThrow(() -> new InvalidArgumentsException("Remediation Tracker not found"));
+    if (remediationTracker.getStatus() == RemediationStatus.COMPLETED) {
+      throw new InvalidArgumentsException(
+          String.format("Remediation Tracker: %s is already closed.", remediationTrackerId));
+    }
+
+    if (!body.getArtifactId().isEmpty()) {
+      ArtifactInfo artifactInfo = remediationTracker.getArtifactInfos().get(body.getArtifactId());
+      if (artifactInfo == null) {
+        throw new InvalidArgumentsException(String.format("ArtifactId: %s not present.", body.getArtifactId()));
+      }
+      if (artifactInfo.getTicketId() != null) {
+        throw new InvalidArgumentsException(
+            String.format("Ticket already exists for artifactId: %s.", body.getArtifactId()));
+      }
+      TicketRequestDto ticketRequestDto = RemediationTrackerMapper.mapToTicketRequestDto(remediationTrackerId, body);
+      TicketResponseDto ticketResponseDto =
+          ticketServiceRestClientService.createTicket(accountId, orgId, projectId, ticketRequestDto);
+      String ticketId = ticketResponseDto.getExternalId();
+      artifactInfo.setTicketId(ticketId);
+      return ticketId;
+    }
+
+    else {
+      TicketRequestDto ticketRequestDto = RemediationTrackerMapper.mapToTicketRequestDto(remediationTrackerId, body);
+      TicketResponseDto ticketResponseDto =
+          ticketServiceRestClientService.createTicket(accountId, orgId, projectId, ticketRequestDto);
+      String ticketId = ticketResponseDto.getExternalId();
+
+      remediationTracker.setTicketId(ticketId);
+      return ticketId;
+    }
   }
 
   @Override

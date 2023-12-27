@@ -6,6 +6,7 @@
  */
 package io.harness.ssca.services.remediation_tracker;
 
+import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
 import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationListingRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationListingResponse;
@@ -31,6 +32,9 @@ public interface RemediationTrackerService {
 
   RemediationTrackersOverallSummaryResponseBody getOverallSummaryForRemediationTrackers(
       String accountId, String orgId, String projectId);
+
+  String createTicket(
+      String projectId, String remediationTrackerId, String orgId, CreateTicketRequestBody body, String accountId);
 
   Page<RemediationListingResponse> listRemediations(
       String accountId, String orgId, String projectId, RemediationListingRequestBody body, Pageable pageable);

@@ -4,6 +4,7 @@
  * that can be found in the licenses directory at the root of this repository, also available at
  * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
  */
+
 package io.harness.ssca.api;
 
 import io.harness.spec.server.ssca.v1.RemediationApi;
@@ -91,8 +92,10 @@ public class RemediationTrackerApiImpl implements RemediationApi {
 
   @Override
   public Response createTicket(
-      String orgId, String projectId, String remediation, @Valid CreateTicketRequestBody body, String harnessAccount) {
-    return null;
+      String projectId, String remediation, String orgId, @Valid CreateTicketRequestBody body, String harnessAccount) {
+    String ticketId = remediationTrackerService.createTicket(projectId, remediation, orgId, body, harnessAccount);
+    RemediationTrackerCreateResponseBody response = new RemediationTrackerCreateResponseBody().id(ticketId);
+    return Response.ok().entity(response).build();
   }
 
   @Override

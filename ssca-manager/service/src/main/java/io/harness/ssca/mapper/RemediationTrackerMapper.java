@@ -9,7 +9,9 @@ package io.harness.ssca.mapper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationListingResponse;
+import io.harness.ssca.beans.ticket.TicketRequestDto;
 import io.harness.ssca.entities.remediation_tracker.CVEVulnerability;
 import io.harness.ssca.entities.remediation_tracker.ContactInfo;
 import io.harness.ssca.entities.remediation_tracker.DefaultVulnerability;
@@ -23,6 +25,9 @@ import io.harness.ssca.entities.remediation_tracker.VulnerabilitySeverity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.SSCA)
@@ -61,6 +66,29 @@ public class RemediationTrackerMapper {
       default:
         throw new InvalidRequestException("Invalid operator: " + condition.getOperator());
     }
+  }
+
+  public TicketRequestDto mapToTicketRequestDto(String remediationId, CreateTicketRequestBody requestBody) {
+    Map<String, List<String>> identifiersCopy = new HashMap<>();
+
+    // If identifiers is not null, add it to identifiersCopy
+    if (requestBody.getIdentifiers() != null) {
+      identifiersCopy.putAll((Map<? extends String, ? extends List<String>>) requestBody.getIdentifiers());
+    }
+
+    // Add or update the remediationId in the identifiers map
+    identifiersCopy.put("remediationId", List.of(remediationId));
+
+    return TicketRequestDto.builder()
+        .description(requestBody.getDescription())
+        .exists(requestBody.isExists())
+        .externalId(requestBody.getExternalId())
+        .identifiers(identifiersCopy)
+        .issueType(requestBody.getIssueType())
+        .priority(requestBody.getPriority())
+        .projectKey(requestBody.getProjectKey())
+        .title(requestBody.getTitle())
+        .build();
   }
 
   public ContactInfo mapContactInfo(io.harness.spec.server.ssca.v1.model.ContactInfo contactInfo) {

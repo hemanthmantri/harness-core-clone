@@ -4,7 +4,8 @@
  * that can be found in the licenses directory at the root of this repository, also available at
  * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
  */
-package io.harness.ssca.ticket;
+
+package io.harness.ssca.client;
 
 import io.harness.datacollection.utils.DataCollectionUtils;
 import io.harness.eraro.ErrorCode;
@@ -20,7 +21,6 @@ import java.util.List;
 import javax.ws.rs.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -28,7 +28,7 @@ import retrofit2.Response;
 @Slf4j
 public class RequestExecutor {
   // TODO: enhance it to handle exceptions, stacktraces and retries based on response code and exception from manager.
-  public <U> U execute(@NotNull Call<U> request) throws IOException {
+  public <U> U execute(Call<U> request) {
     try {
       Response<U> response = request.clone().execute();
       if (response.isSuccessful()) {
@@ -37,12 +37,10 @@ public class RequestExecutor {
         int code = response.code();
         String errorBody = DataCollectionUtils.getErrorBodyString(response);
         tryParsingErrorFromRestResponse(code, errorBody);
-        throw new IOException("Service call failed with code: " + response.code() + ", message: " + response.message()
-            + ", error body: " + DataCollectionUtils.getErrorBodyString(response));
+        throw new ServiceCallException(response.code(), response.message(), errorBody);
       }
     } catch (IOException e) {
-      log.error("Error while executing the service call", e);
-      throw new IOException("Error while executing the service call", e);
+      throw new ServiceCallException(e);
     }
   }
 
@@ -62,17 +60,11 @@ public class RequestExecutor {
     if (CollectionUtils.isNotEmpty(responseMessages)) {
       ResponseMessage responseMessage = responseMessages.get(0);
       if (ErrorCode.DATA_COLLECTION_ERROR.equals(responseMessage.getCode())) {
-        try {
-          throw new IOException("Service call failed with code: " + code
-              + ", message: " + responseMessages.get(0).getMessage() + ", error body: " + errorBody);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+        throw new ServiceCallException(
+            responseMessage.getCode(), code, responseMessages.get(0).getMessage(), errorBody, responseMessages);
       } else {
-        String errorMessage = responseMessage.getMessage();
-        if (code == 400) {
-          throw new BadRequestException(errorMessage);
-        }
+        throw new ServiceCallException(
+            ErrorCode.UNKNOWN_ERROR, code, responseMessages.get(0).getMessage(), errorBody, responseMessages);
       }
     } else {
       String errorMessage;

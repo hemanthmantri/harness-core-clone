@@ -77,6 +77,7 @@ import io.harness.ssca.services.drift.SbomDriftService;
 import io.harness.ssca.services.drift.SbomDriftServiceImpl;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerService;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerServiceImpl;
+import io.harness.ssca.ticket.TicketServiceRestClientService;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -241,6 +242,7 @@ public class SSCAManagerTestRule implements InjectorRuleMixin, MethodRule, Mongo
         bind(ElasticSearchIndexManager.class).annotatedWith(Names.named("SSCA")).to(SSCAIndexManager.class);
 
         bind(RemediationTrackerService.class).to(RemediationTrackerServiceImpl.class);
+        bind(TicketServiceRestClientService.class).toInstance(mock(TicketServiceRestClientService.class));
         MapBinder<PolicyType, PolicyEvaluationService> policyEvaluationServiceMapBinder =
             MapBinder.newMapBinder(binder(), PolicyType.class, PolicyEvaluationService.class);
         policyEvaluationServiceMapBinder.addBinding(PolicyType.OPA)

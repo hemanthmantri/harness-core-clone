@@ -3370,6 +3370,29 @@ components:
           priority: High
           project_key: ABC
           title: A new ticket
+      properties:
+        custom_fields:
+          type: object
+        description:
+          type: string
+        exists:
+          type: boolean
+        external_id:
+          type: string
+        identifiers:
+          type: object
+        issue_type:
+          type: string
+        priority:
+          type: string
+        project_key:
+          type: string
+        title:
+          type: string
+        artifact_id:
+          type: string
+          x-stoplight:
+            id: glmq9cdkt5fxz
     RemediationArtifactDetailsResponse:
       title: RemediationArtifactDetailsResponse
       x-stoplight:

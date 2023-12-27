@@ -9,16 +9,26 @@ package io.harness.ssca.ticket;
 
 import io.harness.ssca.beans.ticket.TicketRequestDto;
 import io.harness.ssca.beans.ticket.TicketResponseDto;
+import io.harness.ssca.client.RequestExecutor;
 
 import com.google.inject.Inject;
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public class TicketServiceRestClientServiceImpl implements TicketServiceRestClientService {
   @Inject private TicketServiceRestClient ticketServiceRestClient;
   @Inject private RequestExecutor requestExecutor;
+
   @Override
   public TicketResponseDto createTicket(
-      String accountId, String orgId, String projectId, TicketRequestDto ticketRequestDto) throws IOException {
-    return requestExecutor.execute(ticketServiceRestClient.createTicket(accountId, projectId, orgId, ticketRequestDto));
+      String accountId, String orgId, String projectId, TicketRequestDto ticketRequestDto) {
+    return requestExecutor.execute(ticketServiceRestClient.createTicket(accountId, orgId, projectId, ticketRequestDto));
+  }
+
+  @Override
+  public List<TicketResponseDto> getTickets(
+      String module, Map<String, List<String>> identifiers, String accountId, String orgId, String projectId) {
+    return requestExecutor.execute(
+        ticketServiceRestClient.getTickets(module, identifiers, accountId, orgId, projectId));
   }
 }
