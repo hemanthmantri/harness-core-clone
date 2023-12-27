@@ -11,18 +11,22 @@ import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
 import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactListingRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationListingRequestBody;
+import io.harness.spec.server.ssca.v1.model.RemediationListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerCreateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerCreateResponseBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerUpdateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackersOverallSummaryResponseBody;
 import io.harness.spec.server.ssca.v1.model.SaveResponse;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerService;
+import io.harness.ssca.utils.PageResponseUtils;
 
 import com.google.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.ws.rs.core.Response;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public class RemediationTrackerApiImpl implements RemediationApi {
   @Inject RemediationTrackerService remediationTrackerService;
@@ -94,7 +98,11 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   @Override
   public Response listRemediations(String org, String project, @Valid RemediationListingRequestBody body,
       String harnessAccount, @Min(1L) @Max(1000L) Integer limit, String order, @Min(0L) Integer page, String sort) {
-    return null;
+    sort = RemediationTrackerApiUtils.getSortFieldMapping(sort);
+    Pageable pageable = PageResponseUtils.getPageable(page, limit, sort, order);
+    Page<RemediationListingResponse> artifactEntities =
+        remediationTrackerService.listRemediations(harnessAccount, org, project, body, pageable);
+    return PageResponseUtils.getPagedResponse(artifactEntities);
   }
 
   @Override

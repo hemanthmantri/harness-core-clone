@@ -7,9 +7,14 @@
 package io.harness.ssca.services.remediation_tracker;
 
 import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
+import io.harness.spec.server.ssca.v1.model.RemediationListingRequestBody;
+import io.harness.spec.server.ssca.v1.model.RemediationListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerCreateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackersOverallSummaryResponseBody;
 import io.harness.ssca.entities.remediation_tracker.RemediationTrackerEntity;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface RemediationTrackerService {
   String createRemediationTracker(
@@ -26,4 +31,7 @@ public interface RemediationTrackerService {
 
   RemediationTrackersOverallSummaryResponseBody getOverallSummaryForRemediationTrackers(
       String accountId, String orgId, String projectId);
+
+  Page<RemediationListingResponse> listRemediations(
+      String accountId, String orgId, String projectId, RemediationListingRequestBody body, Pageable pageable);
 }

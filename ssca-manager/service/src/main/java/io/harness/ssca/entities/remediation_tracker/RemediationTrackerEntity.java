@@ -12,14 +12,17 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
 import dev.morphia.annotations.Entity;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -48,6 +51,18 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = true)
 @OwnedBy(HarnessTeam.SSCA)
 public class RemediationTrackerEntity implements UuidAware, PersistentRegularIterable, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_query_idx")
+                 .unique(true)
+                 .field(RemediationTrackerEntityKeys.accountIdentifier)
+                 .field(RemediationTrackerEntityKeys.orgIdentifier)
+                 .field(RemediationTrackerEntityKeys.projectIdentifier)
+                 .field(RemediationTrackerEntityKeys.uuid)
+                 .build())
+        .build();
+  }
   @NonFinal @Id String uuid; // uuid of the tracker entity.
   @NotNull String accountIdentifier;
   @NotNull String orgIdentifier;
@@ -63,13 +78,12 @@ public class RemediationTrackerEntity implements UuidAware, PersistentRegularIte
   String latestTagWithFix;
   DeploymentsCount deploymentsCount;
   @FdIndex long nextIteration;
-  long targetEndDate;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastUpdatedAt;
   String comments;
   boolean closedManually;
   EmbeddedUser closedBy;
-  LocalDate targetEnddate;
+  Long targetEndDateEpochDay;
 
   @Override
   public Long obtainNextIteration(String fieldName) {

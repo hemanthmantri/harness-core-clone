@@ -9,9 +9,14 @@ package io.harness.repositories.remediation_tracker;
 
 import io.harness.ssca.entities.remediation_tracker.RemediationTrackerEntity;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 public interface RemediationTrackerRepositoryCustom {
   RemediationTrackerEntity update(Query query, Update update);
+
+  Page<RemediationTrackerEntity> findAll(Criteria criteria, Pageable pageable);
 }
