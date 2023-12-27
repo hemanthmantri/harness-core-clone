@@ -95,6 +95,58 @@ public class ScopeInfoFilter implements ContainerRequestFilter, ContainerRespons
 
       if (!isScopeInfoResolutionExemptedRequest(resourceInfo, requestContext)) {
         String accountIdentifier = accountIdentifierOptional.get();
+        /*
+          We first try to infer scope from api path signature and path param
+          - If last OR second-last segment of path is 'org' OR 'organizations' then we will consider it as ACCOUNT scope
+            For example below paths are ACCOUNT scope
+              /organizations
+              /organizations/{identifier}
+              /organizations/all-organizations
+              /aggregate/organizations/{identifier}
+              /aggregate/organizations
+              /orgs
+              /orgs/{org}
+
+          - If last OR second-last segment of path is 'projects' then we will consider it as ORGANIZATION scope
+            For example below paths are ORGANIZATION scope
+              /aggregate/projects/{identifier}
+              /aggregate/projects
+              /projects
+              /projects/{identifier}
+              /projects/all-projects
+              /projects/project-count
+              /orgs/{org}/projects
+              /orgs/{org}/projects/{project}
+
+          - For api paths which follows below pattern we will consider it as PROJECT scope
+            For example below paths are PROJECT scope
+              /orgs/{org}/projects/{project}/secrets
+              /orgs/{org}/projects/{project}/secrets/{secret}
+
+        If we are not able to figure out scope from above path patterns then we will look for query params
+        It supports below query params
+          - ACCOUNT scope
+              /secrets?accountIdentifier=someAccount&orgIdentifier=someOrg
+
+          - ORGANIZATION scope
+              /secrets?accountIdentifier=someAccount&orgIdentifier=someOrg
+
+          - PROJECT scope
+              /secrets?accountIdentifier=someAccount&orgIdentifier=someOrg&projectIdentifier=someProject
+
+
+        For api paths which do not fall in any of above patterns, api owners need to manually resolve scope in that
+        case. They also need to mark there api method as @ScopeInfoResolutionExemptedApi to avoid automatic scope
+        resolution from path OR query param. For example below apis in ng-manager can have any scope
+        ACCOUNT/ORGANIZATION/PROJECT
+              - /artifacts/azureartifacts/projects
+              - /artifacts/azureartifacts/v2/projects
+              - /gcp/project
+              - /jira/projects
+
+        This deviates from supported api path patterns. So automatic scope resolution should be avoided in
+        this case by marking these api methods as @ScopeInfoResolutionExemptedApi
+        */
         String orgIdentifier = getOrgIdentifierFrom(requestContext).orElse(null);
         String projectIdentifier =
             isNotEmpty(orgIdentifier) ? getProjectIdentifierFrom(requestContext).orElse(null) : null;

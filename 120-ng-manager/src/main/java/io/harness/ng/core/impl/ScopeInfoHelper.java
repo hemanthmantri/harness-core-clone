@@ -7,6 +7,9 @@
 
 package io.harness.ng.core.impl;
 
+import static io.harness.beans.ScopeLevel.ACCOUNT;
+import static io.harness.beans.ScopeLevel.ORGANIZATION;
+import static io.harness.beans.ScopeLevel.PROJECT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.ScopeInfo;
@@ -14,27 +17,25 @@ import io.harness.beans.ScopeLevel;
 
 public class ScopeInfoHelper {
   private static final String SCOPE_INFO_CACHE_KEY_DELIMITER = "/";
-  public ScopeInfo populateScopeInfo(final ScopeLevel scopeType, final String uniqueId, final String accountIdentifier,
+  ScopeInfo populateScopeInfo(final ScopeLevel scopeType, final String uniqueId, final String accountIdentifier,
       final String orgIdentifier, final String projIdentifier) {
     ScopeInfo builtScope =
         ScopeInfo.builder().scopeType(scopeType).uniqueId(uniqueId).accountIdentifier(accountIdentifier).build();
-    if (isNotEmpty(orgIdentifier)) {
+    if (ORGANIZATION.equals(scopeType)) {
       builtScope.setOrgIdentifier(orgIdentifier);
-    }
-    if (isNotEmpty(projIdentifier)) {
+    } else if (PROJECT.equals(scopeType)) {
+      builtScope.setOrgIdentifier(orgIdentifier);
       builtScope.setProjectIdentifier(projIdentifier);
     }
     return builtScope;
   }
 
-  public String getScopeInfoCacheKey(
+  String getScopeInfoCacheKey(
       final String accountIdentifier, final String orgIdentifier, final String projectIdentifier) {
     // key-format: ACCOUNT/<accountIdentifier>/ORGANIZATION/orgIdentifier/PROJECT/projectIdentifier
     // append ACCOUNT
-    StringBuilder sb = new StringBuilder()
-                           .append(ScopeLevel.ACCOUNT.name())
-                           .append(SCOPE_INFO_CACHE_KEY_DELIMITER)
-                           .append(accountIdentifier);
+    StringBuilder sb =
+        new StringBuilder().append(ACCOUNT.name()).append(SCOPE_INFO_CACHE_KEY_DELIMITER).append(accountIdentifier);
     // append ORG
     if (isNotEmpty(orgIdentifier)) {
       sb.append(SCOPE_INFO_CACHE_KEY_DELIMITER)
