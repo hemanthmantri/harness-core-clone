@@ -100,8 +100,8 @@ public abstract class TrafficRoutingResourceCreator {
                       String firstVersion = value.get(value.size() - 1);
                       logCallback.saveExecutionLog(
                           format(
-                              "Required CRD specification wasn't found in the cluster. Default api-version %s will be used for resource creation.",
-                              firstVersion),
+                              "CRD specification wasn't found for %s resource in the cluster. Version: %s will be used in case of creation of this resource.",
+                              key, firstVersion),
                           LogLevel.WARN, CommandExecutionStatus.RUNNING);
                       return firstVersion;
                     })));
@@ -123,4 +123,5 @@ public abstract class TrafficRoutingResourceCreator {
   protected abstract String getMainResourceKind();
 
   protected abstract String getMainResourceKindPlural();
+  public abstract Optional<String> getSwapTrafficRoutingPatch(String stable, String stage);
 }

@@ -217,6 +217,11 @@ public class TrafficRoutingResourceCreatorTest extends CategoryTest {
       protected String getMainResourceKindPlural() {
         return "kinds";
       }
+
+      @Override
+      public Optional<String> getSwapTrafficRoutingPatch(String stable, String stage) {
+        return Optional.of("patch");
+      }
     };
   }
 }

@@ -30,4 +30,18 @@ public class TrafficRoutingResourceCreatorFactory {
             String.format("Unsupported Traffic Routing provider type: %s", providerType.name()));
     }
   }
+
+  public TrafficRoutingResourceCreator create(String plural) {
+    switch (plural) {
+      case SMITrafficRoutingResourceCreator.PLURAL: {
+        return new SMITrafficRoutingResourceCreator();
+      }
+      case IstioTrafficRoutingResourceCreator.PLURAL: {
+        return new IstioTrafficRoutingResourceCreator();
+      }
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Unsupported Plural Kind. Can't create Traffic Routing provider for kind type: %s", plural));
+    }
+  }
 }

@@ -160,4 +160,7 @@ public interface KubernetesContainerService {
 
   K8sServiceMetadata getK8sServiceMetadataUsingFabric8(
       KubernetesConfig kubernetesConfig, String containerServiceName, String accountId);
+
+  Object patchCustomObject(
+      KubernetesConfig kubernetesConfig, String name, K8sApiVersion apiVersion, String plural, String patch);
 }

@@ -47,6 +47,8 @@ public class KubernetesExceptionExplanation {
   public final String BG_CONFLICTING_SERVICE =
       "For blue/green deployment, the label [" + HarnessLabels.color + "] is required in service selector";
   public final String BG_SWAP_SERVICES_SERVICE_NOT_FOUND = "Service [%s] not found.";
+  public final String UPDATING_TRAFFIC_ROUTING_RESOURCE_FAILED =
+      "Failed to update traffic routing resource: %s with new destinations";
 
   public final String SCALE_CLI_FAILED = "Failed to scale resource [%s]\n";
 

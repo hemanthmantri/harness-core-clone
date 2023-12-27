@@ -43,4 +43,31 @@ public class TrafficRoutingResourceCreatorFactoryTest extends CategoryTest {
         TrafficRoutingResourceCreatorFactory.create(k8sTrafficRoutingConfig);
     assertThat(resourceCreator).isInstanceOf(SMITrafficRoutingResourceCreator.class);
   }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testCreateResourceCreatorFromTrafficSplits() {
+    TrafficRoutingResourceCreator trafficRoutingResourceCreator =
+        TrafficRoutingResourceCreatorFactory.create("trafficsplits");
+
+    assertThat(trafficRoutingResourceCreator).isInstanceOf(SMITrafficRoutingResourceCreator.class);
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testCreateResourceCreatorFromVirtualServices() {
+    TrafficRoutingResourceCreator trafficRoutingResourceCreator =
+        TrafficRoutingResourceCreatorFactory.create("virtualservices");
+
+    assertThat(trafficRoutingResourceCreator).isInstanceOf(IstioTrafficRoutingResourceCreator.class);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testCreateResourceCreatorFromDummy() {
+    TrafficRoutingResourceCreatorFactory.create("dummy");
+  }
 }

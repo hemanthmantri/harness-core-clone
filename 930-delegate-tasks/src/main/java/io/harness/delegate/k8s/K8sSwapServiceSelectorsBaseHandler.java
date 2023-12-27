@@ -19,8 +19,10 @@ import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
+import io.harness.delegate.k8s.trafficrouting.TrafficRoutingResourceCreatorFactory;
 import io.harness.exception.KubernetesTaskException;
 import io.harness.exception.NestedExceptionUtils;
+import io.harness.k8s.K8sApiVersion;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.exception.KubernetesExceptionExplanation;
 import io.harness.k8s.exception.KubernetesExceptionHints;
@@ -28,14 +30,18 @@ import io.harness.k8s.exception.KubernetesExceptionMessages;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.releasehistory.IK8sRelease;
+import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.util.Yaml;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = true, components = {HarnessModuleComponent.CDS_K8S})
@@ -95,8 +101,6 @@ public class K8sSwapServiceSelectorsBaseHandler {
             toDisplayYaml(serviceTwoUpdated.getSpec().getSelector())),
         LogLevel.INFO);
 
-    logCallback.saveExecutionLog("Done", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
-
     return true;
   }
 
@@ -138,5 +142,55 @@ public class K8sSwapServiceSelectorsBaseHandler {
       return EMPTY;
     }
     return primaryService.getSpec().getSelector().get(HarnessLabels.color);
+  }
+
+  public void updateTrafficRouting(
+      KubernetesConfig kubernetesConfig, IK8sRelease release, String stable, String stage, LogCallback logCallback) {
+    TrafficRoutingInfoDTO trafficRoutingInfo = release.getTrafficRoutingInfo();
+    if (trafficRoutingInfo == null) {
+      return;
+    }
+    String version = trafficRoutingInfo.getVersion();
+    String plural = trafficRoutingInfo.getPlural();
+    String name = trafficRoutingInfo.getName();
+    logCallback.saveExecutionLog(
+        format("%nTraffic routing configuration found in the Blue Green step. Switch all traffic to the %s service%n",
+            stable));
+    Optional<String> swapServicePatch =
+        TrafficRoutingResourceCreatorFactory.create(plural).getSwapTrafficRoutingPatch(stable, stage);
+
+    if (swapServicePatch.isEmpty()) {
+      logCallback.saveExecutionLog(
+          format("Failed to create patch object, therefore resource %s will not be updated", name), LogLevel.ERROR,
+          CommandExecutionStatus.FAILURE);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          format(KubernetesExceptionHints.FAILED_TO_CREATE_PATCH, version, plural, name),
+          format(KubernetesExceptionExplanation.UPDATING_TRAFFIC_ROUTING_RESOURCE_FAILED, name),
+          new KubernetesTaskException(format(KubernetesExceptionMessages.BG_SWAP_SERVICES_FAILED, stable, stage)));
+    }
+
+    logCallback.saveExecutionLog(format("Patching %s resource with:%n%s%n", name, swapServicePatch.get()));
+
+    Object patchedObject;
+    try {
+      patchedObject = kubernetesContainerService.patchCustomObject(
+          kubernetesConfig, name, K8sApiVersion.fromApiVersion(version), plural, swapServicePatch.get());
+    } catch (Exception e) {
+      logCallback.saveExecutionLog(format("Patching failed. Resource: %s is not updated.", name), LogLevel.ERROR,
+          CommandExecutionStatus.FAILURE);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          format(KubernetesExceptionHints.PATCHING_TRAFFIC_ROUTING_RESOURCE_FAILED, version, plural, name),
+          format(KubernetesExceptionExplanation.UPDATING_TRAFFIC_ROUTING_RESOURCE_FAILED, name), e);
+    }
+
+    String patchedObjectYaml = removeMetadataAndConvertToYaml(patchedObject);
+    logCallback.saveExecutionLog(
+        format("Patch applied successfully.%nThe resource is updated:%n%s%n", patchedObjectYaml));
+  }
+
+  private String removeMetadataAndConvertToYaml(Object patchedObject) {
+    Map<String, Object> map = new ObjectMapper().convertValue(patchedObject, Map.class);
+    map.remove("metadata");
+    return Yaml.dump(map);
   }
 }

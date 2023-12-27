@@ -37,10 +37,14 @@ import io.harness.k8s.model.smi.SMIRoute;
 import io.harness.k8s.model.smi.TrafficSplit;
 import io.harness.k8s.model.smi.TrafficSplitSpec;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.util.Yaml;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NoArgsConstructor;
@@ -60,6 +64,7 @@ public class SMITrafficRoutingResourceCreator extends TrafficRoutingResourceCrea
 
   static final String SPLIT = "split";
   static final String SPECS = "specs";
+  private static final String PATCH_FORMAT = "[ { \"op\": \"replace\", \"path\": \"/spec/backends\", \"value\": %s }]";
   private static final Map<String, List<String>> SUPPORTED_API_MAP = Map.of(SPLIT,
       List.of("split.smi-spec.io/v1alpha1", "split.smi-spec.io/v1alpha2", "split.smi-spec.io/v1alpha3",
           "split.smi-spec.io/v1alpha4"),
@@ -102,11 +107,28 @@ public class SMITrafficRoutingResourceCreator extends TrafficRoutingResourceCrea
     return PLURAL;
   }
 
+  @Override
+  public Optional<String> getSwapTrafficRoutingPatch(String stable, String stage) {
+    if (isNotEmpty(stable) && isNotEmpty(stage)) {
+      List<Backend> backends = List.of(
+          Backend.builder().service(stable).weight(100).build(), Backend.builder().service(stage).weight(0).build());
+
+      try {
+        return Optional.of(format(PATCH_FORMAT,
+            new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL).writeValueAsString(backends)));
+      } catch (JsonProcessingException e) {
+        log.warn("Failed to Deserialize List of Backends", e);
+      }
+    }
+    return Optional.empty();
+  }
+
   private TrafficSplit getTrafficSplit(
       String namespace, String releaseName, String stableName, String stageName, String apiVersion) {
     String name = getTrafficRoutingResourceName(stableName, TRAFFIC_SPLIT_SUFFIX, TRAFFIC_SPLIT_DEFAULT_NAME);
     Metadata metadata = getMetadata(name, namespace, releaseName);
     String rootService = getRootService((SMIProviderConfig) k8sTrafficRoutingConfig.getProviderConfig(), stableName);
+    rootService = updatePlaceHoldersIfExist(rootService, stableName, stageName);
 
     return TrafficSplit.builder()
         .metadata(metadata)

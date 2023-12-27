@@ -140,6 +140,7 @@ import io.fabric8.openshift.api.model.DeploymentConfigList;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.dsl.DeployableScalableResource;
 import io.github.resilience4j.retry.Retry;
+import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
@@ -1412,6 +1413,30 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
     });
     return virtualServiceSupplier.get();
+  }
+
+  @Override
+  public Object patchCustomObject(
+      KubernetesConfig kubernetesConfig, String name, K8sApiVersion apiVersion, String plural, String patch) {
+    if (kubernetesConfig == null) {
+      return null;
+    }
+    final Supplier<Object> customObjectSupplier = Retry.decorateSupplier(retry, () -> {
+      try {
+        ApiClient apiClient = kubernetesHelperService.getApiClientWithReadTimeout(kubernetesConfig);
+        CustomObjectsApi customObjectsApi = new CustomObjectsApi(apiClient);
+        return customObjectsApi.patchNamespacedCustomObject(apiVersion.getGroup(), apiVersion.getVersion(),
+            kubernetesConfig.getNamespace(), plural, name, new V1Patch(patch), null, null, null);
+      } catch (ApiException exception) {
+        String message = format(
+            "Unable to patch custom object: Group:[%s] ApiVersion:[%s] Namespace:[%s], Name:[%s] Code: %s, message: %s",
+            apiVersion.getGroup(), apiVersion.getVersion(), kubernetesConfig.getNamespace(), name, exception.getCode(),
+            getErrorMessage(exception));
+        log.error(message);
+        throw new InvalidRequestException(message, exception, USER);
+      }
+    });
+    return customObjectSupplier.get();
   }
 
   @Override

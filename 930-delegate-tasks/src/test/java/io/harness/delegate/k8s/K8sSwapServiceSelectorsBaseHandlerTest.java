@@ -9,6 +9,7 @@ package io.harness.delegate.k8s;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.BUHA;
 import static io.harness.rule.OwnerRule.PRATYUSH;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.TARUN_UBA;
@@ -21,8 +22,10 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -38,8 +41,10 @@ import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesTaskException;
 import io.harness.helpers.k8s.releasehistory.K8sReleaseHandler;
+import io.harness.k8s.K8sApiVersion;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.exception.KubernetesExceptionExplanation;
 import io.harness.k8s.exception.KubernetesExceptionHints;
@@ -51,6 +56,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.releasehistory.IK8sRelease;
 import io.harness.k8s.releasehistory.IK8sReleaseHistory;
 import io.harness.k8s.releasehistory.K8sLegacyRelease;
+import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
@@ -58,6 +64,7 @@ import com.google.common.collect.ImmutableMap;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServiceSpecBuilder;
+import java.util.Collections;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -372,5 +379,81 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
                   format(KubernetesExceptionMessages.BG_SWAP_SERVICES_FAILED, "service1", "service2"));
           return true;
         });
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testUpdateTrafficRouting() {
+    K8sLegacyRelease release = K8sLegacyRelease.builder()
+                                   .trafficRoutingInfoDTO(TrafficRoutingInfoDTO.builder()
+                                                              .name("service-traffic-split")
+                                                              .plural("trafficsplits")
+                                                              .version("networking.istio.io/v1alpha3")
+                                                              .build())
+                                   .build();
+    K8sApiVersion apiVersion = K8sApiVersion.builder().group("networking.istio.io").version("v1alpha3").build();
+    String patch =
+        "[ { \"op\": \"replace\", \"path\": \"/spec/backends\", \"value\": [{\"service\":\"service\",\"weight\":100},{\"service\":\"service-stage\",\"weight\":0}] }]";
+
+    doReturn(Collections.emptyMap())
+        .when(kubernetesContainerService)
+        .patchCustomObject(any(), any(), any(), any(), anyString());
+
+    k8sSwapServiceSelectorsBaseHandler.updateTrafficRouting(
+        kubernetesConfig, release, "service", "service-stage", logCallback);
+
+    verify(kubernetesContainerService, times(1))
+        .patchCustomObject(
+            eq(kubernetesConfig), eq("service-traffic-split"), eq(apiVersion), eq("trafficsplits"), eq(patch));
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testSkipUpdateTrafficRoutingIfConfigNotPresent() {
+    K8sLegacyRelease release = K8sLegacyRelease.builder().build();
+
+    k8sSwapServiceSelectorsBaseHandler.updateTrafficRouting(
+        kubernetesConfig, release, "service", "service-stage", logCallback);
+
+    verifyNoInteractions(kubernetesContainerService);
+  }
+
+  @Test(expected = HintException.class)
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testFailedToCreatePatchObject() {
+    K8sLegacyRelease release = K8sLegacyRelease.builder()
+                                   .trafficRoutingInfoDTO(TrafficRoutingInfoDTO.builder()
+                                                              .name("service-traffic-split")
+                                                              .plural("trafficsplits")
+                                                              .version("networking.istio.io/v1alpha3")
+                                                              .build())
+                                   .build();
+
+    k8sSwapServiceSelectorsBaseHandler.updateTrafficRouting(kubernetesConfig, release, "stable", null, logCallback);
+
+    verifyNoInteractions(kubernetesContainerService);
+  }
+
+  @Test(expected = HintException.class)
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testUpdateTrafficRoutingPatchingFailed() {
+    K8sLegacyRelease release = K8sLegacyRelease.builder()
+                                   .trafficRoutingInfoDTO(TrafficRoutingInfoDTO.builder()
+                                                              .name("service-traffic-split")
+                                                              .plural("trafficsplits")
+                                                              .version("networking.istio.io/v1alpha3")
+                                                              .build())
+                                   .build();
+
+    doThrow(new InvalidArgumentsException("error"))
+        .when(kubernetesContainerService)
+        .patchCustomObject(any(), any(), any(), any(), anyString());
+
+    k8sSwapServiceSelectorsBaseHandler.updateTrafficRouting(
+        kubernetesConfig, release, "service", "service-stage", logCallback);
   }
 }
