@@ -1264,8 +1264,12 @@ paths:
         id: t5fcp5i4961g3
       parameters:
         - $ref: '#/components/parameters/AccountHeader'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Page'
         - schema:
             type: array
+            items:
+             $ref: '#/components/schemas/ExemptionStatusDTO'
           in: query
           name: status
           description: 'status of the exemption, all statuses will be returned if this is null'
@@ -1274,16 +1278,6 @@ paths:
           in: query
           name: artifact_id
           description: 'artifactId of the exemption, only applicable for exemptions with ARTIFACT scope '
-        - schema:
-            type: string
-          in: query
-          name: limit
-          description: Number of items to return per page
-        - schema:
-            type: string
-          in: query
-          name: page
-          description: 'Pagination page number strategy: Specify the page number within the paginated collection related to the number of items in each page'
         - schema:
             type: string
           in: query
@@ -1296,7 +1290,7 @@ paths:
         - exemptions
       operationId: createExemptionForProject
       responses:
-        '201':
+        '200':
           description: ''
           content:
             application/json:
@@ -1326,7 +1320,7 @@ paths:
       summary: Create exemption for artifact
       operationId: createExemptionForArtifact
       responses:
-        '201':
+        '200':
           description: ''
           content:
             application/json:

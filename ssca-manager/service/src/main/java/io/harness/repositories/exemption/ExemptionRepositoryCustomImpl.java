@@ -12,6 +12,11 @@ import io.harness.ssca.entities.exemption.Exemption.ExemptionKeys;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,8 +25,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
 
+@AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class ExemptionRepositoryCustomImpl implements ExemptionRepositoryCustom {
-  @Inject MongoTemplate mongoTemplate;
+  private final MongoTemplate mongoTemplate;
   @Override
   public Page<Exemption> findExemptions(Criteria criteria, Pageable pageable) {
     Query query = getQueryWithDefaultSorting(criteria).with(pageable);
@@ -33,6 +39,17 @@ public class ExemptionRepositoryCustomImpl implements ExemptionRepositoryCustom 
   @Override
   public List<Exemption> findExemptions(Criteria criteria) {
     return mongoTemplate.find(getQueryWithDefaultSorting(criteria), Exemption.class);
+  }
+
+  @Override
+  public Exemption createExemption(Exemption exemptionRequest) {
+    if (StringUtils.isBlank(exemptionRequest.getUuid())) {
+      exemptionRequest.setUuid(UUID.randomUUID().toString());
+    }
+    if (Objects.isNull(exemptionRequest.getCreatedAt())) {
+      exemptionRequest.setCreatedAt(System.currentTimeMillis());
+    }
+    return mongoTemplate.save(exemptionRequest);
   }
 
   private static Query getQueryWithDefaultSorting(Criteria criteria) {

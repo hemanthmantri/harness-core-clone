@@ -20,6 +20,7 @@ import io.harness.SSCAManagerTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.repositories.exemption.ExemptionRepositoryCustomImpl;
 import io.harness.rule.Owner;
+import io.harness.ssca.entities.OperatorEntity;
 import io.harness.ssca.entities.exemption.Exemption;
 import io.harness.ssca.entities.exemption.Exemption.ExemptionDuration;
 import io.harness.ssca.entities.exemption.Exemption.ExemptionInitiator;
@@ -136,7 +137,7 @@ public class ExemptionRepositoryCustomImplTest extends SSCAManagerTestBase {
         .artifactId(artifactId)
         .componentName(componentName)
         .componentVersion("componentVersion")
-        .versionOperator("LESS_THAN")
+        .versionOperator(OperatorEntity.LESSTHAN)
         .exemptionDuration(ExemptionDuration.builder().alwaysExempt(true).build())
         .exemptionInitiator(ExemptionInitiator.builder()
                                 .projectId(builderFactory.getContext().getProjectIdentifier())

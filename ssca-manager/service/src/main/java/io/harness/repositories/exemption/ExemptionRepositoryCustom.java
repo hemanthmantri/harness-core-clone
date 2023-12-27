@@ -17,4 +17,5 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface ExemptionRepositoryCustom {
   Page<Exemption> findExemptions(Criteria criteria, Pageable pageable);
   List<Exemption> findExemptions(Criteria criteria);
+  Exemption createExemption(Exemption exemption);
 }
