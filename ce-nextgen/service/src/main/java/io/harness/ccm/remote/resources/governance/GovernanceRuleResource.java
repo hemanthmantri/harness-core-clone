@@ -18,6 +18,7 @@ import static io.harness.ccm.TelemetryConstants.RESOURCE_TYPE;
 import static io.harness.ccm.TelemetryConstants.RULE_NAME;
 import static io.harness.ccm.rbac.CCMRbacPermissions.CONNECTOR_VIEW;
 import static io.harness.ccm.rbac.CCMRbacPermissions.RULE_EXECUTE;
+import static io.harness.ccm.views.helper.RuleCloudProviderType.GCP;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.PersistenceUtils.DEFAULT_RETRY_POLICY;
 import static io.harness.telemetry.Destination.AMPLITUDE;
@@ -223,8 +224,9 @@ public class GovernanceRuleResource {
       ruleEnforcementDAO.updateCount(ruleEnforcementUpdate);
       RuleCloudProviderType ruleCloudProviderType = ruleEnforcement.getCloudProvider();
       accountId = ruleEnforcement.getAccountId();
-      if (ruleCloudProviderType != RuleCloudProviderType.AWS && ruleCloudProviderType != RuleCloudProviderType.AZURE) {
-        log.error("Support for non AWS/AZURE cloud providers is not present atm. Skipping enqueuing in faktory");
+      if (ruleCloudProviderType != RuleCloudProviderType.AWS && ruleCloudProviderType != RuleCloudProviderType.AZURE
+          && ruleCloudProviderType != RuleCloudProviderType.GCP) {
+        log.error("Support for non AWS/AZURE/GCP cloud providers is not present atm. Skipping enqueuing in faktory");
         // TO DO: Return simple response to dkron instead of empty for debugging purposes
         return ResponseDTO.newResponse();
       }
@@ -267,6 +269,9 @@ public class GovernanceRuleResource {
         if (ruleEnforcement.getCloudProvider() == RuleCloudProviderType.AZURE) {
           faktoryJobType = configuration.getGovernanceConfig().getAzureFaktoryJobType();
           faktoryQueueName = configuration.getGovernanceConfig().getAzureFaktoryQueueName();
+        } else if (ruleEnforcement.getCloudProvider() == RuleCloudProviderType.GCP) {
+          faktoryJobType = configuration.getGovernanceConfig().getGcpFaktoryJobType();
+          faktoryQueueName = configuration.getGovernanceConfig().getGcpFaktoryQueueName();
         }
         List<RuleExecution> ruleExecutions = governanceRuleService.enqueue(accountId, ruleEnforcement, rulesList,
             connectorInfoDTO.getConnectorConfig(), connectorInfoDTO.getIdentifier(), faktoryJobType, faktoryQueueName);
@@ -659,10 +664,17 @@ public class GovernanceRuleResource {
       RecommendationAdhocDTO recommendationAdhocDTO =
           governanceAdhocEnqueueDTO.getTargetAccountDetails().get(targetAccount);
       rbacHelper.checkAccountExecutePermission(accountId, null, null, recommendationAdhocDTO.getCloudConnectorId());
-      for (String targetRegion : governanceAdhocEnqueueDTO.getTargetRegions()) {
+      List<String> targetRegions = governanceAdhocEnqueueDTO.getTargetRegions();
+      if (governanceAdhocEnqueueDTO.getRuleCloudProviderType() == GCP) {
+        // In case of GCP the targetRegions would be empty or make it empty first
+        // And then to use same loop making one dummy entry in the list
+        targetRegions = new ArrayList<>();
+        targetRegions.add("DummyGcpRegion");
+      }
+      for (String targetRegion : targetRegions) {
         GovernanceJobEnqueueDTO governanceJobEnqueueDTO =
             GovernanceJobEnqueueDTO.builder()
-                .targetRegion(targetRegion)
+                .targetRegion(governanceAdhocEnqueueDTO.getRuleCloudProviderType() == GCP ? null : targetRegion)
                 .targetAccountDetails(recommendationAdhocDTO)
                 .ruleId(governanceAdhocEnqueueDTO.getRuleId())
                 .isDryRun(governanceAdhocEnqueueDTO.getIsDryRun())

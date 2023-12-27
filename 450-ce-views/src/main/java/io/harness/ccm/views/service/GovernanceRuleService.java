@@ -34,8 +34,8 @@ public interface GovernanceRuleService {
   void validateSchema(Rule rule);
   Set<ConnectorInfoDTO> getConnectorResponse(
       String accountId, Set<String> targets, RuleCloudProviderType cloudProvider);
-  List<ConnectorResponseDTO> getAWSConnectorWithTargetAccounts(List<String> accounts, String accountId);
-  List<ConnectorResponseDTO> getAzureConnectorWithTargetSubscriptions(List<String> subscriptions, String accountId);
+  List<ConnectorResponseDTO> getConnectorsWithTargets(
+      List<String> accounts, String accountId, RuleCloudProviderType cloudProvider);
   String getSchema();
   String enqueueAdhoc(String accountId, GovernanceJobEnqueueDTO governanceJobEnqueueDTO);
   List<RuleExecution> enqueue(String accountId, RuleEnforcement ruleEnforcement, List<Rule> rulesList,

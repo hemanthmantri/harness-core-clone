@@ -53,6 +53,7 @@ import io.harness.ccm.views.service.RuleSetService;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
+import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -242,6 +243,11 @@ public class GovernanceRuleEnforcementResource {
           nextGenConnectorResponses.stream()
               .map(c -> ((CEAzureConnectorDTO) c.getConnectorConfig()).getSubscriptionId())
               .collect(Collectors.toList()));
+    } else if (ruleEnforcement.getCloudProvider() == RuleCloudProviderType.GCP) {
+      ruleEnforcement.setTargetAccounts(
+          nextGenConnectorResponses.stream()
+              .map(c -> ((GcpCloudCostConnectorDTO) c.getConnectorConfig()).getProjectId())
+              .collect(Collectors.toList()));
     }
     ruleEnforcement.setAccountId(accountId);
     ruleEnforcement.setRunCount(0);
@@ -266,6 +272,9 @@ public class GovernanceRuleEnforcementResource {
       targetRegions.removeAll(Collections.singleton(null));
     }
     ruleEnforcement.setTargetRegions(targetRegions);
+    if (ruleEnforcement.getCloudProvider() == RuleCloudProviderType.GCP) {
+      ruleEnforcement.setTargetRegions(null);
+    }
     GovernanceConfig governanceConfig = configuration.getGovernanceConfig();
     ruleEnforcementService.checkLimitsAndValidate(ruleEnforcement, governanceConfig);
     ruleEnforcementService.save(ruleEnforcement);
@@ -462,6 +471,14 @@ public class GovernanceRuleEnforcementResource {
           nextGenConnectorResponses.stream()
               .map(c -> ((CEAzureConnectorDTO) c.getConnectorConfig()).getSubscriptionId())
               .collect(Collectors.toList()));
+    } else if (ruleEnforcement.getCloudProvider() == RuleCloudProviderType.GCP) {
+      ruleEnforcement.setTargetAccounts(
+          nextGenConnectorResponses.stream()
+              .map(c -> ((GcpCloudCostConnectorDTO) c.getConnectorConfig()).getProjectId())
+              .collect(Collectors.toList()));
+    }
+    if (ruleEnforcement.getCloudProvider() == RuleCloudProviderType.GCP) {
+      ruleEnforcement.setTargetRegions(null);
     }
 
     // Update dkron if enforcement is toggled or schedule is changed or timezone is changed
