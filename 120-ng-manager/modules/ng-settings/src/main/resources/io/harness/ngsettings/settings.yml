@@ -1,6 +1,6 @@
 #Any edit in this file should accompany an increment in version.
 name : settingsConfiguration
-version : 40
+version : 41
 settings :
   - identifier: mandate_webhook_secrets_for_github_triggers
     name: Mandate Webhook Secrets for Github Triggers
@@ -612,3 +612,13 @@ settings :
     allowOverrides: false
     allowedScopes:
       - ACCOUNT
+  - identifier: enable_ssca_airgap
+    name: Enable SSCA Airgap
+    category: SUPPLY_CHAIN_ASSURANCE
+    defaultValue: false
+    valueType: BOOLEAN
+    allowOverrides: true
+    allowedScopes:
+      - ACCOUNT
+      - ORGANIZATION
+      - PROJECT

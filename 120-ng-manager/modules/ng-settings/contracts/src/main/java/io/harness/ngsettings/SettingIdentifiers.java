@@ -60,4 +60,5 @@ public class SettingIdentifiers {
   public static final String USE_BASE64_ENCODED_SECRETS_FOR_ATTESTATION = "use_base64_encoded_secrets_for_attestation";
   public static final String RUN_RBAC_VALIDATION_BEFORE_EXECUTING_INLINE_PIPELINES =
       "run_rbac_validation_before_executing_inline_pipelines";
+  public static final String ENABLE_SSCA_AIRGAP = "enable_ssca_airgap";
 }
