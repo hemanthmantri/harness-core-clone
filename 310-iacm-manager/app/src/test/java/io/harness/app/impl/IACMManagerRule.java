@@ -36,7 +36,6 @@ import io.harness.queue.QueueController;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.YamlBeansModuleRegistrars;
@@ -120,7 +119,7 @@ public class IACMManagerRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Provides
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClass() {
-        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
+        return ImmutableList.<YamlSchemaRootClass>builder().build();
       }
     });
 

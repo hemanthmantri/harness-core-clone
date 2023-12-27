@@ -9,16 +9,12 @@ package io.harness.serializer;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ngtriggers.beans.config.NgTriggerConfigSchemaWrapper;
 import io.harness.serializer.kryo.NGTriggerKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.morphia.NGTriggerMorphiaRegistrar;
-import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.serializer.kryo.PollingKryoRegistrar;
 import lombok.experimental.UtilityClass;
@@ -40,16 +36,5 @@ public class NGTriggerRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .add(NGTriggerMorphiaRegistrar.class)
-          .build();
-
-  public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
-      ImmutableList.<YamlSchemaRootClass>builder()
-          .add(YamlSchemaRootClass.builder()
-                   .entityType(EntityType.TRIGGERS)
-                   .availableAtProjectLevel(true)
-                   .availableAtOrgLevel(false)
-                   .availableAtAccountLevel(false)
-                   .clazz(NgTriggerConfigSchemaWrapper.class)
-                   .build())
           .build();
 }

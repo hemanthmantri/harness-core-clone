@@ -170,9 +170,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       @Provides
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClass() {
-        return ImmutableList.<YamlSchemaRootClass>builder()
-            .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
-            .build();
+        return ImmutableList.<YamlSchemaRootClass>builder().build();
       }
 
       @Provides

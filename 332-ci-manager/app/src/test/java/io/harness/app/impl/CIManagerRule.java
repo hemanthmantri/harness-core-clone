@@ -149,7 +149,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Provides
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClass() {
-        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
+        return ImmutableList.<YamlSchemaRootClass>builder().build();
       }
 
       @Provides

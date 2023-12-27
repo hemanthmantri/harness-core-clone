@@ -70,15 +70,10 @@ import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.steps.executable.AsyncExecutableWithRbac;
 import io.harness.sto.plan.creator.step.STOGenericStepPlanCreator;
-import io.harness.yaml.schema.beans.YamlGroup;
-import io.harness.yaml.schema.beans.YamlSchemaMetadata;
-import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -222,29 +217,6 @@ public enum STOStepType {
 
     return stoSteps;
   }
-
-  public static YamlSchemaRootClass createStepYaml(STOStepType stepType) {
-    return YamlSchemaRootClass.builder()
-        .entityType(stepType.getEntityType())
-        .availableAtProjectLevel(true)
-        .availableAtOrgLevel(false)
-        .yamlSchemaMetadata(YamlSchemaMetadata.builder()
-                                .modulesSupported(Collections.singletonList(ModuleType.STO))
-                                .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
-                                .build())
-        .availableAtAccountLevel(false)
-        .clazz(stepType.getNode())
-        .build();
-  }
-
-  public static ImmutableList<YamlSchemaRootClass> createSecurityStepYamlDefinitions() {
-    ImmutableList.Builder<YamlSchemaRootClass> stepPaletteListBuilder = ImmutableList.builder();
-
-    Arrays.asList(STOStepType.values()).forEach(e -> stepPaletteListBuilder.add(createStepYaml(e)));
-
-    return stepPaletteListBuilder.build();
-  }
-
   private static PartialPlanCreator<?> getPlanCreator(STOStepType stepType) {
     return new STOGenericStepPlanCreator(stepType);
   }

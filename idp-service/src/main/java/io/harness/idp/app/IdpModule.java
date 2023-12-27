@@ -876,7 +876,7 @@ public class IdpModule extends AbstractModule {
   @Provides
   @Singleton
   List<YamlSchemaRootClass> yamlSchemaRootClasses() {
-    return ImmutableList.<YamlSchemaRootClass>builder().addAll(IdpServiceRegistrars.yamlSchemaRegistrars).build();
+    return ImmutableList.<YamlSchemaRootClass>builder().build();
   }
 
   @Provides

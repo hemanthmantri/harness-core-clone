@@ -216,7 +216,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       @Provides
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClass() {
-        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CDNGRegistrars.yamlSchemaRegistrars).build();
+        return ImmutableList.<YamlSchemaRootClass>builder().build();
       }
 
       @Provides

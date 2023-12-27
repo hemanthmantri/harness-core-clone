@@ -97,7 +97,6 @@ public class NextGenRegistrars {
       ImmutableList.<YamlSchemaRootClass>builder()
           .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
           .addAll(GitOpsRegistrars.yamlSchemaRegistrars)
-          .addAll(CDNGRegistrars.yamlSchemaRegistrars)
           .addAll(FreezeRegistrars.yamlSchemaRegistrars)
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.SECRETS)

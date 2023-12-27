@@ -241,7 +241,7 @@ public class IACMManagerApplication extends Application<IACMManagerConfiguration
       @Provides
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClasses() {
-        return ImmutableList.<YamlSchemaRootClass>builder().addAll(IACMBeansRegistrars.yamlSchemaRegistrars).build();
+        return ImmutableList.<YamlSchemaRootClass>builder().build();
       }
       @Provides
       @Singleton

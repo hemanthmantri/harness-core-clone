@@ -219,8 +219,6 @@ import io.harness.waiter.PmsNotifyEventConsumerRedis;
 import io.harness.waiter.PmsNotifyEventListener;
 import io.harness.waiter.PmsNotifyEventPublisher;
 import io.harness.waiter.ProgressUpdateService;
-import io.harness.yaml.YamlSdkConfiguration;
-import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.InstrumentedExecutorService;
 import com.codahale.metrics.MetricRegistry;
@@ -462,7 +460,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(InterruptMonitor.class).registerIterators(iteratorsConfig.getInterruptMonitorConfig());
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
-    registerYamlSdk(injector);
     if (appConfig.isShouldDeployWithGitSync()) {
       registerGitSyncSdk(appConfig, injector, environment);
     }
@@ -995,15 +992,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
     //    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
     //    environment.jersey().register(injector.getInstance(EtagFilter.class));
-  }
-
-  private void registerYamlSdk(Injector injector) {
-    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
-                                                    .requireSchemaInit(true)
-                                                    .requireSnippetInit(true)
-                                                    .requireValidatorInit(false)
-                                                    .build();
-    YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 
   private void registerNotificationTemplates(Injector injector) {

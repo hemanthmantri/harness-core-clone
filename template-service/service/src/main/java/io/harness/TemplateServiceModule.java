@@ -303,9 +303,7 @@ public class TemplateServiceModule extends AbstractModule {
   @Provides
   @Singleton
   List<YamlSchemaRootClass> yamlSchemaRootClasses() {
-    return ImmutableList.<YamlSchemaRootClass>builder()
-        .addAll(TemplateServiceModuleRegistrars.yamlSchemaRegistrars)
-        .build();
+    return ImmutableList.<YamlSchemaRootClass>builder().build();
   }
 
   @Provides
