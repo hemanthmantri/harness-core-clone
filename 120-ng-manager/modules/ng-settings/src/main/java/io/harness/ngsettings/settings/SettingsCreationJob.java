@@ -15,6 +15,7 @@ import io.harness.beans.ScopeLevel;
 import io.harness.exception.InvalidRequestException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.ngsettings.entities.AccountSettingConfiguration;
 import io.harness.ngsettings.entities.SettingConfiguration;
 import io.harness.ngsettings.entities.SettingsConfigurationState;
 import io.harness.ngsettings.services.SettingsService;
@@ -125,9 +126,9 @@ public class SettingsCreationJob {
         return;
       }
       log.info("Updating settings in the database");
-      Set<SettingConfiguration> latestSettings =
+      Set<AccountSettingConfiguration> latestSettings =
           isNotEmpty(settingsConfig.getSettings()) ? settingsConfig.getSettings() : new HashSet<>();
-      Set<SettingConfiguration> currentSettings = new HashSet<>(settingsService.listDefaultSettings());
+      Set<AccountSettingConfiguration> currentSettings = new HashSet<>(settingsService.listDefaultSettings());
 
       Set<String> latestIdentifiers =
           latestSettings.stream().map(SettingConfiguration::getIdentifier).collect(Collectors.toSet());
@@ -168,7 +169,7 @@ public class SettingsCreationJob {
   }
 
   private void deleteSettingsAtDisallowedScopes(
-      Set<SettingConfiguration> currentSettings, Set<SettingConfiguration> upsertedSettings) {
+      Set<AccountSettingConfiguration> currentSettings, Set<SettingConfiguration> upsertedSettings) {
     Map<String, SettingConfiguration> settingConfigurationMap =
         currentSettings.stream().collect(Collectors.toMap(SettingConfiguration::getIdentifier, setting -> setting));
     upsertedSettings.forEach(setting -> {

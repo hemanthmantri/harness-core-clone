@@ -7,11 +7,11 @@
 
 package io.harness.repositories.ngsettings.custom;
 
-import io.harness.ngsettings.entities.SettingConfiguration;
+import io.harness.ngsettings.entities.AccountSettingConfiguration;
 
 import java.util.List;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 public interface SettingConfigurationRepositoryCustom {
-  List<SettingConfiguration> findAll(Criteria criteria);
+  List<AccountSettingConfiguration> findAll(Criteria criteria);
 }

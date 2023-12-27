@@ -17,7 +17,7 @@ import io.harness.migration.NGMigration;
 import io.harness.ng.core.accountsetting.dto.AccountSettingType;
 import io.harness.ng.core.accountsetting.services.NGAccountSettingService;
 import io.harness.ngsettings.SettingIdentifiers;
-import io.harness.ngsettings.entities.Setting;
+import io.harness.ngsettings.entities.AccountSetting;
 import io.harness.repositories.ngsettings.spring.SettingRepository;
 import io.harness.utils.featureflaghelper.NGFeatureFlagHelperService;
 
@@ -41,16 +41,16 @@ public class DisableBuiltInHarnessSMSettingsMigration implements NGMigration {
           featureFlagService.getFeatureFlagEnabledAccountIds(FeatureName.DISABLE_HARNESS_SM.name());
       accountIds.forEach(accountId -> {
         if (accountSettingService.getIsBuiltInSMDisabled(accountId, null, null, AccountSettingType.CONNECTOR)) {
-          Setting setting = Setting.builder()
-                                .accountIdentifier(accountId)
-                                .identifier(settingIdentifier)
-                                .allowOverrides(false)
-                                .category(CORE)
-                                .value(settingTrueValue)
-                                .valueType(BOOLEAN)
-                                .build();
+          AccountSetting accountSetting = AccountSetting.builder()
+                                              .accountIdentifier(accountId)
+                                              .identifier(settingIdentifier)
+                                              .allowOverrides(false)
+                                              .category(CORE)
+                                              .value(settingTrueValue)
+                                              .valueType(BOOLEAN)
+                                              .build();
 
-          settingRepository.upsert(setting);
+          settingRepository.upsert(accountSetting);
         }
       });
     } catch (Exception e) {

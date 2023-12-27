@@ -32,4 +32,10 @@ public final class SettingConstants {
   public static final String INCLUDES_PARENT_SCOPE =
       "Flag to include the settings which only exist at the parent scopes";
   public static final String INCLUDES_PARENT_SCOPE_KEY = "includeParentScopes";
+  public static final String USER_ID = "userID";
+  public static final String GLOBAL_ACCOUNT = "__GLOBAL_ACCOUNT__";
+  public static final String TYPE_ALIAS_FOR_ACCOUNT_SETTING = "NGSetting";
+  public static final String TYPE_ALIAS_FOR_ACCOUNT_CONFIGURATION = "NGSettingConfiguration";
+  public static final String _CLASS = "_class";
+  public static final String TYPE_ALIAS_FOR_USER_SETTING = "UserSetting";
 }

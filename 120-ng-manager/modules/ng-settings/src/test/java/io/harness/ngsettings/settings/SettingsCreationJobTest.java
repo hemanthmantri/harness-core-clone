@@ -29,6 +29,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.ngsettings.NgSettingsTestBase;
 import io.harness.ngsettings.SettingPlanConfig;
 import io.harness.ngsettings.SettingValueType;
+import io.harness.ngsettings.entities.AccountSettingConfiguration;
 import io.harness.ngsettings.entities.SettingConfiguration;
 import io.harness.ngsettings.entities.SettingsConfigurationState;
 import io.harness.ngsettings.services.SettingsService;
@@ -111,10 +112,10 @@ public class SettingsCreationJobTest extends NgSettingsTestBase {
     settingsCreationJob.run();
     SettingsConfig settingsConfig =
         (SettingsConfig) ReflectionUtils.getFieldValue(settingsCreationJob, SETTINGS_CONFIG_FIELD);
-    Set<SettingConfiguration> currentSettings = settingsConfig.getSettings();
+    Set<AccountSettingConfiguration> currentSettings = settingsConfig.getSettings();
     Set<ScopeLevel> allowedScopes = new HashSet<>();
     allowedScopes.add(ScopeLevel.ACCOUNT);
-    currentSettings.add(SettingConfiguration.builder()
+    currentSettings.add(AccountSettingConfiguration.builder()
                             .identifier(NEW_SETTING)
                             .name(SETTING_NAME)
                             .allowedScopes(allowedScopes)
@@ -142,7 +143,7 @@ public class SettingsCreationJobTest extends NgSettingsTestBase {
         latestSettingsConfig, currentSettingsConfig.getVersion() + 1);
     Set<ScopeLevel> allowedScopes = new HashSet<>();
     allowedScopes.add(ScopeLevel.ACCOUNT);
-    currentSettingsConfig.getSettings().add(SettingConfiguration.builder()
+    currentSettingsConfig.getSettings().add(AccountSettingConfiguration.builder()
                                                 .identifier(NEW_SETTING)
                                                 .name(SETTING_NAME)
                                                 .allowedScopes(allowedScopes)
@@ -166,7 +167,7 @@ public class SettingsCreationJobTest extends NgSettingsTestBase {
     assertTrue(optional.isPresent());
     assertEquals(settingsConfig.getVersion(), optional.get().getConfigVersion());
 
-    List<SettingConfiguration> currentSettingConfigurations = settingsService.listDefaultSettings();
+    List<AccountSettingConfiguration> currentSettingConfigurations = settingsService.listDefaultSettings();
 
     if (currentSettingConfigurations.size() != settingsConfig.getSettings().size()) {
       fail("The count of setting configurations does not match");

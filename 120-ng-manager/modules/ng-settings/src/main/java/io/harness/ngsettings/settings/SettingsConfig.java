@@ -9,7 +9,7 @@ package io.harness.ngsettings.settings;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngsettings.entities.SettingConfiguration;
+import io.harness.ngsettings.entities.AccountSettingConfiguration;
 
 import java.util.Set;
 import javax.validation.Valid;
@@ -23,5 +23,5 @@ import lombok.Value;
 public class SettingsConfig {
   @NotEmpty String name;
   int version;
-  @Valid Set<SettingConfiguration> settings;
+  @Valid Set<AccountSettingConfiguration> settings;
 }

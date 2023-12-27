@@ -10,7 +10,7 @@ package io.harness.repositories.ngsettings.custom;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngsettings.entities.SettingConfiguration;
+import io.harness.ngsettings.entities.AccountSettingConfiguration;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -26,8 +26,8 @@ public class SettingConfigurationRepositoryCustomImpl implements SettingConfigur
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public List<SettingConfiguration> findAll(Criteria criteria) {
+  public List<AccountSettingConfiguration> findAll(Criteria criteria) {
     Query query = new Query(criteria);
-    return mongoTemplate.find(query, SettingConfiguration.class);
+    return mongoTemplate.find(query, AccountSettingConfiguration.class);
   }
 }

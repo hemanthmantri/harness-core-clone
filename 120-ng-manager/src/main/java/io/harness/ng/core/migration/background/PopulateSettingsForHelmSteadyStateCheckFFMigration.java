@@ -20,7 +20,7 @@ import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.FeatureName;
 import io.harness.migration.NGMigration;
 import io.harness.ngsettings.SettingIdentifiers;
-import io.harness.ngsettings.entities.Setting;
+import io.harness.ngsettings.entities.AccountSetting;
 import io.harness.repositories.ngsettings.spring.SettingRepository;
 import io.harness.utils.featureflaghelper.NGFeatureFlagHelperService;
 
@@ -47,15 +47,15 @@ public class PopulateSettingsForHelmSteadyStateCheckFFMigration implements NGMig
       Set<String> accountIds =
           featureFlagService.getFeatureFlagEnabledAccountIds(FeatureName.HELM_STEADY_STATE_CHECK_1_16.name());
       accountIds.forEach(accountId -> {
-        Setting setting = Setting.builder()
-                              .accountIdentifier(accountId)
-                              .identifier(settingIdentifier)
-                              .allowOverrides(true)
-                              .category(CD)
-                              .value(settingTrueValue)
-                              .valueType(BOOLEAN)
-                              .build();
-        settingRepository.upsert(setting);
+        AccountSetting accountSetting = AccountSetting.builder()
+                                            .accountIdentifier(accountId)
+                                            .identifier(settingIdentifier)
+                                            .allowOverrides(true)
+                                            .category(CD)
+                                            .value(settingTrueValue)
+                                            .valueType(BOOLEAN)
+                                            .build();
+        settingRepository.upsert(accountSetting);
         iterationCounter.addAndGet(1);
       });
     } catch (Exception e) {

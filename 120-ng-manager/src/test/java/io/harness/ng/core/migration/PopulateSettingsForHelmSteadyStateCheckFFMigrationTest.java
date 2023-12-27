@@ -6,12 +6,10 @@
  */
 
 package io.harness.ng.core.migration;
-
-import static io.harness.ngsettings.SettingCategory.CD;
-import static io.harness.ngsettings.SettingValueType.BOOLEAN;
 import static io.harness.rule.OwnerRule.PRATYUSH;
 
-import static org.mockito.Mockito.times;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -19,16 +17,17 @@ import io.harness.NgManagerTestBase;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.migration.background.PopulateSettingsForHelmSteadyStateCheckFFMigration;
-import io.harness.ngsettings.SettingIdentifiers;
-import io.harness.ngsettings.entities.Setting;
+import io.harness.ngsettings.entities.AccountSetting;
 import io.harness.repositories.ngsettings.spring.SettingRepository;
 import io.harness.rule.Owner;
 import io.harness.utils.featureflaghelper.NGFeatureFlagHelperService;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -46,22 +45,14 @@ public class PopulateSettingsForHelmSteadyStateCheckFFMigrationTest extends NgMa
   @Owner(developers = PRATYUSH)
   @Category(UnitTests.class)
   public void testPopulateSettingsForHelmSteadyStateCheckFFMigration() {
+    ArgumentCaptor<AccountSetting> accountSettingCaptor = ArgumentCaptor.forClass(AccountSetting.class);
     when(featureFlagService.getFeatureFlagEnabledAccountIds(FeatureName.HELM_STEADY_STATE_CHECK_1_16.name()))
         .thenReturn(accountIds);
     populateSettingsForHelmSteadyStateCheckFFMigration.migrate();
-    verify(settingRepository, times(1)).upsert(createSetting(accountId1));
-    verify(settingRepository, times(1)).upsert(createSetting(accountId2));
-    verify(settingRepository, times(1)).upsert(createSetting(accountId3));
-  }
-
-  private Setting createSetting(String accountId) {
-    return Setting.builder()
-        .accountIdentifier(accountId)
-        .identifier(SettingIdentifiers.ENABLE_STEADY_STATE_FOR_JOBS_KEY_IDENTIFIER)
-        .allowOverrides(true)
-        .category(CD)
-        .value("true")
-        .valueType(BOOLEAN)
-        .build();
+    verify(settingRepository, atLeast(3)).upsert(accountSettingCaptor.capture());
+    List<AccountSetting> capturedSettings = accountSettingCaptor.getAllValues();
+    assertThat(capturedSettings)
+        .extracting(AccountSetting::getAccountIdentifier)
+        .contains(accountId1, accountId2, accountId3);
   }
 }

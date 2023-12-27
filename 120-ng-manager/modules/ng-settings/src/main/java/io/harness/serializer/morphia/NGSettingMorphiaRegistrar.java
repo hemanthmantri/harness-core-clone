@@ -12,6 +12,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.ngsettings.entities.AccountSetting;
+import io.harness.ngsettings.entities.AccountSettingConfiguration;
 import io.harness.ngsettings.entities.Setting;
 import io.harness.ngsettings.entities.SettingConfiguration;
 import io.harness.ngsettings.entities.SettingsConfigurationState;
@@ -25,6 +27,8 @@ public class NGSettingMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Setting.class);
     set.add(SettingConfiguration.class);
     set.add(SettingsConfigurationState.class);
+    set.add(AccountSetting.class);
+    set.add(AccountSettingConfiguration.class);
   }
 
   @Override
