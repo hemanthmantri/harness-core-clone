@@ -857,7 +857,11 @@ paths:
         - $ref: '#/components/parameters/AccountHeader'
       requestBody:
         $ref: '#/components/requestBodies/RemediationTrackerCreateRequestBody'
-    get:
+  '/v1/orgs/{org}/projects/{project}/remediations/list':
+    parameters:
+      - $ref: '#/components/parameters/OrgParam'
+      - $ref: '#/components/parameters/ProjectParam'
+    post:
       summary: List All Remediation Trackers
       operationId: listRemediations
       responses:
@@ -1093,9 +1097,11 @@ paths:
         - x-api-key: []
       parameters:
         - $ref: '#/components/parameters/AccountHeader'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Page'
       requestBody:
         $ref: '#/components/requestBodies/RemediationArtifactListingRequestBody'
-  '/v1/orgs/{org}/projects/{project}/remediations/{remediation}/environments':
+  '/v1/orgs/{org}/projects/{project}/remediations/{remediation}/artifacts/{artifact}/environments':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
       - $ref: '#/components/parameters/ProjectParam'
@@ -1105,13 +1111,19 @@ paths:
         in: path
         required: true
         description: Remediation Tracker Id
-    post:
-      summary: Get Environment List for Remediation.
+      - schema:
+          type: string
+        name: artifact
+        in: path
+        required: true
+        description: Artifact Id
+    get:
+      summary: Get Environment List for Artifact In Remediation.
       tags:
         - Remediation
       responses:
         '200':
-          $ref: '#/components/responses/RemediationArtifactListingResponseBody'
+          $ref: '#/components/responses/RemediationEnvironmentResponseBody'
         '400':
           description: Bad Request
         '500':
@@ -1126,14 +1138,10 @@ paths:
         - $ref: '#/components/parameters/AccountHeader'
         - schema:
             type: string
-            enum:
-              - prod
-              - pre_prod
+            $ref: '#/components/schemas/EnvironmentTypeFilter'
           in: query
           name: env_type
           description: Provide type of environments to be returned.
-      requestBody:
-        $ref: '#/components/requestBodies/RemediationArtifactListingRequestBody'
   '/v1/orgs/{org}/projects/{project}/remediations/{remediation}/artifacts/{artifact}/details':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
@@ -1169,7 +1177,7 @@ paths:
         - x-api-key: []
       parameters:
         - $ref: '#/components/parameters/AccountHeader'
-  '/v1/orgs/{org}/projects/{project}/remediations/{remediation}/artifacts/{artifact}/environments':
+  '/v1/orgs/{org}/projects/{project}/remediations/{remediation}/artifacts/{artifact}/deployments':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
       - $ref: '#/components/parameters/ProjectParam'
@@ -1204,8 +1212,10 @@ paths:
         - x-api-key: []
       parameters:
         - $ref: '#/components/parameters/AccountHeader'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Page'
       requestBody:
-        $ref: '#/components/requestBodies/RemediationArtifactListingRequestBody'
+        $ref: '#/components/requestBodies/RemediationArtifactDeploymentsListingRequestBody'
   '/v1/orgs/{org}/projects/{project}/remediations/{remediation}/create-ticket':
     post:
       summary: Create Ticket
@@ -2036,6 +2046,22 @@ components:
         - orchestration_id
         - violation_type
         - violation_details
+    EnvironmentTypeFilter:
+      title: EnvironmentTypeFilter
+      x-stoplight:
+        id: mwmtv6d8fzhn7
+      enum:
+        - Prod
+        - PreProd
+        - None
+        - All
+    EnvironmentType:
+      title: EnvironmentType
+      x-stoplight:
+        id: mwmtv6d8fzhn7
+      enum:
+        - Prod
+        - PreProd
     EnforcementSummaryDTO:
       title: EnforcementSummaryDTO
       x-stoplight:
@@ -2950,6 +2976,8 @@ components:
           x-stoplight:
             id: sjzn1a4b2j6x4
           description: Remediation Tracker Id.
+      required:
+        - id
     VulnerabilityInfo:
       title: VulnerabilityInfo
       x-stoplight:
@@ -3144,6 +3172,12 @@ components:
           description: List of statuses and their counts.
           items:
             $ref: '#/components/schemas/RemediationCount'
+        deployments_count:
+          x-stoplight:
+            id: 4q3q3q3q3q3q3
+          type: object
+          description: Total Deployments Count.
+          $ref: '#/components/schemas/DeploymentsCount'
     RemediationStatus:
       title: RemediationStatus
       x-stoplight:
@@ -3166,6 +3200,9 @@ components:
           format: int64
           default: 0
           description: Number of trackers having the status.
+      required:
+        - status
+        - count
     ComponentDriftSummary:
       title: ComponentDriftSummary
       x-stoplight:
@@ -3314,6 +3351,8 @@ components:
         - severity
         - deployments_count
         - status
+        - schedule_status
+        - remediation_condition
     DeploymentsCount:
       title: DeploymentsCount
       x-stoplight:
@@ -3443,6 +3482,7 @@ components:
           $ref: '#/components/schemas/TicketInfo'
       required:
         - id
+        - remediation_id
         - component
         - severity
         - status
@@ -3492,6 +3532,8 @@ components:
           description: Total environments included in the tracker.
           format: int64
           minimum: 0
+        remediation_condition:
+          $ref: '#/components/schemas/RemediationCondition'
         deployments_count:
           $ref: '#/components/schemas/DeploymentsCount'
         vulnerability_description:
@@ -3521,11 +3563,16 @@ components:
           nullable: true
         contact:
           $ref: '#/components/schemas/ContactInfo'
-        created_By_name:
+        created_by_name:
           type: string
           x-stoplight:
-            id: y1y69npd1zkeu
-          description: Name of the User who created the Remediation Tracker
+            id: wcr2hns9l67kw
+          description: Name of the User who created the Remediation Tracker.
+        created_by_email:
+          type: string
+          x-stoplight:
+            id: wcr2hns9l67kw
+          description: Email of the User who created the Remediation Tracker.
       required:
         - id
         - component
@@ -3536,6 +3583,7 @@ components:
         - environments
         - deployments_count
         - start_time_milli
+        - remediation_condition
     PipelineInfo:
       title: PipelineInfo
       x-stoplight:
@@ -3564,8 +3612,10 @@ components:
           type: string
           description: Id of who trigger the deployment pipeline
         triggered_at:
-          type: string
+          type: integer
           description: Time of trigger of the deployment pipeline
+          format: int64
+          nullable: true
         triggered_type:
           type: string
           description: Trigger type of the deployment pipeline
@@ -3625,18 +3675,13 @@ components:
       required:
         - external_id
     RemediationArtifactDeploymentsListingResponse:
-      title: RemediationEnvironmentsListingResponse
+      title: RemediationArtifactDeploymentsListingResponse
       x-stoplight:
         id: 7mzjc1ohjzxg4
       type: object
       properties:
         type:
-          x-stoplight:
-            id: tvom6z7ju59ba
-          enum:
-            - Prod
-            - PreProd
-          description: Environemnt Type.
+          $ref : '#/components/schemas/EnvironmentType'
         name:
           type: string
           x-stoplight:
@@ -3656,6 +3701,13 @@ components:
           $ref: '#/components/schemas/RemediationStatus'
         deployment_pipeline:
           $ref: '#/components/schemas/PipelineInfo'
+      required:
+        - type
+        - name
+        - identifier
+        - tag
+        - status
+        - deployment_pipeline
     RemediationTrackerUpdateRequestBody:
       title: RemediationTrackerUpdateRequestBody
       x-stoplight:
@@ -3675,6 +3727,19 @@ components:
             id: g8f3nly0l8c5l
           format: date
           description: Target End Date in UTC.
+        vulnerability_description:
+          type: string
+          x-stoplight:
+            id: 9k1ghip4lyook
+          description: Details of the vulnerability.
+        severity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+      required:
+        - contact
+        - comments
+        - target_end_date
+        - vulnerability_description
+        - severity
     RemediationTrackerUpdateResponseBody:
       title: RemediationTrackerUpdateResponseBody
       x-stoplight:
@@ -3686,6 +3751,8 @@ components:
           x-stoplight:
             id: 8crvslu4mewad
           description: Remediation Tracker Id.
+      required:
+        - id
     RemediationArtifactListingRequestBody:
       title: RemediationArtifactListingRequestBody
       x-stoplight:
@@ -3693,12 +3760,14 @@ components:
       type: object
       properties:
         deployment_status:
+          type: string
           x-stoplight:
             id: oiufbpamsgjeq
           enum:
             - Prod
             - PreProd
         remediation_status:
+          type: string
           x-stoplight:
             id: ufgogyfcz0pdp
           enum:
@@ -3715,11 +3784,7 @@ components:
           x-stoplight:
             id: q9ijm7y7dpa0k
         env_type:
-          x-stoplight:
-            id: ym625yhehgxpc
-          enum:
-            - Prod
-            - PreProd
+          $ref: '#/components/schemas/EnvironmentTypeFilter'
     EnvironmentInfo:
       title: EnvironmentInfo
       x-stoplight:
@@ -3737,11 +3802,7 @@ components:
             id: y60d0880clsv3
           description: Name of the Environment.
         type:
-          x-stoplight:
-            id: 965rgz7isoukx
-          enum:
-            - Prod
-            - PreProd
+          $ref: '#/components/schemas/EnvironmentType'
           description: Type of the Environment.
       required:
         - identifier
@@ -4422,7 +4483,6 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/EnvironmentInfo'
-            $ref: '#/components/schemas/CreateTicketResponseBody'
     ExemptionListResponseDTO:
       description: ''
       content:

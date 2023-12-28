@@ -13,8 +13,11 @@ import io.harness.utils.ApiUtils;
 import io.harness.utils.PageUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -26,10 +29,24 @@ public class PageResponseUtils {
     return PageUtils.getPageRequest(new PageRequest(page, limit, Arrays.asList(sortOrder)));
   }
 
+  public static Pageable getPageable(Integer page, Integer limit) {
+    return PageUtils.getPageRequest(new PageRequest(page, limit, Collections.emptyList()));
+  }
+
   public static <T> Response getPagedResponse(Page<T> entities) {
     ResponseBuilder responseBuilder = Response.ok();
     ResponseBuilder responseBuilderWithLinks =
         ApiUtils.addLinksHeader(responseBuilder, entities.getTotalElements(), entities.getNumber(), entities.getSize());
     return responseBuilderWithLinks.entity(entities.getContent()).build();
+  }
+
+  public static <T> List<T> getPaginatedList(List<T> completeList, int page, int limit) {
+    List<List<T>> paginatedLists = ListUtils.partition(completeList, limit);
+
+    if (page < 0 || page > paginatedLists.size()) {
+      throw new IllegalArgumentException("Invalid page number");
+    }
+
+    return paginatedLists.get(page);
   }
 }

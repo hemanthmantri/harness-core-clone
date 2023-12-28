@@ -219,8 +219,8 @@ public class SSCAManagerModule extends AbstractModule {
         SSCA_SERVICE.getServiceId()));
     install(AccessControlClientModule.getInstance(
         this.configuration.getAccessControlClientConfiguration(), SSCA_SERVICE.getServiceId()));
-    install(UserClientModule.getInstance(configuration.getManagerClientConfig(),
-        configuration.getSscaManagerServiceSecret(), SSCA_SERVICE.getServiceId()));
+    install(UserClientModule.getInstance(this.configuration.getManagerClientConfig(),
+        this.configuration.getNgManagerServiceSecret(), SSCA_SERVICE.getServiceId()));
   }
 
   @Provides

@@ -11,18 +11,30 @@ import static io.harness.spec.server.ssca.v1.model.Operator.EQUALS;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.UserProvider;
+import io.harness.remote.client.CGRestUtils;
 import io.harness.repositories.remediation_tracker.RemediationTrackerRepository;
 import io.harness.spec.server.ssca.v1.model.ComponentFilter;
 import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
+import io.harness.spec.server.ssca.v1.model.EnvironmentTypeFilter;
 import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
 import io.harness.spec.server.ssca.v1.model.NameOperator;
 import io.harness.spec.server.ssca.v1.model.Operator;
+import io.harness.spec.server.ssca.v1.model.PipelineInfo;
+import io.harness.spec.server.ssca.v1.model.RemediationArtifactDeploymentsListingRequestBody;
+import io.harness.spec.server.ssca.v1.model.RemediationArtifactDeploymentsListingResponse;
+import io.harness.spec.server.ssca.v1.model.RemediationArtifactDetailsResponse;
+import io.harness.spec.server.ssca.v1.model.RemediationArtifactListingRequestBody;
+import io.harness.spec.server.ssca.v1.model.RemediationArtifactListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationCount;
+import io.harness.spec.server.ssca.v1.model.RemediationDetailsResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationListingRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerCreateRequestBody;
+import io.harness.spec.server.ssca.v1.model.RemediationTrackerUpdateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackersOverallSummaryResponseBody;
+import io.harness.ssca.beans.EnvType;
 import io.harness.ssca.beans.remediation_tracker.PatchedPendingArtifactEntitiesResult;
 import io.harness.ssca.beans.ticket.TicketRequestDto;
 import io.harness.ssca.beans.ticket.TicketResponseDto;
@@ -38,12 +50,15 @@ import io.harness.ssca.entities.remediation_tracker.RemediationCondition;
 import io.harness.ssca.entities.remediation_tracker.RemediationStatus;
 import io.harness.ssca.entities.remediation_tracker.RemediationTrackerEntity;
 import io.harness.ssca.entities.remediation_tracker.RemediationTrackerEntity.RemediationTrackerEntityKeys;
+import io.harness.ssca.entities.remediation_tracker.VulnerabilityInfo;
 import io.harness.ssca.entities.remediation_tracker.VulnerabilityInfo.VulnerabilityInfoKeys;
 import io.harness.ssca.mapper.RemediationTrackerMapper;
 import io.harness.ssca.services.ArtifactService;
 import io.harness.ssca.services.CdInstanceSummaryService;
 import io.harness.ssca.services.NormalisedSbomComponentService;
 import io.harness.ssca.ticket.TicketServiceRestClientService;
+import io.harness.ssca.utils.PageResponseUtils;
+import io.harness.user.remote.UserClient;
 
 import com.google.inject.Inject;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
@@ -51,10 +66,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -68,6 +85,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -85,6 +104,8 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
   @Inject MongoTemplate mongoTemplate;
 
   @Inject UserProvider userProvider;
+
+  @Inject private UserClient userClient;
 
   @Inject TicketServiceRestClientService ticketServiceRestClientService;
 
@@ -106,11 +127,87 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
             .status(RemediationStatus.ON_GOING)
             .startTimeMilli(System.currentTimeMillis())
             .targetEndDateEpochDay(body.getTargetEndDate() != null ? body.getTargetEndDate().toEpochDay() : null)
+            .createdBy(userProvider.activeUser().getUuid())
+            .lastUpdatedBy(userProvider.activeUser().getUuid())
             .build();
     remediationTracker = repository.save(remediationTracker);
     // If this increases API latency, we can move this to a separate thread or a job.
     updateArtifactsAndEnvironments(remediationTracker);
     return remediationTracker.getUuid();
+  }
+
+  @Override
+  public String updateRemediationTracker(String accountId, String orgId, String projectId, String remediationTrackerId,
+      RemediationTrackerUpdateRequestBody body) {
+    RemediationTrackerEntity remediationTracker =
+        repository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
+                accountId, orgId, projectId, new ObjectId(remediationTrackerId))
+            .orElseThrow(() -> new InvalidArgumentsException("Remediation Tracker not found"));
+    if (remediationTracker.getStatus() == RemediationStatus.COMPLETED) {
+      throw new InvalidArgumentsException(
+          String.format("Remediation Tracker: %s is already closed.", remediationTrackerId));
+    }
+    Criteria criteria = Criteria.where(RemediationTrackerEntityKeys.uuid).is(remediationTracker.getUuid());
+    Update update = new Update();
+    update.set(RemediationTrackerEntityKeys.contactInfo, RemediationTrackerMapper.mapContactInfo(body.getContact()));
+    update.set(RemediationTrackerEntityKeys.targetEndDateEpochDay, body.getTargetEndDate().toEpochDay());
+    update.set(RemediationTrackerEntityKeys.comments, body.getComments());
+    update.set(RemediationTrackerEntityKeys.lastUpdatedBy, userProvider.activeUser());
+    VulnerabilityInfo vulnerabilityInfo = remediationTracker.getVulnerabilityInfo();
+    vulnerabilityInfo.setVulnerabilityDescription(body.getVulnerabilityDescription());
+    vulnerabilityInfo.setSeverity(RemediationTrackerMapper.mapSeverityToVulnerabilitySeverity(body.getSeverity()));
+    update.set(RemediationTrackerEntityKeys.vulnerabilityInfo, vulnerabilityInfo);
+
+    repository.update(new Query(criteria), update);
+    updateArtifactsAndEnvironments(remediationTracker);
+    return remediationTracker.getUuid();
+  }
+
+  @Override
+  public RemediationDetailsResponse getRemediationDetails(
+      String accountId, String orgId, String projectId, String remediationTrackerId) {
+    RemediationTrackerEntity remediationTracker =
+        repository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
+                accountId, orgId, projectId, new ObjectId(remediationTrackerId))
+            .orElseThrow(() -> new InvalidArgumentsException("Remediation Tracker not found"));
+    updateArtifactsAndEnvironments(remediationTracker);
+    RemediationDetailsResponse response = RemediationTrackerMapper.mapRemediationDetailsResponse(remediationTracker);
+    Optional<UserInfo> userInfoOptional =
+        CGRestUtils.getResponse(userClient.getUserById(remediationTracker.getCreatedBy()));
+    if (userInfoOptional.isPresent()) {
+      response.setCreatedByName(userInfoOptional.get().getName());
+      response.setCreatedByEmail(userInfoOptional.get().getEmail());
+    }
+    // TODO fetch info for ticketId
+    return response;
+  }
+
+  @Override
+  public RemediationArtifactDetailsResponse getRemediationArtifactDetails(
+      String accountId, String orgId, String projectId, String remediationTrackerId, String artifactId) {
+    RemediationTrackerEntity remediationTracker =
+        repository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
+                accountId, orgId, projectId, new ObjectId(remediationTrackerId))
+            .orElseThrow(() -> new InvalidArgumentsException("Remediation Tracker not found"));
+    updateArtifactsAndEnvironments(remediationTracker);
+
+    ArtifactInfo artifactInfo = remediationTracker.getArtifactInfos().get(artifactId);
+    if (artifactInfo == null) {
+      throw new InvalidArgumentsException(String.format("ArtifactId: %s not present.", artifactId));
+    }
+    RemediationArtifactDetailsResponse response =
+        RemediationTrackerMapper.mapArtifactInfoToArtifactDetailsResponse(remediationTracker, artifactInfo);
+    ArtifactEntity latestArtifact = artifactService.getLatestArtifact(accountId, orgId, projectId, artifactId);
+    if (latestArtifact != null) {
+      PipelineInfo pipeline = artifactService.getPipelineInfo(accountId, orgId, projectId, latestArtifact);
+      response.setBuildPipeline(pipeline);
+      response.setLatestBuildTag(latestArtifact.getTag());
+    }
+    // TODO add ticket info
+    return response;
   }
 
   @Override
@@ -125,7 +222,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
     }
     closeTracker(remediationTracker);
     remediationTracker.setClosedManually(true);
-    remediationTracker.setClosedBy(userProvider.activeUser());
+    remediationTracker.setClosedBy(userProvider.activeUser().getUuid());
     repository.save(remediationTracker);
     return true;
   }
@@ -148,6 +245,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
     }
     artifactInfo.setExcluded(true);
     repository.save(remediationTracker);
+    updateArtifactsAndEnvironments(remediationTracker);
     return true;
   }
 
@@ -231,6 +329,35 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
     overallSummary.setRemediationCounts(
         mongoTemplate.aggregate(aggregationForRemediationCount, RemediationTrackerEntity.class, RemediationCount.class)
             .getMappedResults());
+
+    Criteria matchCriteria = Criteria.where("accountIdentifier")
+                                 .is(accountId)
+                                 .and("orgIdentifier")
+                                 .is(orgId)
+                                 .and("projectIdentifier")
+                                 .is(projectId);
+
+    TypedAggregation<RemediationTrackerEntity> aggregation =
+        Aggregation.newAggregation(RemediationTrackerEntity.class, Aggregation.match(matchCriteria),
+            Aggregation.group()
+                .sum("deploymentsCount.pendingProdCount")
+                .as("pendingProdCount")
+                .sum("deploymentsCount.patchedProdCount")
+                .as("patchedProdCount")
+                .sum("deploymentsCount.pendingNonProdCount")
+                .as("pendingNonProdCount")
+                .sum("deploymentsCount.patchedNonProdCount")
+                .as("patchedNonProdCount"));
+
+    AggregationResults<io.harness.spec.server.ssca.v1.model.DeploymentsCount> aggregationResults =
+        mongoTemplate.aggregate(aggregation, io.harness.spec.server.ssca.v1.model.DeploymentsCount.class);
+
+    if (!aggregationResults.getMappedResults().isEmpty()) {
+      overallSummary.setDeploymentsCount(aggregationResults.getMappedResults().get(0));
+    } else {
+      // Handle the case where there are no matching documents
+      overallSummary.setDeploymentsCount(new io.harness.spec.server.ssca.v1.model.DeploymentsCount());
+    }
     return overallSummary;
   }
 
@@ -307,6 +434,81 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
         getRemediationListingResponses(remediationTrackerEntities.toList());
 
     return new PageImpl<>(remediationListingResponses, pageable, remediationTrackerEntities.getTotalElements());
+  }
+
+  @Override
+  public Page<RemediationArtifactListingResponse> listRemediationArtifacts(String accountId, String orgId,
+      String projectId, String remediationTrackerId, RemediationArtifactListingRequestBody body, Pageable pageable) {
+    RemediationTrackerEntity remediationTracker =
+        repository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
+                accountId, orgId, projectId, new ObjectId(remediationTrackerId))
+            .orElseThrow(() -> new InvalidArgumentsException("Remediation Tracker not found"));
+    updateArtifactsAndEnvironments(remediationTracker);
+
+    List<ArtifactInfo> artifactInfos = new ArrayList<>(remediationTracker.getArtifactInfos().values());
+    List<RemediationArtifactListingResponse> artifactListingResponses =
+        artifactInfos.stream()
+            .map(RemediationTrackerMapper::mapArtifactInfoToArtifactListingResponse)
+            .collect(Collectors.toList());
+    // TODO add ticket details
+    artifactListingResponses = artifactListingResponses.stream()
+                                   .sorted(Comparator.comparing(RemediationArtifactListingResponse::getName))
+                                   .collect(Collectors.toList());
+    // We have implemented in-memory sort here to support pagination.
+    // Since we don't expect a lot of artifacts in a remediation tracker, this should be fine.
+    return new PageImpl<>(
+        PageResponseUtils.getPaginatedList(artifactListingResponses, pageable.getPageNumber(), pageable.getPageSize()),
+        pageable, artifactListingResponses.size());
+  }
+
+  @Override
+  public Page<RemediationArtifactDeploymentsListingResponse> listRemediationArtifactDeployments(String accountId,
+      String orgId, String projectId, String remediationTrackerId, String artifactId,
+      RemediationArtifactDeploymentsListingRequestBody body, Pageable pageable) {
+    RemediationTrackerEntity remediationTracker =
+        repository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
+                accountId, orgId, projectId, new ObjectId(remediationTrackerId))
+            .orElseThrow(() -> new InvalidArgumentsException("Remediation Tracker not found"));
+    updateArtifactsAndEnvironments(remediationTracker);
+
+    ArtifactInfo artifactInfo = remediationTracker.getArtifactInfos().get(artifactId);
+    if (artifactInfo == null) {
+      throw new InvalidArgumentsException(String.format("ArtifactId: %s not present.", artifactId));
+    }
+    List<EnvironmentInfo> environments = artifactInfo.getEnvironments();
+    List<RemediationArtifactDeploymentsListingResponse> responses =
+        environments.stream()
+            .map(RemediationTrackerMapper::mapEnvironmentInfoToArtifactDeploymentsListingResponse)
+            .collect(Collectors.toList());
+    responses = responses.stream()
+                    .sorted(Comparator.comparing(RemediationArtifactDeploymentsListingResponse::getName))
+                    .collect(Collectors.toList());
+    // We have implemented in-memory sort here to support pagination.
+    // Since we don't expect a lot of artifacts in a remediation tracker, this should be fine.
+    return new PageImpl<>(
+        PageResponseUtils.getPaginatedList(responses, pageable.getPageNumber(), pageable.getPageSize()), pageable,
+        responses.size());
+  }
+
+  @Override
+  public List<io.harness.spec.server.ssca.v1.model.EnvironmentInfo> getAllEnvironmentsInArtifact(String accountId,
+      String orgId, String projectId, String remediationTrackerId, String artifactId,
+      EnvironmentTypeFilter environmentType) {
+    RemediationTrackerEntity remediationTracker =
+        repository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
+                accountId, orgId, projectId, new ObjectId(remediationTrackerId))
+            .orElseThrow(() -> new InvalidArgumentsException("Remediation Tracker not found"));
+    updateArtifactsAndEnvironments(remediationTracker);
+
+    ArtifactInfo artifactInfo = remediationTracker.getArtifactInfos().get(artifactId);
+    if (artifactInfo == null) {
+      throw new InvalidArgumentsException(String.format("ArtifactId: %s not present.", artifactId));
+    }
+    List<EnvironmentInfo> environments = artifactInfo.getEnvironments();
+    return buildEnvironmentInfos(environments, environmentType);
   }
 
   private void validateRemediationCreateRequest(RemediationTrackerCreateRequestBody body) {
@@ -539,6 +741,32 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
     }
   }
 
+  private List<io.harness.spec.server.ssca.v1.model.EnvironmentInfo> buildEnvironmentInfos(
+      List<EnvironmentInfo> infos, EnvironmentTypeFilter environmentType) {
+    return infos.stream()
+        .filter(info -> isEnvironmentTypeMatch(environmentType, info.getEnvType()))
+        .map(info
+            -> new io.harness.spec.server.ssca.v1.model.EnvironmentInfo()
+                   .identifier(info.getEnvIdentifier())
+                   .name(info.getEnvName())
+                   .type(RemediationTrackerMapper.mapEnvType(info.getEnvType())))
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  private boolean isEnvironmentTypeMatch(EnvironmentTypeFilter environmentType, EnvType envType) {
+    switch (environmentType) {
+      case PROD:
+        return envType == EnvType.Production;
+      case PREPROD:
+        return envType == EnvType.PreProduction;
+      case ALL:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   private EnvironmentInfo buildEnvironmentInfo(CdInstanceSummary summary, ArtifactDetails details) {
     return EnvironmentInfo.builder()
         .envIdentifier(summary.getEnvIdentifier())
@@ -552,6 +780,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
 
   private Pipeline buildDeploymentPipeline(CdInstanceSummary summary) {
     return Pipeline.builder()
+        .pipelineName(summary.getLastPipelineName())
         .pipelineId(summary.getLastPipelineExecutionName())
         .pipelineExecutionId(summary.getLastPipelineExecutionId())
         .triggeredById(summary.getLastDeployedById())

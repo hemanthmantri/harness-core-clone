@@ -14,6 +14,7 @@ import io.harness.spec.server.ssca.v1.model.ArtifactDeploymentViewResponse;
 import io.harness.spec.server.ssca.v1.model.ArtifactDetailResponse;
 import io.harness.spec.server.ssca.v1.model.ArtifactListingRequestBody;
 import io.harness.spec.server.ssca.v1.model.ArtifactListingResponse;
+import io.harness.spec.server.ssca.v1.model.PipelineInfo;
 import io.harness.spec.server.ssca.v1.model.SbomProcessRequestBody;
 import io.harness.ssca.beans.EnvType;
 import io.harness.ssca.beans.SbomDTO;
@@ -47,9 +48,13 @@ public interface ArtifactService {
   ArtifactEntity getLatestArtifact(
       String accountId, String orgIdentifier, String projectIdentifier, String artifactId, String tag);
 
+  ArtifactEntity getLatestArtifact(String accountId, String orgIdentifier, String projectIdentifier, String artifactId);
+
   ArtifactDetailResponse getArtifactDetails(
       String accountId, String orgIdentifier, String projectIdentifier, String artifactId, String tag);
 
+  PipelineInfo getPipelineInfo(
+      String accountId, String orgIdentifier, String projectIdentifier, ArtifactEntity artifact);
   String generateArtifactId(String registryUrl, String name);
 
   void saveArtifactAndInvalidateOldArtifact(ArtifactEntity artifact);
