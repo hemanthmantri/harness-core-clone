@@ -8,12 +8,17 @@
 package io.harness.ssca.services;
 
 import static io.harness.rule.OwnerRule.ARPITJ;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.BuilderFactory;
 import io.harness.SSCAManagerTestBase;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.CdInstanceSummaryRepo;
@@ -22,9 +27,11 @@ import io.harness.spec.server.ssca.v1.model.ArtifactDeploymentViewRequestBody;
 import io.harness.spec.server.ssca.v1.model.ArtifactDeploymentViewRequestBody.PolicyViolationEnum;
 import io.harness.ssca.beans.EnvType;
 import io.harness.ssca.beans.instance.ArtifactDetailsDTO;
+import io.harness.ssca.beans.instance.InstanceDTO;
 import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.CdInstanceSummary;
 import io.harness.ssca.entities.CdInstanceSummary.CdInstanceSummaryBuilder;
+import io.harness.ssca.helpers.CdInstanceSummaryServiceHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -35,11 +42,13 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -51,9 +60,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 public class CdInstanceSummaryServiceImplTest extends SSCAManagerTestBase {
-  @Inject CdInstanceSummaryService cdInstanceSummaryService;
+  @Inject @InjectMocks CdInstanceSummaryServiceImpl cdInstanceSummaryService;
   @Mock CdInstanceSummaryRepo cdInstanceSummaryRepo;
   @Mock ArtifactService artifactService;
+  @Mock FeatureFlagService featureFlagService;
+  @Mock CdInstanceSummaryServiceHelper cdInstanceSummaryServiceHelper;
   private BuilderFactory builderFactory;
 
   @Before
@@ -77,6 +88,30 @@ public class CdInstanceSummaryServiceImplTest extends SSCAManagerTestBase {
   }
 
   @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testUpsertInstance_noArtifactIdentity_FFEnabled() {
+    InstanceDTO k8sInstance = builderFactory.getK8sInstanceDTOBuilder().primaryArtifact(null).build();
+    when(featureFlagService.isFeatureFlagEnabled(
+             k8sInstance.getAccountIdentifier(), FeatureName.SSCA_MATCH_INSTANCE_IMAGE_NAME.name()))
+        .thenReturn(true);
+    when(cdInstanceSummaryServiceHelper.isK8sInstanceInfo(k8sInstance)).thenReturn(true);
+    ArtifactEntity artifact = builderFactory.getArtifactEntityBuilder()
+                                  .name("image1")
+                                  .artifactCorrelationId("image1:tag1")
+                                  .tag("tag1")
+                                  .build();
+    when(cdInstanceSummaryServiceHelper.findCorrelatedArtifactsForK8sInstance(k8sInstance))
+        .thenReturn(Set.of(artifact));
+    MockedStatic<NGRestUtils> mockRestStatic = Mockito.mockStatic(NGRestUtils.class);
+    mockRestStatic.when(() -> NGRestUtils.getResponse(any())).thenReturn(null);
+    Boolean response = cdInstanceSummaryService.upsertInstance(k8sInstance);
+    assertThat(response).isEqualTo(true);
+    verify(artifactService, times(1)).updateArtifactEnvCount(artifact, EnvType.Production, 1);
+    verify(cdInstanceSummaryRepo, times(1)).save(any());
+  }
+
+  @Test
   @Owner(developers = ARPITJ)
   @Category(UnitTests.class)
   public void testUpsertInstance() {
@@ -94,14 +129,42 @@ public class CdInstanceSummaryServiceImplTest extends SSCAManagerTestBase {
   public void testRemoveInstance() {
     Boolean response = cdInstanceSummaryService.removeInstance(builderFactory.getInstanceNGEntityBuilder().build());
     assertThat(response).isEqualTo(true);
-    Mockito.when(cdInstanceSummaryRepo.findOne(Mockito.any()))
-        .thenReturn(builderFactory.getCdInstanceSummaryBuilder().build());
+    when(cdInstanceSummaryRepo.findOne(Mockito.any())).thenReturn(builderFactory.getCdInstanceSummaryBuilder().build());
 
-    Mockito.when(artifactService.getArtifactByCorrelationId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+    when(artifactService.getArtifactByCorrelationId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(builderFactory.getArtifactEntityBuilder().build());
 
     response = cdInstanceSummaryService.removeInstance(builderFactory.getInstanceNGEntityBuilder().build());
     assertThat(response).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testRemoveInstance_noArtifactIdentity_FFEnabled() {
+    InstanceDTO k8sInstance = builderFactory.getK8sInstanceDTOBuilder().primaryArtifact(null).build();
+    when(featureFlagService.isFeatureFlagEnabled(
+             k8sInstance.getAccountIdentifier(), FeatureName.SSCA_MATCH_INSTANCE_IMAGE_NAME.name()))
+        .thenReturn(true);
+    when(cdInstanceSummaryServiceHelper.isK8sInstanceInfo(k8sInstance)).thenReturn(true);
+    ArtifactEntity artifact = builderFactory.getArtifactEntityBuilder()
+                                  .name("image1")
+                                  .artifactCorrelationId("image1:tag1")
+                                  .tag("tag1")
+                                  .build();
+    when(cdInstanceSummaryServiceHelper.findCorrelatedArtifactsForK8sInstance(k8sInstance))
+        .thenReturn(Set.of(artifact));
+    when(cdInstanceSummaryRepo.findOne(Mockito.any())).thenReturn(builderFactory.getCdInstanceSummaryBuilder().build());
+    when(artifactService.getArtifactByCorrelationId(k8sInstance.getAccountIdentifier(), k8sInstance.getOrgIdentifier(),
+             k8sInstance.getProjectIdentifier(), "image1:tag1"))
+        .thenReturn(artifact);
+
+    MockedStatic<NGRestUtils> mockRestStatic = Mockito.mockStatic(NGRestUtils.class);
+    mockRestStatic.when(() -> NGRestUtils.getResponse(any())).thenReturn(null);
+    Boolean response = cdInstanceSummaryService.removeInstance(k8sInstance);
+    assertThat(response).isEqualTo(true);
+    verify(artifactService, times(1)).updateArtifactEnvCount(artifact, EnvType.Production, 0);
+    verify(cdInstanceSummaryRepo, times(1)).save(any());
   }
 
   @Test
@@ -114,7 +177,7 @@ public class CdInstanceSummaryServiceImplTest extends SSCAManagerTestBase {
                            builder.envIdentifier("env3").build()),
             Pageable.ofSize(2).withPage(0), 5);
 
-    Mockito.when(cdInstanceSummaryRepo.findAll(Mockito.any(), Mockito.any())).thenReturn(entities);
+    when(cdInstanceSummaryRepo.findAll(Mockito.any(), Mockito.any())).thenReturn(entities);
 
     Page<CdInstanceSummary> cdInstanceSummaryPage =
         cdInstanceSummaryService.getCdInstanceSummaries(builderFactory.getContext().getAccountId(),
@@ -130,8 +193,7 @@ public class CdInstanceSummaryServiceImplTest extends SSCAManagerTestBase {
   @Owner(developers = ARPITJ)
   @Category(UnitTests.class)
   public void testGetCdInstanceSummary() {
-    Mockito.when(cdInstanceSummaryRepo.findOne(Mockito.any()))
-        .thenReturn(builderFactory.getCdInstanceSummaryBuilder().build());
+    when(cdInstanceSummaryRepo.findOne(Mockito.any())).thenReturn(builderFactory.getCdInstanceSummaryBuilder().build());
 
     CdInstanceSummary cdInstanceSummary = cdInstanceSummaryService.getCdInstanceSummary(
         builderFactory.getContext().getAccountId(), builderFactory.getContext().getOrgIdentifier(),

@@ -45,6 +45,9 @@ public interface ArtifactService {
   ArtifactEntity getArtifactByCorrelationId(
       String accountId, String orgIdentifier, String projectIdentifier, String artifactCorrelationId);
 
+  ArtifactEntity getLatestArtifactByImageNameAndTag(
+      String accountId, String orgIdentifier, String projectIdentifier, String imageName, String tag);
+
   ArtifactEntity getLatestArtifact(
       String accountId, String orgIdentifier, String projectIdentifier, String artifactId, String tag);
 

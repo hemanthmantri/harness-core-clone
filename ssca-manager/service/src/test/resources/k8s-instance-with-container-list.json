@@ -1,0 +1,52 @@
+{
+  "_id": "65707d6122d048e7e5691786",
+  "accountIdentifier": "kmpySmUISimoRrJL6NL73w",
+  "orgIdentifier": "default",
+  "projectIdentifier": "SSCADebeziumTest",
+  "instanceKey": "K8sInstanceInfoDTO_arpitji-test28-fz4ft_test_nginx:latest",
+  "instanceType": "K8S_INSTANCE",
+  "envIdentifier": "preEnv2",
+  "envName": "pre-Env-2",
+  "envType": "PreProduction",
+  "serviceIdentifier": "service1",
+  "serviceName": "service-1",
+  "infrastructureMappingId": "6512c35ab98b98266768c0dd",
+  "infrastructureKind": "KubernetesDirect",
+  "connectorRef": "account.k8schiplayconnector",
+  "primaryArtifact": {
+    "displayName": "library/nginx:latest",
+    "artifactId": "primary",
+    "tag": "latest",
+    "artifactIdentity": {
+      "image": "index.docker.com/arpit/image-new:tag-1"
+    }
+  },
+  "lastDeployedById": "lv0euRhKRCyiXWzS7pOg6g",
+  "lastDeployedByName": "Admin",
+  "lastDeployedAt": 1695728401638,
+  "lastPipelineExecutionId": "jAfvNJMTR0mhK24tDZtmIQ",
+  "lastPipelineExecutionName": "UltimateTestPipeline",
+  "stageNodeExecutionId": "Lgy-ay7xRmmKVkjpleQLsA",
+  "stageStatus": "SUCCEEDED",
+  "stageSetupId": "Lgy-ay7xRmmKVkjpleQLsA",
+  "rollbackStatus": "NOT_STARTED",
+  "instanceInfo": {
+    "namespace": "test",
+    "releaseName": "release-c192785e79b96272cd2065a2715b2664de3b59e2",
+    "podName": "arpitji-5bf67bd864-fz4ft",
+    "podIP": "10.0.0.146",
+    "containerList": [
+      {
+        "containerId": "docker://c4190ab30f8d4fd8caa35d34c0ed803f91452bb3c6e9eb09039774d0b49a4d06",
+        "name": "arpitji",
+        "image": "nginx:latest"
+      }
+    ],
+    "_class": "io.harness.entities.instanceinfo.K8sInstanceInfo"
+  },
+  "isDeleted": false,
+  "deletedAt": 1695729192063,
+  "createdAt": 1695728475984,
+  "lastModifiedAt": 1695728590738,
+  "_class": "io.harness.entities.Instance"
+}

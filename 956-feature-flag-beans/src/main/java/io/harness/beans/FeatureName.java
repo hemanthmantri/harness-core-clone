@@ -906,7 +906,9 @@ public enum FeatureName {
   CDS_OVERRIDES_GITX("Onboard Overrides entity to GitX", HarnessTeam.CDC),
   CDS_SUPPORT_DIFFERENT_INFRA_DURING_ENV_PROPAGATION(
       "FF to suppport selecting different infrastructure during environment propagation", CDC),
-  SSCA_ENFORCEMENT_EXEMPTIONS_ENABLED("FF to enable exemption workflow in the SSCA enforcement step", SSCA);
+  SSCA_ENFORCEMENT_EXEMPTIONS_ENABLED("FF to enable exemption workflow in the SSCA enforcement step", SSCA),
+  SSCA_MATCH_INSTANCE_IMAGE_NAME(
+      "Enable matching K8s instance image name with SSCA artifact to determine artifacts deployed", SSCA);
 
   // keep-sorted end
 

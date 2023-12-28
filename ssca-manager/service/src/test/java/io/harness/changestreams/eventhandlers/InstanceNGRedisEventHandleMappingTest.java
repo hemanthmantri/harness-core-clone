@@ -8,15 +8,22 @@
 package io.harness.changestreams.eventhandlers;
 
 import static io.harness.rule.OwnerRule.ARPITJ;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 import io.harness.SSCAManagerTestBase;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.debezium.DebeziumChangeEvent;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.ssca.beans.instance.InstanceDTO;
+import io.harness.ssca.beans.instance.K8sInstanceInfoDTO;
+import io.harness.ssca.services.FeatureFlagService;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -28,10 +35,13 @@ import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class InstanceNGRedisEventHandleMappingTest extends SSCAManagerTestBase {
-  @Inject InstanceNGRedisEventHandler handler;
+  @Inject @InjectMocks InstanceNGRedisEventHandler handler;
+  @Mock FeatureFlagService featureFlagService;
   private DebeziumChangeEvent event;
 
   @Before
@@ -45,7 +55,11 @@ public class InstanceNGRedisEventHandleMappingTest extends SSCAManagerTestBase {
   @Owner(developers = ARPITJ)
   @Category(UnitTests.class)
   public void testCreateInstance() {
-    InstanceDTO instanceDTO = handler.createEntity(event.getValue());
+    assertCreateEntityInstance(event.getValue());
+  }
+
+  private InstanceDTO assertCreateEntityInstance(String json) {
+    InstanceDTO instanceDTO = handler.createEntity(json);
     assertThat(instanceDTO.getAccountIdentifier()).isEqualTo("kmpySmUISimoRrJL6NL73w");
     assertThat(instanceDTO.getOrgIdentifier()).isEqualTo("default");
     assertThat(instanceDTO.getProjectIdentifier()).isEqualTo("SSCADebeziumTest");
@@ -68,6 +82,43 @@ public class InstanceNGRedisEventHandleMappingTest extends SSCAManagerTestBase {
     assertThat(instanceDTO.isDeleted()).isEqualTo(false);
     assertThat(instanceDTO.getCreatedAt()).isEqualTo(1695728475984l);
     assertThat(instanceDTO.getLastModifiedAt()).isEqualTo(1695728590738l);
+    return instanceDTO;
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCreateInstanceWithK8sInstanceInfoAsMap() {
+    when(featureFlagService.isFeatureFlagEnabled(any(), eq(FeatureName.SSCA_MATCH_INSTANCE_IMAGE_NAME.name())))
+        .thenReturn(true);
+    InstanceDTO instanceDTO = assertCreateEntityInstance(event.getValue());
+    assertThat(instanceDTO.getInstanceInfo()).isNotNull();
+    assertThat(instanceDTO.getInstanceInfo()).isInstanceOf(K8sInstanceInfoDTO.class);
+    K8sInstanceInfoDTO instanceInfoDTO = (K8sInstanceInfoDTO) instanceDTO.getInstanceInfo();
+    assertThat(instanceInfoDTO.getContainerList()).isNotNull().isNotEmpty().hasSize(1);
+    assertThat(instanceInfoDTO.getContainerList().get(0).getImage()).isEqualTo("nginx:latest");
+    assertThat(instanceInfoDTO.getContainerList().get(0).getName()).isEqualTo("arpitji");
+    assertThat(instanceInfoDTO.getContainerList().get(0).getContainerId())
+        .isEqualTo("docker://c4190ab30f8d4fd8caa35d34c0ed803f91452bb3c6e9eb09039774d0b49a4d06");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCreateInstanceWithK8sInstanceInfoAsList()
+      throws IllegalAccessException, InvalidProtocolBufferException {
+    String messageString = readFile("k8s-instance-with-container-list.json");
+    when(featureFlagService.isFeatureFlagEnabled(any(), eq(FeatureName.SSCA_MATCH_INSTANCE_IMAGE_NAME.name())))
+        .thenReturn(true);
+    InstanceDTO instanceDTO = assertCreateEntityInstance(messageString);
+    assertThat(instanceDTO.getInstanceInfo()).isNotNull();
+    assertThat(instanceDTO.getInstanceInfo()).isInstanceOf(K8sInstanceInfoDTO.class);
+    K8sInstanceInfoDTO instanceInfoDTO = (K8sInstanceInfoDTO) instanceDTO.getInstanceInfo();
+    assertThat(instanceInfoDTO.getContainerList()).isNotNull().isNotEmpty().hasSize(1);
+    assertThat(instanceInfoDTO.getContainerList().get(0).getImage()).isEqualTo("nginx:latest");
+    assertThat(instanceInfoDTO.getContainerList().get(0).getName()).isEqualTo("arpitji");
+    assertThat(instanceInfoDTO.getContainerList().get(0).getContainerId())
+        .isEqualTo("docker://c4190ab30f8d4fd8caa35d34c0ed803f91452bb3c6e9eb09039774d0b49a4d06");
   }
 
   private String readFile(String filename) {
