@@ -23,4 +23,6 @@ public interface ServiceOverrideRepositoryCustomV2 {
   Page<NGServiceOverridesEntity> findAll(Criteria criteria, Pageable pageRequest);
 
   List<NGServiceOverridesEntity> findAll(Criteria criteria);
+
+  NGServiceOverridesEntity saveGitAware(NGServiceOverridesEntity overrideToSave);
 }

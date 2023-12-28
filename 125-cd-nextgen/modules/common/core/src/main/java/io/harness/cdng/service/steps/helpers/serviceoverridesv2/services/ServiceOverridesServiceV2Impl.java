@@ -31,10 +31,15 @@ import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.service.steps.helpers.serviceoverridesv2.setupusage.ServiceOverridesV2SetupUsageHelper;
 import io.harness.cdng.service.steps.helpers.serviceoverridesv2.validators.ServiceOverrideValidatorService;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.InternalServerErrorException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitaware.helper.GitAwareContextHelper;
+import io.harness.gitaware.helper.GitAwareEntityHelper;
+import io.harness.gitsync.beans.StoreType;
+import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.logging.LogLevel;
 import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.events.EnvironmentUpdatedEvent;
@@ -45,7 +50,10 @@ import io.harness.ng.core.serviceoverridev2.beans.ServiceOverrideAuditEventDTO;
 import io.harness.ng.core.serviceoverridev2.beans.ServiceOverridesSpec;
 import io.harness.ng.core.serviceoverridev2.beans.ServiceOverridesType;
 import io.harness.ng.core.serviceoverridev2.mappers.ServiceOverrideEventDTOMapper;
+import io.harness.ng.core.serviceoverridev2.mappers.ServiceOverridesMapperV2;
 import io.harness.ng.core.serviceoverridev2.service.ServiceOverridesServiceV2;
+import io.harness.ng.core.utils.CDGitXService;
+import io.harness.ng.core.utils.GitXUtils;
 import io.harness.outbox.api.OutboxService;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.helpers.RuntimeInputFormHelper;
@@ -101,17 +109,21 @@ public class ServiceOverridesServiceV2Impl implements ServiceOverridesServiceV2 
   private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_RETRY_POLICY;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private final TransactionTemplate transactionTemplate;
   @Inject ServiceOverridesV2SetupUsageHelper serviceOverridesV2SetupUsageHelper;
+  @Inject final CDGitXService cdGitXService;
+  private final GitAwareEntityHelper gitAwareEntityHelper;
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
   @Inject
   public ServiceOverridesServiceV2Impl(ServiceOverridesRepositoryV2 serviceOverrideRepositoryV2,
       OutboxService outboxService, ServiceOverrideValidatorService overrideValidatorService,
-      TransactionTemplate transactionTemplate) {
+      TransactionTemplate transactionTemplate, CDGitXService cdGitXService, GitAwareEntityHelper gitAwareEntityHelper) {
     this.serviceOverrideRepositoryV2 = serviceOverrideRepositoryV2;
     this.outboxService = outboxService;
     this.overrideValidatorService = overrideValidatorService;
     this.transactionTemplate = transactionTemplate;
+    this.cdGitXService = cdGitXService;
+    this.gitAwareEntityHelper = gitAwareEntityHelper;
   }
 
   @Override
@@ -132,6 +144,7 @@ public class ServiceOverridesServiceV2Impl implements ServiceOverridesServiceV2 
 
   @Override
   public NGServiceOverridesEntity create(@NonNull NGServiceOverridesEntity requestedEntity) {
+    // todo(@hinger): apply gitX settings once remote overrides GA
     validatePresenceOfRequiredFields(
         requestedEntity.getAccountId(), requestedEntity.getEnvironmentRef(), requestedEntity.getType());
     if (requestedEntity.getSpec() != null) {
@@ -503,7 +516,20 @@ public class ServiceOverridesServiceV2Impl implements ServiceOverridesServiceV2 
   }
 
   private NGServiceOverridesEntity saveAndSendOutBoxEvent(@NonNull NGServiceOverridesEntity requestedEntity) {
-    NGServiceOverridesEntity tempCreateResult = serviceOverrideRepositoryV2.save(requestedEntity);
+    // set yamlV2 from spec if not present
+    ServiceOverridesMapperV2.setYamlV2IfNotPresent(requestedEntity);
+
+    if (GitAwareContextHelper.isRemoteEntity()) {
+      // check if gitX is enabled
+      if (!cdGitXService.isNewGitXEnabled(requestedEntity.getAccountId(), requestedEntity.getOrgIdentifier(),
+              requestedEntity.getProjectIdentifier())) {
+        throw new InvalidRequestException(GitXUtils.getErrorMessageForGitSimplificationNotEnabled(
+            requestedEntity.getOrgIdentifier(), requestedEntity.getProjectIdentifier()));
+      }
+      addGitParamsToOverrideEntity(requestedEntity);
+    }
+
+    NGServiceOverridesEntity tempCreateResult = serviceOverrideRepositoryV2.saveGitAware(requestedEntity);
     if (tempCreateResult == null) {
       throw new InvalidRequestException(format(
           "NGServiceOverridesEntity under Project[%s], Organization [%s], Environment [%s] and Service [%s] couldn't be created.",
@@ -527,6 +553,19 @@ public class ServiceOverridesServiceV2Impl implements ServiceOverridesServiceV2 
     }
 
     return tempCreateResult;
+  }
+
+  private void addGitParamsToOverrideEntity(@NonNull NGServiceOverridesEntity overrideEntity) {
+    GitEntityInfo gitEntityInfo = GitAwareContextHelper.getGitRequestParamsInfo();
+    overrideEntity.setStoreType(StoreType.REMOTE);
+    if (EmptyPredicate.isEmpty(overrideEntity.getRepoURL())) {
+      overrideEntity.setRepoURL(gitAwareEntityHelper.getRepoUrl(
+          overrideEntity.getAccountId(), overrideEntity.getOrgIdentifier(), overrideEntity.getProjectIdentifier()));
+    }
+    overrideEntity.setConnectorRef(gitEntityInfo.getConnectorRef());
+    overrideEntity.setRepo(gitEntityInfo.getRepoName());
+    overrideEntity.setFilePath(gitEntityInfo.getFilePath());
+    overrideEntity.setFallBackBranch(gitEntityInfo.getBranch());
   }
 
   private NGServiceOverridesEntity updateAndSendOutboxEvent(@NonNull NGServiceOverridesEntity requestedEntity,

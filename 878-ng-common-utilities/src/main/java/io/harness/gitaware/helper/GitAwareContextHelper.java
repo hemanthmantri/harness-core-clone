@@ -27,6 +27,7 @@ import io.harness.gitsync.scm.beans.ScmGitMetaData;
 import io.harness.gitsync.scm.beans.ScmGitMetaDataContext;
 import io.harness.gitsync.sdk.CacheResponse;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitx.EntityGitInfo;
 import io.harness.logging.AutoLogContext;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.gitaware.GitAware;
@@ -134,6 +135,35 @@ public class GitAwareContextHelper {
     return existingDetails;
   }
 
+  public EntityGitInfo updateEntityGitInfoFromScmGitMetadata(@NonNull EntityGitInfo entityGitInfo) {
+    ScmGitMetaData scmGitMetaData = getScmGitMetaData();
+
+    if (scmGitMetaData == null) {
+      return entityGitInfo;
+    }
+
+    if (isEmpty(entityGitInfo.getObjectId())) {
+      entityGitInfo.setObjectId(scmGitMetaData.getBlobId());
+    }
+    if (isEmpty(entityGitInfo.getBranch())) {
+      entityGitInfo.setBranch(scmGitMetaData.getBranchName());
+    }
+    if (isEmpty(entityGitInfo.getRepoName())) {
+      entityGitInfo.setRepoName(scmGitMetaData.getRepoName());
+    }
+    if (isEmpty(entityGitInfo.getFilePath())) {
+      entityGitInfo.setFilePath(scmGitMetaData.getFilePath());
+    }
+    if (isEmpty(entityGitInfo.getCommitId())) {
+      entityGitInfo.setCommitId(scmGitMetaData.getCommitId());
+    }
+    if (isEmpty(entityGitInfo.getFileUrl())) {
+      entityGitInfo.setFileUrl(scmGitMetaData.getFileUrl());
+    }
+
+    return entityGitInfo;
+  }
+
   public CacheResponse getCacheResponseFromScmGitMetadata() {
     ScmGitMetaData scmGitMetaData = getScmGitMetaData();
     if (scmGitMetaData == null || scmGitMetaData.getCacheResponse() == null) {
@@ -144,6 +174,10 @@ public class GitAwareContextHelper {
 
   public EntityGitDetails getEntityGitDetails(GitAware gitAware) {
     return EntityGitDetails.builder().repoName(gitAware.getRepo()).filePath(gitAware.getFilePath()).build();
+  }
+
+  public EntityGitInfo getEntityInfo(GitAware gitAware) {
+    return EntityGitInfo.builder().repoName(gitAware.getRepo()).filePath(gitAware.getFilePath()).build();
   }
 
   public String getBranchInRequest() {
@@ -231,6 +265,11 @@ public class GitAwareContextHelper {
 
   public boolean isRemoteEntity(GitEntityInfo gitEntityInfo) {
     return gitEntityInfo != null && StoreType.REMOTE.equals(gitEntityInfo.getStoreType());
+  }
+
+  public boolean isRemoteEntity() {
+    GitEntityInfo gitEntityInfo = getGitRequestParamsInfo();
+    return isRemoteEntity(gitEntityInfo);
   }
 
   public boolean isDefaultBranch() {

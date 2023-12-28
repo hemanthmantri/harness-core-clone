@@ -20,6 +20,7 @@ java_library(
         "//:lombok",
         "//980-commons/src/main/java/io/harness/context:module",
         "//999-annotations/src/main/java/io/harness/annotations/dev:module",
+        "@maven//:io_swagger_core_v3_swagger_annotations",
     ],
 )
 
