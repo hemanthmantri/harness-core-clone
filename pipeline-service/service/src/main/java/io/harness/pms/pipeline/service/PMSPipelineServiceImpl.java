@@ -363,7 +363,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       validatePipelineSync(
           orgIdentifier, projectIdentifier, pipelineId, loadFromCache, pipelineEntity, templateMergeResponseDTO);
     }
-    if (PipelineGitXHelper.shouldPublishSetupUsages(loadFromCache, pipelineEntity.getStoreType())) {
+    if (PipelineGitXHelper.shouldPublishSetupUsages(pipelineEntity.getStoreType(), loadFromCache)) {
       pmsPipelineServiceHelper.computePipelineReferences(pipelineEntity);
     }
     return PipelineGetResult.builder()
@@ -1174,11 +1174,11 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     try {
       if (INLINE_TO_REMOTE.equals(moveConfigDTO.getMoveConfigOperationType())) {
         Optional<PipelineEntity> optionalPipelineEntity =
-            getAndValidatePipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
-                pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), false);
+            getPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+                pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), false, false, false, false);
         if (optionalPipelineEntity.isPresent()) {
           pmsPipelineServiceHelper.deletePipelineReferences(optionalPipelineEntity.get());
-          if (GitAwareContextHelper.isGitDefaultBranch()) {
+          if (PipelineGitXHelper.shouldPublishSetupUsages(optionalPipelineEntity.get().getStoreType(), false)) {
             pmsPipelineServiceHelper.computePipelineReferences(optionalPipelineEntity.get());
           }
         }
@@ -1229,7 +1229,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   private void computeReferencesIfRemotePipeline(PipelineEntity pipelineEntity) {
-    if (PipelineGitXHelper.shouldPublishSetupUsages(pipelineEntity.getStoreType())) {
+    if (PipelineGitXHelper.shouldPublishSetupUsages(pipelineEntity.getStoreType(), false)) {
       pmsPipelineServiceHelper.computePipelineReferences(pipelineEntity);
     }
   }

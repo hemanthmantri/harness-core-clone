@@ -62,14 +62,14 @@ public class PipelineGitXHelperTest {
   @Category(UnitTests.class)
   public void testComputePipelineReferencesForInlinePipeline() {
     boolean loadFromCache = false;
-    assertFalse(PipelineGitXHelper.shouldPublishSetupUsages(loadFromCache, StoreType.INLINE));
+    assertFalse(PipelineGitXHelper.shouldPublishSetupUsages(StoreType.INLINE, loadFromCache));
   }
   @Test
   @Owner(developers = ADITHYA)
   @Category(UnitTests.class)
   public void testComputePipelineReferencesForRemotePipelineLoadedFromCache() {
     boolean loadFromCache = true;
-    assertFalse(PipelineGitXHelper.shouldPublishSetupUsages(loadFromCache, StoreType.REMOTE));
+    assertFalse(PipelineGitXHelper.shouldPublishSetupUsages(StoreType.REMOTE, loadFromCache));
   }
 
   @Test
@@ -77,6 +77,6 @@ public class PipelineGitXHelperTest {
   @Category(UnitTests.class)
   public void testComputePipelineReferencesForRemotePipelineLoadedFromGitForDefaultBranch() {
     boolean loadFromCache = false;
-    assertFalse(PipelineGitXHelper.shouldPublishSetupUsages(loadFromCache, StoreType.REMOTE));
+    assertFalse(PipelineGitXHelper.shouldPublishSetupUsages(StoreType.REMOTE, loadFromCache));
   }
 }

@@ -707,7 +707,7 @@ public class PMSPipelineServiceHelper {
         FilterCreationParams.builder()
             .pipelineEntity(pipelineEntity)
             .filterCreationGitMetadata(FilterCreationGitMetadata.builder()
-                                           .branch(GitAwareContextHelper.getBranchFromGitContext())
+                                           .branch(GitAwareContextHelper.getBranchInSCMGitMetadata())
                                            .repo(pipelineEntity.getRepo())
                                            .isGitDefaultBranch(true)
                                            .build())
