@@ -205,6 +205,402 @@ paths:
         - x-api-key: []
       tags:
         - Notification Rules
+  '/v1/orgs/{org}/notification-channels':
+    get:
+      summary: List Notification channels at org level
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationChannelListResponse'
+      operationId: list-notification-channels-org
+      x-stoplight:
+        id: 7f06dghsczggq
+      description: Returns a list of notification channels for the scope.
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SearchTerm'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Order'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+    post:
+      summary: Create Notification channel
+      operationId: create-notification-channel-org
+      responses:
+        '201':
+          $ref: '#/components/responses/NotificationChannelResponse'
+      x-stoplight:
+        id: 04epvtgjpa7e3
+      description: Create Notification Channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationChannelRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+    parameters:
+      - $ref: '#/components/parameters/OrgPathParam'
+  /v1/notification-channels:
+    get:
+      summary: List Notification channels at account level
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationChannelListResponse'
+      operationId: list-notification-channels-account
+      x-stoplight:
+        id: t1d6wc1ljfysy
+      description: Returns a list of notification channels for the scope.
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SearchTerm'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Order'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+    post:
+      summary: Create Notification channel
+      operationId: create-notification-channel-account
+      responses:
+        '201':
+          $ref: '#/components/responses/NotificationChannelResponse'
+      x-stoplight:
+        id: eagf3rzgxjg7v
+      description: Create Notification Channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationChannelRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+  '/v1/orgs/{org}/notification-rules':
+    get:
+      summary: List Notification rules at org level
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationRuleListResponse'
+      operationId: list-notification-rules-org
+      x-stoplight:
+        id: 957y69gpg0tau
+      description: Get list of notification rules
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Order'
+        - $ref: '#/components/parameters/SearchTerm'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+    post:
+      summary: Create Notification Rule
+      operationId: create-notification-rule-org
+      responses:
+        '201':
+          $ref: '#/components/responses/NotificationRuleResponse'
+      x-stoplight:
+        id: d2ilssdkmulz3
+      description: Create Notification Rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationRuleRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+    parameters:
+      - $ref: '#/components/parameters/OrgPathParam'
+  /v1/notification-rules:
+    get:
+      summary: List Notification rules at account level
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationRuleListResponse'
+      operationId: list-notification-rules-account
+      x-stoplight:
+        id: d13uafcccis6i
+      description: Get list of notification rules for account
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Order'
+        - $ref: '#/components/parameters/SearchTerm'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+    post:
+      summary: Create Notification Rule
+      operationId: create-notification-rule-account
+      responses:
+        '201':
+          $ref: '#/components/responses/NotificationRuleResponse'
+      x-stoplight:
+        id: 0b4ddvulbaih0
+      description: Create Notification Rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationRuleRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+  '/v1/orgs/{org}/notification-channels/{notification-channel}':
+    parameters:
+      - schema:
+          type: string
+        name: notification-channel
+        in: path
+        required: true
+        description: identifier
+      - $ref: '#/components/parameters/OrgPathParam'
+    get:
+      summary: Get Notification channel
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationChannelResponse'
+      operationId: get-notification-channel-org
+      x-stoplight:
+        id: x9qecy71tvb91
+      description: Get Notification Channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+    delete:
+      summary: Delete Notification Channel
+      operationId: delete-notification-channel-org
+      responses:
+        '204':
+          description: No Content
+      x-stoplight:
+        id: 1h3wl838rbc4y
+      description: Delete notification channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+    put:
+      summary: Update Notification Channel
+      operationId: update-notification-channel-org
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationChannelResponse'
+      x-stoplight:
+        id: xfx6n6a0skidx
+      description: Update Notification Channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationChannelRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+  '/v1/notification-channels/{notification-channel}':
+    parameters:
+      - schema:
+          type: string
+        name: notification-channel
+        in: path
+        required: true
+        description: identifier
+    get:
+      summary: Get Notification channel
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationChannelResponse'
+      operationId: get-notification-channel-account
+      x-stoplight:
+        id: 8jhjdrvmfs03m
+      description: Get Notification Channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+    delete:
+      summary: Delete Notification Channel
+      operationId: delete-notification-channel-account
+      responses:
+        '204':
+          description: No Content
+      x-stoplight:
+        id: 9cfw7n0c2ruuj
+      description: Delete notification channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+    put:
+      summary: Update Notification Channel
+      operationId: update-notification-channel-account
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationChannelResponse'
+      x-stoplight:
+        id: ighsd1dqoylgs
+      description: Update Notification Channel
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationChannelRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Channels
+      x-internal: true
+  '/v1/orgs/{org}/notification-rules/{notification-rule}':
+    parameters:
+      - $ref: '#/components/parameters/OrgPathParam'
+      - schema:
+          type: string
+        name: notification-rule
+        in: path
+        required: true
+        description: identifier
+    get:
+      summary: Get Notification Rule
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationRuleResponse'
+      operationId: get-notification-rule-org
+      x-stoplight:
+        id: 2pbw1482swpyr
+      description: Get notification rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+    delete:
+      summary: Delete Notification Rule
+      operationId: delete-notification-rule-org
+      responses:
+        '204':
+          description: No Content
+      x-stoplight:
+        id: a1eigux41o2z4
+      description: Delete notification rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+    put:
+      summary: Update Notification Rule
+      operationId: update-notification-rule-org
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationRuleResponse'
+      x-stoplight:
+        id: 796406aqjnsp5
+      description: Update Notification Rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationRuleRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+  '/v1/notification-rules/{notification-rule}':
+    parameters:
+      - schema:
+          type: string
+        name: notification-rule
+        in: path
+        required: true
+        description: identifier
+    get:
+      summary: Get Notification Rule
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationRuleResponse'
+      operationId: get-notification-rule-account
+      x-stoplight:
+        id: gdmn76upi32vf
+      description: Get notification rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+    delete:
+      summary: Delete Notification Rule
+      operationId: delete-notification-rule-account
+      responses:
+        '204':
+          description: No Content
+      x-stoplight:
+        id: 0qc0xdioohbrx
+      description: Delete notification rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
+    put:
+      summary: Update Notification Rule
+      operationId: update-notification-rule-account
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationRuleResponse'
+      x-stoplight:
+        id: huh88xbae00wj
+      description: Update Notification Rule
+      parameters:
+        - $ref: '#/components/parameters/AccountHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/NotificationRuleRequest'
+      security:
+        - x-api-key: []
+      tags:
+        - Notification Rules
+      x-internal: true
 components:
   schemas:
     NotificationChannelDTO:
@@ -275,7 +671,7 @@ components:
         notification_channel_type:
           $ref: '#/components/schemas/ChannelType'
         status:
-          type: string
+          $ref: '#/components/schemas/Status'
         channel:
           $ref: '#/components/schemas/ChannelDTO'
         created_by:
