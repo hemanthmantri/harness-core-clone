@@ -640,7 +640,6 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     Map<String, String> gitEnvVars = new HashMap<>();
     gitEnvVars.put(DRONE_REMOTE_URL, scmUrl);
     gitEnvVars.put(DRONE_NETRC_MACHINE, scmProvider);
-    when(codebaseUtils.getGitEnvVariables(connectorDetails, repoName)).thenReturn(gitEnvVars);
     when(ciCodebaseUtils.getGitEnvVariables(connectorDetails, repoName)).thenReturn(gitEnvVars);
 
     final ParameterField<Build> buildParameter = createBuildParameter(buildType, buildValue);
@@ -691,7 +690,6 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     Map<String, String> gitEnvVars = new HashMap<>();
     gitEnvVars.put(DRONE_REMOTE_URL, scmUrl);
     gitEnvVars.put(DRONE_NETRC_MACHINE, scmProvider);
-    when(codebaseUtils.getGitEnvVariables(connectorDetails, repoName)).thenReturn(gitEnvVars);
     when(ciCodebaseUtils.getGitEnvVariables(connectorDetails, repoName)).thenReturn(gitEnvVars);
 
     final ParameterField<Build> buildParameter = createBuildParameter(buildType, buildValue);
@@ -741,7 +739,6 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     Map<String, String> gitEnvVars = new HashMap<>();
     gitEnvVars.put(DRONE_REMOTE_URL, scmUrl);
     gitEnvVars.put(DRONE_NETRC_MACHINE, scmProvider);
-    when(codebaseUtils.getGitEnvVariables(connectorDetails, null)).thenReturn(gitEnvVars);
 
     when(ciCodebaseUtils.getGitEnvVariables(connectorDetails, null)).thenReturn(gitEnvVars);
 

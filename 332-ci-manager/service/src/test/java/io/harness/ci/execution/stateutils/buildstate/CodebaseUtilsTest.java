@@ -39,8 +39,6 @@ import io.harness.delegate.beans.connector.scm.azurerepo.AzureRepoConnectionType
 import io.harness.delegate.beans.connector.scm.azurerepo.AzureRepoConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -48,6 +46,7 @@ import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.utils.CiCodebaseUtils;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
@@ -63,6 +62,7 @@ public class CodebaseUtilsTest extends CIExecutionTestBase {
   @Inject public CodebaseUtils codebaseUtils;
   @Mock private ConnectorUtils connectorUtils;
   @Mock private GitBuildStatusUtility gitBuildStatusUtility;
+  @Mock private CiCodebaseUtils ciCodebaseUtils;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
   private Ambiance ambiance;
 
@@ -263,27 +263,6 @@ public class CodebaseUtilsTest extends CIExecutionTestBase {
             .build();
     CodeBase codeBase = CodeBase.builder().repoName(ParameterField.createValueField(repoName)).build();
     final Map<String, String> gitEnvVariables = codebaseUtils.getGitEnvVariables(connectorDetails, codeBase, false);
-    assertThat(gitEnvVariables.get(DRONE_NETRC_MACHINE)).isEqualTo(scmHostName);
-    assertThat(gitEnvVariables.get(DRONE_REMOTE_URL)).isEqualTo(scmUrl + "/" + repoName + ".git");
-  }
-
-  @Test
-  @Owner(developers = JAMES_RICKS)
-  @Category(UnitTests.class)
-  public void testGetGitEnvVariables() {
-    String repoName = "myRepoName";
-    String scmHostName = "gitlab.com";
-    String scmUrl = "git@" + scmHostName + ":org";
-    ConnectorDetails connectorDetails =
-        ConnectorDetails.builder()
-            .connectorType(ConnectorType.GITLAB)
-            .connectorConfig(GitlabConnectorDTO.builder()
-                                 .connectionType(GitConnectionType.ACCOUNT)
-                                 .url(scmUrl)
-                                 .authentication(GitlabAuthenticationDTO.builder().authType(GitAuthType.SSH).build())
-                                 .build())
-            .build();
-    final Map<String, String> gitEnvVariables = codebaseUtils.getGitEnvVariables(connectorDetails, repoName);
     assertThat(gitEnvVariables.get(DRONE_NETRC_MACHINE)).isEqualTo(scmHostName);
     assertThat(gitEnvVariables.get(DRONE_REMOTE_URL)).isEqualTo(scmUrl + "/" + repoName + ".git");
   }

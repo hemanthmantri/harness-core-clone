@@ -23,7 +23,6 @@ import static io.harness.ci.commonconstants.BuildEnvironmentConstants.CI_REPO;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.CI_REPO_LINK;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.CI_REPO_REMOTE;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE;
-import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_BRANCH;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_BUILD_EVENT;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_BUILD_LINK;
@@ -39,14 +38,9 @@ import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_COMM
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_COMMIT_MESSAGE;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_COMMIT_REF;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_COMMIT_SHA;
-import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_GIT_HTTP_URL;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_GIT_SSH_URL;
-import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
-import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_NETRC_PORT;
-import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_PULL_REQUEST;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_PULL_REQUEST_TITLE;
-import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO_BRANCH;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO_LINK;
@@ -54,7 +48,6 @@ import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO_NAMESPACE;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO_OWNER;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO_PRIVATE;
-import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO_SCM;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_REPO_VISIBILITY;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_SOURCE_BRANCH;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_STAGE_KIND;
@@ -63,9 +56,6 @@ import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_SYST
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_SYSTEM_PROTO;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_TAG;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
-import static io.harness.ci.commonconstants.CIExecutionConstants.AWS_CODE_COMMIT;
-import static io.harness.ci.commonconstants.CIExecutionConstants.AWS_CODE_COMMIT_URL_REGEX;
-import static io.harness.ci.commonconstants.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.ci.commonconstants.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -79,44 +69,23 @@ import static io.harness.delegate.beans.connector.ConnectorType.HARNESS;
 import static io.harness.delegate.beans.connector.scm.adapter.AzureRepoToGitMapper.mapToGitConnectionType;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.stripEnd;
-import static org.apache.commons.lang3.StringUtils.stripStart;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.ci.execution.execution.GitBuildStatusUtility;
 import io.harness.ci.execution.integrationstage.BuildEnvironmentUtils;
-import io.harness.ci.execution.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.beans.connector.scm.azurerepo.AzureRepoConnectorDTO;
-import io.harness.delegate.beans.connector.scm.azurerepo.AzureRepoHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.azurerepo.AzureRepoHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.harness.HarnessConnectorDTO;
-import io.harness.delegate.beans.connector.scm.harness.HarnessHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.harness.HarnessHttpCredentialsDTO;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
@@ -124,6 +93,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
+import io.harness.utils.CiCodebaseUtils;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
@@ -131,8 +101,6 @@ import com.google.inject.Singleton;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -142,6 +110,7 @@ public class CodebaseUtils {
   @Inject private ConnectorUtils connectorUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private GitBuildStatusUtility gitBuildStatusUtility;
+  @Inject private CiCodebaseUtils ciCodebaseUtils;
   private final String PRMergeStatus = "merged";
 
   public Map<String, String> getCodebaseVars(
@@ -319,242 +288,7 @@ public class CodebaseUtils {
       throw new CIStageExecutionException("CI codebase spec is not set");
     }
     String repoName = ciCodebase.getRepoName().getValue();
-    return getGitEnvVariables(gitConnector, repoName);
-  }
-
-  public Map<String, String> getGitEnvVariables(ConnectorDetails gitConnector, String repoName) {
-    Map<String, String> envVars = new HashMap<>();
-    if (gitConnector == null) {
-      return envVars;
-    }
-
-    validateGitConnector(gitConnector);
-    if (gitConnector.getConnectorType() == GITHUB) {
-      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
-      validateGithubConnectorAuth(gitConfigDTO);
-      envVars = retrieveGitSCMEnvVar(gitConnector, repoName, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    } else if (gitConnector.getConnectorType() == AZURE_REPO) {
-      AzureRepoConnectorDTO gitConfigDTO = (AzureRepoConnectorDTO) gitConnector.getConnectorConfig();
-      validateAzureRepoConnectorAuth(gitConfigDTO);
-      GitConnectionType gitConnectionType = mapToGitConnectionType(gitConfigDTO.getConnectionType());
-      envVars = retrieveGitSCMEnvVar(gitConnector, repoName, gitConnectionType, gitConfigDTO.getUrl());
-    } else if (gitConnector.getConnectorType() == GITLAB) {
-      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
-      validateGitlabConnectorAuth(gitConfigDTO);
-      envVars = retrieveGitSCMEnvVar(gitConnector, repoName, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    } else if (gitConnector.getConnectorType() == BITBUCKET) {
-      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
-      validateBitbucketConnectorAuth(gitConfigDTO);
-      envVars = retrieveGitSCMEnvVar(gitConnector, repoName, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    } else if (gitConnector.getConnectorType() == CODECOMMIT) {
-      AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
-      envVars = retrieveAwsCodeCommitEnvVar(gitConfigDTO, repoName);
-    } else if (gitConnector.getConnectorType() == GIT) {
-      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-      envVars = retrieveGitEnvVar(gitConfigDTO, repoName);
-    } else if (gitConnector.getConnectorType() == HARNESS) {
-      HarnessConnectorDTO gitConfigDTO = (HarnessConnectorDTO) gitConnector.getConnectorConfig();
-      validateHarnessConnectorAuth(gitConfigDTO);
-      envVars = retrieveGitSCMEnvVar(gitConnector, repoName, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    } else {
-      throw new CIStageExecutionException("Unsupported git connector type" + gitConnector.getConnectorType());
-    }
-
-    return envVars;
-  }
-
-  private Map<String, String> retrieveGitSCMEnvVar(
-      ConnectorDetails gitConnector, String repoName, GitConnectionType connectionType, String url) {
-    Map<String, String> envVars = new HashMap<>();
-    String gitUrl = IntegrationStageUtils.getGitURL(repoName, connectionType, url);
-    if (gitConnector.getConnectorType() == HARNESS) {
-      gitUrl =
-          getCompleteHarnessUrl(url, gitConnector.getOrgIdentifier(), gitConnector.getProjectIdentifier(), repoName);
-    }
-
-    String domain = GitClientHelper.getGitSCM(gitUrl);
-    String port = GitClientHelper.getGitSCMPort(gitUrl);
-    if (port != null) {
-      envVars.put(DRONE_NETRC_PORT, port);
-    }
-
-    envVars.put(DRONE_REMOTE_URL, gitUrl);
-    envVars.put(DRONE_NETRC_MACHINE, domain);
-    envVars.put(DRONE_REPO_SCM, gitConnector.getConnectorType().toString());
-
-    if (GitClientHelper.isHTTPProtocol(gitUrl)) {
-      envVars.put(DRONE_GIT_HTTP_URL, gitUrl);
-    } else if (GitClientHelper.isSSHProtocol(gitUrl)) {
-      envVars.put(DRONE_GIT_SSH_URL, gitUrl);
-    }
-    return envVars;
-  }
-
-  private void validateGithubConnectorAuth(GithubConnectorDTO gitConfigDTO) {
-    switch (gitConfigDTO.getAuthentication().getAuthType()) {
-      case HTTP:
-        GithubHttpCredentialsDTO gitAuth = (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-        if (gitAuth.getType() != GithubHttpAuthenticationType.USERNAME_AND_PASSWORD
-            && gitAuth.getType() != GithubHttpAuthenticationType.USERNAME_AND_TOKEN
-            && gitAuth.getType() != GithubHttpAuthenticationType.OAUTH
-            && gitAuth.getType() != GithubHttpAuthenticationType.GITHUB_APP) {
-          throw new CIStageExecutionException("Unsupported github connector auth type" + gitAuth.getType());
-        }
-        break;
-      case SSH:
-        break;
-      default:
-        throw new CIStageExecutionException(
-            "Unsupported github connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-  }
-
-  private void validateHarnessConnectorAuth(HarnessConnectorDTO gitConfigDTO) {
-    switch (gitConfigDTO.getAuthentication().getAuthType()) {
-      case HTTP:
-        HarnessHttpCredentialsDTO gitAuth =
-            (HarnessHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-        if (gitAuth.getType() != HarnessHttpAuthenticationType.USERNAME_AND_TOKEN) {
-          throw new CIStageExecutionException("Unsupported harness connector auth type" + gitAuth.getType());
-        }
-        break;
-      default:
-        throw new CIStageExecutionException(
-            "Unsupported github connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-  }
-
-  private void validateBitbucketConnectorAuth(BitbucketConnectorDTO gitConfigDTO) {
-    switch (gitConfigDTO.getAuthentication().getAuthType()) {
-      case HTTP:
-        BitbucketHttpCredentialsDTO gitAuth =
-            (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-        if (gitAuth.getType() != BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-          throw new CIStageExecutionException("Unsupported bitbucket connector auth type" + gitAuth.getType());
-        }
-        break;
-      case SSH:
-        break;
-      default:
-        throw new CIStageExecutionException(
-            "Unsupported bitbucket connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-  }
-
-  private void validateAzureRepoConnectorAuth(AzureRepoConnectorDTO gitConfigDTO) {
-    switch (gitConfigDTO.getAuthentication().getAuthType()) {
-      case HTTP:
-        AzureRepoHttpCredentialsDTO gitAuth =
-            (AzureRepoHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-        if (gitAuth.getType() != AzureRepoHttpAuthenticationType.USERNAME_AND_TOKEN) {
-          throw new CIStageExecutionException("Unsupported azure repo connector auth type" + gitAuth.getType());
-        }
-        break;
-      case SSH:
-        break;
-      default:
-        throw new CIStageExecutionException(
-            "Unsupported azure repo connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-  }
-
-  private void validateGitlabConnectorAuth(GitlabConnectorDTO gitConfigDTO) {
-    switch (gitConfigDTO.getAuthentication().getAuthType()) {
-      case HTTP:
-        GitlabHttpCredentialsDTO gitAuth = (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-        if (gitAuth.getType() != GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD
-            && gitAuth.getType() != GitlabHttpAuthenticationType.USERNAME_AND_TOKEN
-            && gitAuth.getType() != GitlabHttpAuthenticationType.OAUTH) {
-          throw new CIStageExecutionException("Unsupported gitlab connector auth type" + gitAuth.getType());
-        }
-        break;
-      case SSH:
-        break;
-      default:
-        throw new CIStageExecutionException(
-            "Unsupported gitlab connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-  }
-
-  private Map<String, String> retrieveGitEnvVar(GitConfigDTO gitConfigDTO, String repoName) {
-    Map<String, String> envVars = new HashMap<>();
-    String gitUrl =
-        IntegrationStageUtils.getGitURL(repoName, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
-
-    envVars.put(DRONE_REPO_SCM, String.valueOf(GIT));
-    envVars.put(DRONE_REMOTE_URL, gitUrl);
-    envVars.put(DRONE_NETRC_MACHINE, domain);
-    switch (gitConfigDTO.getGitAuthType()) {
-      case HTTP:
-        GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-        envVars.put(DRONE_NETRC_USERNAME, gitAuth.getUsername());
-        envVars.put(DRONE_GIT_HTTP_URL, gitUrl);
-        break;
-      case SSH:
-        envVars.put(DRONE_GIT_SSH_URL, gitUrl);
-        break;
-      default:
-        throw new CIStageExecutionException("Unsupported bitbucket connector auth" + gitConfigDTO.getGitAuthType());
-    }
-    return envVars;
-  }
-
-  private Map<String, String> retrieveAwsCodeCommitEnvVar(AwsCodeCommitConnectorDTO gitConfigDTO, String repoName) {
-    Map<String, String> envVars = new HashMap<>();
-    GitConnectionType gitConnectionType =
-        gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO : GitConnectionType.ACCOUNT;
-    String gitUrl = IntegrationStageUtils.getGitURL(repoName, gitConnectionType, gitConfigDTO.getUrl());
-
-    envVars.put(DRONE_REPO_SCM, AWS_CODE_COMMIT);
-    envVars.put(DRONE_REMOTE_URL, gitUrl);
-    envVars.put(DRONE_AWS_REGION, getAwsCodeCommitRegion(gitConfigDTO.getUrl()));
-    if (gitConfigDTO.getAuthentication().getAuthType() == AwsCodeCommitAuthType.HTTPS) {
-      AwsCodeCommitHttpsCredentialsDTO credentials =
-          (AwsCodeCommitHttpsCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      if (credentials.getType() != AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY) {
-        throw new CIStageExecutionException("Unsupported aws code commit connector auth type" + credentials.getType());
-      }
-    } else {
-      throw new CIStageExecutionException(
-          "Unsupported aws code commit connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-    return envVars;
-  }
-
-  private String getAwsCodeCommitRegion(String url) {
-    Pattern r = Pattern.compile(AWS_CODE_COMMIT_URL_REGEX);
-    Matcher m = r.matcher(url);
-
-    if (m.find()) {
-      return m.group(1);
-    } else {
-      throw new InvalidRequestException("Url does not have region information");
-    }
-  }
-
-  private void validateGitConnector(ConnectorDetails gitConnector) {
-    if (gitConnector == null) {
-      log.error("Git connector is not valid {}", gitConnector);
-      throw new InvalidArgumentsException("Git connector is not valid", WingsException.USER);
-    }
-    if (gitConnector.getConnectorType() != GIT && gitConnector.getConnectorType() != ConnectorType.GITHUB
-        && gitConnector.getConnectorType() != ConnectorType.GITLAB && gitConnector.getConnectorType() != BITBUCKET
-        && gitConnector.getConnectorType() != CODECOMMIT && gitConnector.getConnectorType() != AZURE_REPO
-        && gitConnector.getConnectorType() != HARNESS) {
-      log.error("Git connector ref is not of type git {}", gitConnector.getConnectorType());
-      throw new InvalidArgumentsException(
-          "Connector type is not from supported connectors list GITHUB, GITLAB, BITBUCKET, CODECOMMIT ",
-          WingsException.USER);
-    }
-
-    // TODO Validate all
-
-    //    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-    //    if (gitConfigDTO.getGitAuthType() != GitAuthType.HTTP && gitConfigDTO.getGitAuthType() != GitAuthType.SSH) {
-    //      log.error("Git connector ref is of invalid auth type {}", gitConnector);
-    //      throw new InvalidArgumentsException("Invalid auth provided for git connector", WingsException.USER);
-    //    }
+    return ciCodebaseUtils.getGitEnvVariables(gitConnector, repoName);
   }
 
   public ConnectorDetails getGitConnector(
@@ -599,7 +333,7 @@ public class CodebaseUtils {
     String completeURL = scmConnector.getUrl();
 
     if (scmConnector.getConnectorType() == HARNESS) {
-      completeURL = getCompleteHarnessUrl(
+      completeURL = CiCodebaseUtils.getCompleteHarnessUrl(
           completeURL, connectorDetails.getOrgIdentifier(), connectorDetails.getProjectIdentifier(), repoName);
     } else if (isNotEmpty(repoName) && gitConnectionType == GitConnectionType.PROJECT) {
       if (scmConnector.getConnectorType() == AZURE_REPO) {
@@ -611,23 +345,6 @@ public class CodebaseUtils {
     }
 
     return completeURL;
-  }
-
-  public static String getCompleteHarnessUrl(
-      String accountUrl, String orgIdentifier, String projectIdentifier, String repo) {
-    repo = stripStart(repo, "/");
-    repo = stripEnd(repo, "/");
-    if (!repo.endsWith(GIT_URL_SUFFIX)) {
-      repo += GIT_URL_SUFFIX;
-    }
-    String parts[] = repo.split("/");
-    if (parts.length == 3) {
-      return accountUrl + "/" + repo;
-    } else if (parts.length == 2) {
-      return accountUrl + "/" + orgIdentifier + "/" + repo;
-    } else {
-      return accountUrl + "/" + orgIdentifier + "/" + projectIdentifier + "/" + repo;
-    }
   }
 
   public static GitConnectionType getGitConnectionType(ConnectorDetails gitConnector) {

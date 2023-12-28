@@ -8,6 +8,7 @@
 package io.harness.ci.execution.serializer.vm;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.ci.config.CIDockerLayerCachingConfig;
@@ -107,8 +108,12 @@ public class VmPluginCompatibleStepSerializer {
 
     Map<EnvVariableEnum, String> additionalSecretsMap =
         PluginSettingUtils.getConnectorSecretEnvMap(pluginCompatibleStep.getNonYamlInfo().getStepInfoType());
-
-    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorRef);
+    ConnectorDetails connectorDetails;
+    if (pluginCompatibleStep instanceof GitCloneStepInfo) {
+      connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorRef, true);
+    } else {
+      connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorRef);
+    }
 
     Map<EnvVariableEnum, String> newEnvToSecretsMap = new HashMap<>(connectorDetails.getEnvToSecretsMap());
     newEnvToSecretsMap.putAll(additionalSecretsMap);

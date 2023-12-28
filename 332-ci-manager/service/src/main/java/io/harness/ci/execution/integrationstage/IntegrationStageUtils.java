@@ -75,7 +75,6 @@ import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml;
 import io.harness.beans.yaml.extended.platform.ArchType;
 import io.harness.ci.commonconstants.CIExecutionConstants;
-import io.harness.ci.execution.buildstate.CodebaseUtils;
 import io.harness.ci.execution.buildstate.ConnectorUtils;
 import io.harness.ci.execution.buildstate.InfraInfoUtils;
 import io.harness.ci.execution.states.RunStep;
@@ -120,6 +119,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.utils.CiCodebaseUtils;
 import io.harness.utils.CiIntegrationStageUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
@@ -442,10 +442,6 @@ public class IntegrationStageUtils {
       throw new IllegalArgumentException("CI codebase spec is not set");
     }
     String repoName = ciCodebase.getRepoName().getValue();
-    return getGitURL(repoName, connectionType, url);
-  }
-
-  public static String getGitURL(String repoName, GitConnectionType connectionType, String url) {
     return CiIntegrationStageUtils.getGitURL(repoName, connectionType, url);
   }
 
@@ -478,7 +474,7 @@ public class IntegrationStageUtils {
       url = getGitURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
     } else if (gitConnector.getConnectorType() == HARNESS) {
       HarnessConnectorDTO gitConfigDTO = (HarnessConnectorDTO) gitConnector.getConnectorConfig();
-      url = CodebaseUtils.getCompleteHarnessUrl(gitConfigDTO.getUrl(), gitConnector.getOrgIdentifier(),
+      url = CiCodebaseUtils.getCompleteHarnessUrl(gitConfigDTO.getUrl(), gitConnector.getOrgIdentifier(),
           gitConnector.getProjectIdentifier(), ciCodebase.getRepoName().getValue());
     } else {
       throw new CIStageExecutionException("Unsupported git connector type" + gitConnector.getConnectorType());

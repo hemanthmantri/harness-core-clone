@@ -77,7 +77,7 @@ public class GitCloneStepInfo implements PluginCompatibleStep, WithConnectorRef 
 
   @VariableExpression(skipVariableExpression = true) @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> connectorRef;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> connectorRef;
 
   ContainerResource resources;
 
