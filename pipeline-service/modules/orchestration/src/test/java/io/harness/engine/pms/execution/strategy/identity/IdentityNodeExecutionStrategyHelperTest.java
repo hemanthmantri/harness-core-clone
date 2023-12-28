@@ -7,12 +7,15 @@
 
 package io.harness.engine.pms.execution.strategy.identity;
 
+import static io.harness.rule.OwnerRule.AYUSHI_TIWARI;
 import static io.harness.rule.OwnerRule.BRIJESH;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -20,20 +23,32 @@ import static org.mockito.Mockito.verify;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.OrchestrationTestHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanService;
 import io.harness.execution.NodeExecution;
+import io.harness.graph.stepDetail.service.NodeExecutionInfoService;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.UnitProgress;
 import io.harness.plan.IdentityPlanNode;
+import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.StrategyMetadata;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.interrupts.RetryInterruptConfig;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,12 +59,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.util.CloseableIterator;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class IdentityNodeExecutionStrategyHelperTest {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock PlanService planService;
   @InjectMocks IdentityNodeExecutionStrategyHelper identityNodeExecutionStrategyHelper;
+
+  @Mock NodeExecutionInfoService pmsGraphStepDetailsService;
+
+  @Mock Ambiance ambiance;
 
   @Before
   public void setUp() {
@@ -165,5 +185,110 @@ public class IdentityNodeExecutionStrategyHelperTest {
     assertEquals(mappedIds.size(), retryIds.size());
     assertThat(mappedIds.contains(retryIdsMap.get(retryIds.get(0)))).isTrue();
     assertThat(mappedIds.contains(retryIdsMap.get(retryIds.get(1)))).isTrue();
+  }
+
+  @Test
+  @Owner(developers = AYUSHI_TIWARI)
+  @Category(UnitTests.class)
+  public void testGetCorrectNodeExecution() {
+    List<Level> currLevels = new ArrayList<>();
+    Level level1 = Level.newBuilder()
+                       .setStrategyMetadata(StrategyMetadata.newBuilder().setCurrentIteration(1).build())
+                       .setGroup("blah1")
+                       .setNodeType("node1")
+                       .setOriginalIdentifier("originalIdentifier")
+                       .build();
+    Level level2 = Level.newBuilder()
+                       .setStrategyMetadata(StrategyMetadata.newBuilder().setCurrentIteration(2).build())
+                       .setRuntimeId("runtime")
+                       .build();
+    currLevels.add(level1);
+    currLevels.add(level2);
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .ambiance(Ambiance.newBuilder().addLevels(0, level1).addLevels(level2).setPlanExecutionId("123").build())
+            .nextId("123")
+            .build();
+    List<NodeExecution> nodeExecutionList = Collections.singletonList(nodeExecution);
+    CloseableIterator<NodeExecution> executionsIterator =
+        OrchestrationTestHelper.createCloseableIterator(nodeExecutionList.iterator());
+    NodeExecution result = identityNodeExecutionStrategyHelper.getCorrectNodeExecution(executionsIterator, currLevels);
+    assertThat(result.getAmbiance().getLevelsCount()).isEqualTo(2);
+    assertThat(result.getAmbiance().getPlanExecutionId()).isEqualTo(nodeExecution.getPlanExecutionId());
+    assertThat(result.getAmbiance().getLevels(0).getGroup()).isEqualTo(level1.getGroup());
+    assertThat(result.getAmbiance().getLevels(0).getNodeType()).isEqualTo(level1.getNodeType());
+    assertThat(result.getAmbiance().getLevels(0).getOriginalIdentifier()).isEqualTo(level1.getOriginalIdentifier());
+    assertThat(result.getAmbiance().getLevels(1).getRuntimeId()).isEqualTo(level2.getRuntimeId());
+  }
+
+  @Test
+  @Owner(developers = AYUSHI_TIWARI)
+  @Category(UnitTests.class)
+  public void testCreateNodeExecution() {
+    SkipType skipType = SkipType.SKIP_NODE;
+    StepType stepType = StepType.newBuilder().build();
+
+    IdentityPlanNode node = IdentityPlanNode.builder()
+                                .originalNodeExecutionId("1")
+                                .uuid("12")
+                                .serviceName("serviceName")
+                                .skipGraphType(skipType)
+                                .stepType(stepType)
+                                .stageFqn("Fqn")
+                                .group("group")
+                                .isSkipExpressionChain(true)
+                                .build();
+
+    String notifyId = "12";
+    String parentId = "124";
+    String previousId = "123";
+    Level level = Level.newBuilder().setRuntimeId("1").build();
+    Ambiance ambiance = Ambiance.newBuilder().addLevels(level).build();
+    List<UnitProgress> unitProgressList = new ArrayList<>();
+
+    UnitProgress unitProgress = UnitProgress.newBuilder().build();
+    unitProgressList.add(unitProgress);
+
+    NodeRunInfo nodeRunInfo = NodeRunInfo.newBuilder().build();
+    FailureInfo failureInfo = FailureInfo.newBuilder().build();
+    Map<String, Object> progressData = new HashMap<>();
+    AdviserResponse adviserResponse = AdviserResponse.newBuilder().build();
+    List<String> listOfTimeoutIds = new ArrayList<>();
+    List<InterruptEffect> interruptEffectList = new ArrayList<>();
+    PmsStepParameters pmsStepParameters = new PmsStepParameters();
+
+    NodeExecution originalExecution = NodeExecution.builder()
+                                          .unitProgresses(unitProgressList)
+                                          .uuid("12")
+                                          .name("blah")
+                                          .identifier("hello")
+                                          .mode(ExecutionMode.ASYNC)
+                                          .nodeRunInfo(nodeRunInfo)
+                                          .failureInfo(failureInfo)
+                                          .progressData(progressData)
+                                          .adviserResponse(adviserResponse)
+                                          .adviserTimeoutInstanceIds(listOfTimeoutIds)
+                                          .interruptHistories(interruptEffectList)
+                                          .resolvedParams(pmsStepParameters)
+                                          .resolvedInputs(pmsStepParameters)
+                                          .executionInputConfigured(true)
+                                          .build();
+
+    doReturn(originalExecution).when(nodeExecutionService).get(node.getOriginalNodeExecutionId());
+    doReturn(originalExecution).when(nodeExecutionService).save(any());
+    doNothing()
+        .when(pmsGraphStepDetailsService)
+        .copyStepDetailsForRetry(eq(ambiance.getPlanExecutionId()), eq(originalExecution.getUuid()), anyString());
+
+    NodeExecution actual =
+        identityNodeExecutionStrategyHelper.createNodeExecution(ambiance, node, notifyId, parentId, previousId);
+
+    assertThat(actual).isNotNull();
+    assertThat(actual.getNodeId()).isEqualTo(originalExecution.getNodeId());
+    assertThat(actual.getMode()).isEqualTo(originalExecution.getMode());
+    assertThat(actual.getSkipGraphType()).isEqualTo(originalExecution.getSkipGraphType());
+    assertThat(actual.getNodeRunInfo()).isEqualTo(originalExecution.getNodeRunInfo());
+    assertThat(actual.getAdviserResponse()).isEqualTo(originalExecution.getAdviserResponse());
+    assertThat(actual.getInterruptHistories()).isEqualTo(originalExecution.getInterruptHistories());
   }
 }
