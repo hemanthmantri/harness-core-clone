@@ -28,4 +28,5 @@ public class OrchestrationStepEnvVariables {
   boolean sscaManagerEnabled;
   String sbomDrift;
   boolean base64SecretAttestation;
+  boolean airgapEnabled;
 }

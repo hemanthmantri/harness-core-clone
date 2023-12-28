@@ -50,6 +50,7 @@ public class SlsaVerificationPluginHelper {
   private static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
 
   public static final String PLUGIN_BASE64_SECRET = "PLUGIN_BASE64_SECRET";
+  public static final String ENABLE_SSCA_AIRGAP = "ENABLE_SSCA_AIRGAP";
 
   @Inject private NgSettingsUtils ngSettingsUtils;
 
@@ -74,6 +75,10 @@ public class SlsaVerificationPluginHelper {
     boolean useBase64SecretForAttestation = ngSettingsUtils.getBaseEncodingEnabled(AmbianceUtils.getAccountId(ambiance),
         AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
     envMap.put(PLUGIN_BASE64_SECRET, String.valueOf(useBase64SecretForAttestation));
+
+    boolean airgapEnabled = ngSettingsUtils.getAirgapEnabled(AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
+    envMap.put(ENABLE_SSCA_AIRGAP, String.valueOf(airgapEnabled));
     return envMap;
   }
 

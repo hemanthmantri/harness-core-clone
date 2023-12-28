@@ -70,6 +70,9 @@ public class SscaEnforcementPluginHelper {
     boolean useBase64SecretForAttestation = ngSettingsUtils.getBaseEncodingEnabled(AmbianceUtils.getAccountId(ambiance),
         AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
 
+    boolean airgapEnabled = ngSettingsUtils.getAirgapEnabled(AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
+
     Map<String, String> envMap = SscaEnforcementStepPluginUtils.getSscaEnforcementStepEnvVariables(
         EnforcementStepEnvVariables.builder()
             .stepExecutionId(runtimeId)
@@ -78,6 +81,7 @@ public class SscaEnforcementPluginHelper {
             .sscaManagerEnabled(sscaServiceUtils.isSSCAManagerEnabled())
             .policySetRef(policySetRef)
             .base64SecretAttestation(useBase64SecretForAttestation)
+            .airgapEnabled(airgapEnabled)
             .build());
     if (infraType == Type.VM) {
       envMap.putAll(getSscaEnforcementSecretEnvMap(stepInfo, identifier, ambiance.getExpressionFunctorToken()));

@@ -41,4 +41,18 @@ public class NgSettingsUtils {
     }
     return useBase64SecretForAttestation;
   }
+
+  public boolean getAirgapEnabled(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    boolean enabledAirgap = false;
+    try {
+      enabledAirgap =
+          Boolean.parseBoolean(NGRestUtils
+                                   .getResponse(settingsClient.getSetting(SettingIdentifiers.ENABLE_SSCA_AIRGAP,
+                                       accountIdentifier, orgIdentifier, projectIdentifier))
+                                   .getValue());
+    } catch (Exception e) {
+      log.error(String.format("Could not fetch the default config for SSCA airgap, reverting to default", e));
+    }
+    return enabledAirgap;
+  }
 }

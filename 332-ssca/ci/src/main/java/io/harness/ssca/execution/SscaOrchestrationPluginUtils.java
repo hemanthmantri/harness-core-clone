@@ -80,6 +80,9 @@ public class SscaOrchestrationPluginUtils {
     boolean useBase64SecretForAttestation = ngSettingsUtils.getBaseEncodingEnabled(AmbianceUtils.getAccountId(ambiance),
         AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
 
+    boolean airgapEnabled = ngSettingsUtils.getAirgapEnabled(AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
+
     String runtimeId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     OrchestrationStepEnvVariables envVariables =
         OrchestrationStepEnvVariables.builder()
@@ -94,6 +97,7 @@ public class SscaOrchestrationPluginUtils {
             .sscaManagerEnabled(sscaServiceUtils.getSscaServiceConfig().isSscaManagerEnabled())
             .sbomDrift(sbomDrift)
             .base64SecretAttestation(useBase64SecretForAttestation)
+            .airgapEnabled(airgapEnabled)
             .build();
     Map<String, String> envMap = SscaOrchestrationStepPluginUtils.getSScaOrchestrationStepEnvVariables(envVariables);
     if (type == Type.VM) {

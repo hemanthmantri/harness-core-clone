@@ -23,4 +23,5 @@ public class EnforcementStepEnvVariables {
   boolean sscaManagerEnabled;
   String policySetRef;
   boolean base64SecretAttestation;
+  boolean airgapEnabled;
 }

@@ -44,6 +44,7 @@ public class SscaOrchestrationStepPluginUtils {
   public static final String SSCA_MANAGER_ENABLED = "SSCA_MANAGER_ENABLED";
   public static final String PLUGIN_SBOM_DRIFT = "PLUGIN_SBOM_DRIFT";
   public static final String PLUGIN_BASE64_SECRET = "PLUGIN_BASE64_SECRET";
+  public static final String ENABLE_SSCA_AIRGAP = "ENABLE_SSCA_AIRGAP";
 
   public Map<String, String> getSScaOrchestrationStepEnvVariables(OrchestrationStepEnvVariables envVariables) {
     Map<String, String> envMap = new HashMap<>();
@@ -63,6 +64,7 @@ public class SscaOrchestrationStepPluginUtils {
     envMap.put(STEP_ID, envVariables.getStepIdentifier());
     envMap.put(PLUGIN_SBOM_DRIFT, envVariables.getSbomDrift());
     envMap.put(PLUGIN_BASE64_SECRET, String.valueOf(envVariables.isBase64SecretAttestation()));
+    envMap.put(ENABLE_SSCA_AIRGAP, String.valueOf(envVariables.isAirgapEnabled()));
     envMap.values().removeAll(Collections.singleton(null));
 
     return envMap;
