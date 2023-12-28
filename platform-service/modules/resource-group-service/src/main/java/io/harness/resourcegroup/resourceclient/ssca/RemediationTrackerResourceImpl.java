@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
 public class RemediationTrackerResourceImpl implements Resource {
-  public static final String REMEDIATION_TRACKER = "REMEDIATION_TRACKER";
+  public static final String REMEDIATION_TRACKER = "SSCA_REMEDIATION_TRACKER";
 
   @Override
   public String getType() {

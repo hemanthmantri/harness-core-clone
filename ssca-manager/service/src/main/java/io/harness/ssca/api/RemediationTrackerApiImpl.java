@@ -6,6 +6,16 @@
  */
 package io.harness.ssca.api;
 
+import static io.harness.ssca.search.framework.Constants.REMEDIATION_TRACKER_CLOSE;
+import static io.harness.ssca.search.framework.Constants.REMEDIATION_TRACKER_EDIT;
+import static io.harness.ssca.search.framework.Constants.REMEDIATION_TRACKER_RESOURCE;
+import static io.harness.ssca.search.framework.Constants.REMEDIATION_TRACKER_VIEW;
+
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.spec.server.ssca.v1.RemediationApi;
 import io.harness.spec.server.ssca.v1.model.CreateTicketRequest;
@@ -44,8 +54,9 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   @Inject RemediationTrackerService remediationTrackerService;
 
   @Override
-  public Response createRemediationTracker(
-      String orgId, String projectId, @Valid RemediationTrackerCreateRequestBody body, String harnessAccount) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_EDIT)
+  public Response createRemediationTracker(@OrgIdentifier String orgId, @ProjectIdentifier String projectId,
+      @Valid RemediationTrackerCreateRequestBody body, @AccountIdentifier String harnessAccount) {
     String remediationTrackerId =
         remediationTrackerService.createRemediationTracker(harnessAccount, orgId, projectId, body);
     RemediationTrackerCreateResponseBody response = new RemediationTrackerCreateResponseBody().id(remediationTrackerId);
@@ -53,8 +64,10 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response updateRemediationTracker(String org, String project, String remediation,
-      @Valid RemediationTrackerUpdateRequestBody body, String harnessAccount) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_EDIT)
+  public Response updateRemediationTracker(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @ResourceIdentifier String remediation, @Valid RemediationTrackerUpdateRequestBody body,
+      @AccountIdentifier String harnessAccount) {
     String remediationTrackerId =
         remediationTrackerService.updateRemediationTracker(harnessAccount, org, project, remediation, body);
     RemediationTrackerUpdateResponseBody response = new RemediationTrackerUpdateResponseBody().id(remediationTrackerId);
@@ -62,28 +75,36 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response closeRemediationTracker(String org, String project, String remediation, String harnessAccount) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_CLOSE)
+  public Response closeRemediationTracker(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @ResourceIdentifier String remediation, @AccountIdentifier String harnessAccount) {
     boolean response = remediationTrackerService.close(harnessAccount, org, project, remediation);
     return Response.ok().entity(new SaveResponse().status(response ? "SUCCESS" : "FAILURE")).build();
   }
 
   @Override
-  public Response excludeArtifact(
-      String org, String project, String remediation, @Valid ExcludeArtifactRequest body, String harnessAccount) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_EDIT)
+  public Response excludeArtifact(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @ResourceIdentifier String remediation, @Valid ExcludeArtifactRequest body,
+      @AccountIdentifier String harnessAccount) {
     boolean response = remediationTrackerService.excludeArtifact(harnessAccount, org, project, remediation, body);
     return Response.ok().entity(new SaveResponse().status(response ? "SUCCESS" : "FAILURE")).build();
   }
 
   @Override
-  public Response getOverallSummary(String org, String project, String harnessAccount) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_VIEW)
+  public Response getOverallSummary(
+      @OrgIdentifier String org, @ProjectIdentifier String project, @AccountIdentifier String harnessAccount) {
     RemediationTrackersOverallSummaryResponseBody response =
         remediationTrackerService.getOverallSummaryForRemediationTrackers(harnessAccount, org, project);
     return Response.ok().entity(response).build();
   }
 
   @Override
-  public Response listRemediations(String org, String project, @Valid RemediationListingRequestBody body,
-      String harnessAccount, @Min(1L) @Max(1000L) Integer limit, String order, @Min(0L) Integer page, String sort) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_VIEW)
+  public Response listRemediations(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @Valid RemediationListingRequestBody body, @AccountIdentifier String harnessAccount,
+      @Min(1L) @Max(1000L) Integer limit, String order, @Min(0L) Integer page, String sort) {
     sort = RemediationTrackerApiUtils.getSortFieldMapping(sort);
     Pageable pageable = PageResponseUtils.getPageable(page, limit, sort, order);
     Page<RemediationListingResponse> artifactEntities =
@@ -92,16 +113,19 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response getRemediationDetails(String org, String project, String remediation, String harnessAccount) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_VIEW)
+  public Response getRemediationDetails(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @ResourceIdentifier String remediation, @AccountIdentifier String harnessAccount) {
     RemediationDetailsResponse response =
         remediationTrackerService.getRemediationDetails(harnessAccount, org, project, remediation);
     return Response.ok().entity(response).build();
   }
 
   @Override
-  public Response getArtifactListForRemediation(String org, String project, String remediation,
-      @Valid RemediationArtifactListingRequestBody body, String harnessAccount, @Min(1L) @Max(1000L) Integer limit,
-      @Min(0L) Integer page) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_VIEW)
+  public Response getArtifactListForRemediation(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @ResourceIdentifier String remediation, @Valid RemediationArtifactListingRequestBody body,
+      @AccountIdentifier String harnessAccount, @Min(1L) @Max(1000L) Integer limit, @Min(0L) Integer page) {
     Pageable pageable = PageResponseUtils.getPageable(page, limit);
     Page<RemediationArtifactListingResponse> artifactEntities =
         remediationTrackerService.listRemediationArtifacts(harnessAccount, org, project, remediation, body, pageable);
@@ -109,16 +133,19 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response getArtifactInRemediationDetails(
-      String org, String project, String remediation, String artifact, String harnessAccount) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_VIEW)
+  public Response getArtifactInRemediationDetails(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @ResourceIdentifier String remediation, String artifact, @AccountIdentifier String harnessAccount) {
     RemediationArtifactDetailsResponse response =
         remediationTrackerService.getRemediationArtifactDetails(harnessAccount, org, project, remediation, artifact);
     return Response.ok().entity(response).build();
   }
 
   @Override
-  public Response getDeploymentsListForArtifactInRemediation(String org, String project, String remediation,
-      String artifact, @Valid RemediationArtifactDeploymentsListingRequestBody body, String harnessAccount,
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_VIEW)
+  public Response getDeploymentsListForArtifactInRemediation(@OrgIdentifier String org,
+      @ProjectIdentifier String project, @ResourceIdentifier String remediation, String artifact,
+      @Valid RemediationArtifactDeploymentsListingRequestBody body, @AccountIdentifier String harnessAccount,
       @Min(1L) @Max(1000L) Integer limit, @Min(0L) Integer page) {
     Pageable pageable = PageResponseUtils.getPageable(page, limit);
     Page<RemediationArtifactDeploymentsListingResponse> artifactEntities =
@@ -128,8 +155,10 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response getEnvironmentListForRemediation(
-      String org, String project, String remediation, String artifact, String harnessAccount, String envType) {
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_VIEW)
+  public Response getEnvironmentListForRemediation(@OrgIdentifier String org, @ProjectIdentifier String project,
+      @ResourceIdentifier String remediation, String artifact, @AccountIdentifier String harnessAccount,
+      String envType) {
     EnvType env = RemediationTrackerMapper.mapEnvType(envType);
     List<EnvironmentInfo> response = remediationTrackerService.getAllEnvironmentsInArtifact(
         harnessAccount, org, project, remediation, artifact, env);
@@ -137,9 +166,10 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response createTicket(
-      String orgId, String projectId, String remediation, @Valid CreateTicketRequest body, String harnessAccount) {
-    String ticketId = remediationTrackerService.createTicket(projectId, remediation, orgId, body, harnessAccount);
+  @NGAccessControlCheck(resourceType = REMEDIATION_TRACKER_RESOURCE, permission = REMEDIATION_TRACKER_EDIT)
+  public Response createTicket(@ProjectIdentifier String project, @ResourceIdentifier String remediation,
+      @OrgIdentifier String org, @Valid CreateTicketRequest body, @AccountIdentifier String harnessAccount) {
+    String ticketId = remediationTrackerService.createTicket(project, remediation, org, body, harnessAccount);
     RemediationTrackerCreateResponseBody response = new RemediationTrackerCreateResponseBody().id(ticketId);
     return Response.ok().entity(response).build();
   }

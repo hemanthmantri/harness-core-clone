@@ -213,9 +213,9 @@ public class RemediationTrackerMapper {
   public io.harness.spec.server.ssca.v1.model.EnvironmentType mapEnvType(EnvType environmentType) {
     switch (environmentType) {
       case PreProduction:
-        return EnvironmentType.PROD;
-      case Production:
         return EnvironmentType.PREPROD;
+      case Production:
+        return EnvironmentType.PROD;
       default:
         throw new InvalidRequestException("Invalid environment type: " + environmentType);
     }

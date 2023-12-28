@@ -14,4 +14,11 @@ import io.harness.annotations.dev.OwnedBy;
 public class Constants {
   public static final String ARTIFACT_ENTITY = "artifact";
   public static final String SBOM_COMPONENT_ENTITY = "component";
+  public static final String REMEDIATION_TRACKER_RESOURCE = "SSCA_REMEDIATION_TRACKER";
+
+  public static final String REMEDIATION_TRACKER_EDIT = "ssca_remediationtracker_edit";
+
+  public static final String REMEDIATION_TRACKER_VIEW = "ssca_remediationtracker_view";
+
+  public static final String REMEDIATION_TRACKER_CLOSE = "ssca_remediationtracker_close";
 }
