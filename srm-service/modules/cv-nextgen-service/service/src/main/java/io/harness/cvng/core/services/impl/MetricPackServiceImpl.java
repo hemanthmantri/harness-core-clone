@@ -15,8 +15,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.MetricPack.MetricPackKeys;
@@ -24,6 +26,7 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesThresholdService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.YamlUtils;
 
@@ -41,6 +44,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +58,9 @@ public class MetricPackServiceImpl implements MetricPackService {
 
   static final List<String> NEWRELIC_METRICPACK_FILES = Lists.newArrayList(
       "/newrelic/metric-packs/performance-pack.yml", "/newrelic/metric-packs/default-custom-pack.yml");
+
+  static final List<String> NEWRELIC_GRAPHQL_METRICPACK_FILES = Lists.newArrayList(
+      "/newrelic/metric-packs/performance-pack-graphql.yml", "/newrelic/metric-packs/default-custom-pack.yml");
 
   static final List<String> DYNATRACE_METRIC_FILES = Lists.newArrayList("/dynatrace/metric-packs/performance-pack.yml",
       "/dynatrace/metric-packs/infrastructure-pack.yml", "/dynatrace/metric-packs/default-custom-pack.yml");
@@ -247,9 +254,20 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Inject private HPersistence hPersistence;
   @Inject private TimeSeriesThresholdService timeSeriesThresholdService;
 
+  @Inject private NextGenService nextGenService;
   @Override
-  public List<MetricPackDTO> getMetricPacks(
-      DataSourceType dataSourceType, String accountId, String orgIdentifier, String projectIdentifier) {
+  public List<MetricPackDTO> getMetricPacks(DataSourceType dataSourceType, String accountId, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifer) {
+    if (dataSourceType == DataSourceType.NEW_RELIC) {
+      return getMetricPacks(accountId, orgIdentifier, projectIdentifier, connectorIdentifer, dataSourceType)
+          .stream()
+          // hack to remove Custom metric pack from APPD in UI
+          .filter(metricPack
+              -> !(getDatasourcesToEliminateForCustom().contains(metricPack.getDataSourceType())
+                  && metricPack.getIdentifier().equals(CUSTOM_PACK_IDENTIFIER)))
+          .map(MetricPack::toDTO)
+          .collect(Collectors.toList());
+    }
     return getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType)
         .stream()
         // hack to remove Custom metric pack from APPD in UI
@@ -296,6 +314,42 @@ public class MetricPackServiceImpl implements MetricPackService {
     return metricPacksFromDb;
   }
 
+  @Override
+  public List<MetricPack> getMetricPacks(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifer, DataSourceType dataSourceType) {
+    ConnectorInfoDTO connectorInfoDTO =
+        getConnectorConfigDTO(accountId, connectorIdentifer, orgIdentifier, projectIdentifier);
+    if (!((NewRelicConnectorDTO) connectorInfoDTO.getConnectorConfig()).getUrl().contains("insights")) {
+      dataSourceType = DataSourceType.NEW_RELIC_GRAPHQL;
+    }
+    List<MetricPack> metricPacksFromDb = hPersistence.createQuery(MetricPack.class, excludeAuthority)
+                                             .filter(MetricPackKeys.accountId, accountId)
+                                             .filter(MetricPackKeys.projectIdentifier, projectIdentifier)
+                                             .filter(MetricPackKeys.orgIdentifier, orgIdentifier)
+                                             .filter(MetricPackKeys.dataSourceType, dataSourceType)
+                                             .asList();
+    if (isEmpty(metricPacksFromDb)) {
+      final Map<String, MetricPack> metricPackDefinitionsFromYaml =
+          getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
+      final ArrayList<MetricPack> metricPacks = Lists.newArrayList(metricPackDefinitionsFromYaml.values());
+      log.info(String.format(
+          "Saving Metric packs for accountId %s, orgIdentifier %s, projectIdentifier %s for dataSourceType %s",
+          accountId, orgIdentifier, projectIdentifier, dataSourceType));
+      hPersistence.save(metricPacks);
+      DataSourceType finalDataSourceType = dataSourceType;
+      metricPacks.forEach(metricPack
+          -> timeSeriesThresholdService.createDefaultIgnoreThresholds(
+              accountId, orgIdentifier, projectIdentifier, finalDataSourceType, metricPack));
+      return metricPacks;
+    }
+
+    metricPacksFromDb.forEach(metricPack -> metricPack.getMetrics().forEach(metricDefinition -> {
+      if (metricDefinition.getThresholds() == null) {
+        metricDefinition.setThresholds(Collections.emptyList());
+      }
+    }));
+    return metricPacksFromDb;
+  }
   @Override
   public MetricPack getMetricPack(String accountId, String orgIdentifier, String projectIdentifier,
       DataSourceType dataSourceType, String identifier) {
@@ -344,6 +398,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case NEW_RELIC:
         yamlFileNames.addAll(NEWRELIC_METRICPACK_FILES);
+        break;
+      case NEW_RELIC_GRAPHQL:
+        yamlFileNames.addAll(NEWRELIC_GRAPHQL_METRICPACK_FILES);
         break;
       case DYNATRACE:
         yamlFileNames.addAll(DYNATRACE_METRIC_FILES);
@@ -558,5 +615,13 @@ public class MetricPackServiceImpl implements MetricPackService {
       default:
         throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
     }
+  }
+
+  private ConnectorInfoDTO getConnectorConfigDTO(
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+    Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
+    return connectorDTO.get();
   }
 }

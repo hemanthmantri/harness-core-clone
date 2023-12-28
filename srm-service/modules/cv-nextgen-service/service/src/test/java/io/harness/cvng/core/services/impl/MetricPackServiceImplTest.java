@@ -102,8 +102,8 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetMetricPacksDTO() {
-    final List<MetricPackDTO> metricPacks =
-        metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
+    final List<MetricPackDTO> metricPacks = metricPackService.getMetricPacks(
+        DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier, null);
     assertThat(metricPacks.size()).isGreaterThan(0);
     metricPacks.forEach(metricPack -> {
       assertThat(metricPack.getUuid()).isNotEmpty();

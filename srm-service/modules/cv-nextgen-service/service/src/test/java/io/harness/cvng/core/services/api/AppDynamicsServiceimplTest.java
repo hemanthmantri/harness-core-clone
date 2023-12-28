@@ -146,8 +146,8 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetMetricPackData() throws IOException, IllegalAccessException {
-    final List<MetricPackDTO> metricPacks =
-        metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
+    final List<MetricPackDTO> metricPacks = metricPackService.getMetricPacks(
+        DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier, null);
     assertThat(metricPacks).isNotEmpty();
 
     String textLoad = Resources.toString(
@@ -363,8 +363,8 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testGetMetricData() throws IOException, IllegalAccessException {
-    final List<MetricPackDTO> metricPacks =
-        metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
+    final List<MetricPackDTO> metricPacks = metricPackService.getMetricPacks(
+        DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier, null);
     assertThat(metricPacks).isNotEmpty();
 
     String textLoad = Resources.toString(
@@ -413,8 +413,8 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testGetMetricDataV2() throws IOException, IllegalAccessException {
-    final List<MetricPackDTO> metricPacks =
-        metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
+    final List<MetricPackDTO> metricPacks = metricPackService.getMetricPacks(
+        DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier, null);
     assertThat(metricPacks).isNotEmpty();
 
     String textLoad = Resources.toString(
@@ -463,8 +463,8 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testGetMetricData_empty() throws IOException, IllegalAccessException {
-    final List<MetricPackDTO> metricPacks =
-        metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
+    final List<MetricPackDTO> metricPacks = metricPackService.getMetricPacks(
+        DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier, null);
     assertThat(metricPacks).isNotEmpty();
 
     String textLoad = Resources.toString(

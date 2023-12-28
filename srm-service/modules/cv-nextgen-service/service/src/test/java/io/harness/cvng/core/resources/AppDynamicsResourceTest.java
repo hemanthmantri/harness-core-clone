@@ -250,7 +250,7 @@ public class AppDynamicsResourceTest extends CvNextGenTestBase {
   public void testGetMetricData() {
     final List<MetricPackDTO> metricPacks =
         metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, builderFactory.getContext().getAccountId(),
-            builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier());
+            builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier(), null);
     assertThat(metricPacks).isNotEmpty();
 
     String textLoad = Resources.toString(
@@ -316,7 +316,7 @@ public class AppDynamicsResourceTest extends CvNextGenTestBase {
   public void testGetMetricDataV2() {
     final List<MetricPackDTO> metricPacks =
         metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, builderFactory.getContext().getAccountId(),
-            builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier());
+            builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier(), null);
     assertThat(metricPacks).isNotEmpty();
 
     String textLoad = Resources.toString(

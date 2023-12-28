@@ -21,6 +21,7 @@ public enum DataSourceType {
   STACKDRIVER_LOG("Stackdriver Log", VerificationType.LOG, DEMO_TEMPLATE_SPLUNK, false),
   KUBERNETES("Kubernetes", VerificationType.TIME_SERIES, DEMO_TEMPLATE_PROMETHEUS, false),
   NEW_RELIC("New Relic", VerificationType.TIME_SERIES, DEMO_TEMPLATE_APPDYNAMICS, false),
+  NEW_RELIC_GRAPHQL("New Relic GraphQL", VerificationType.TIME_SERIES, DEMO_TEMPLATE_APPDYNAMICS, false),
   PROMETHEUS("Prometheus", VerificationType.TIME_SERIES, DEMO_TEMPLATE_PROMETHEUS, false),
   DATADOG_METRICS("DatadogMetrics", VerificationType.TIME_SERIES, DEMO_TEMPLATE_PROMETHEUS, false),
   DATADOG_LOG("DatadogLog", VerificationType.LOG, DEMO_TEMPLATE_SPLUNK, false),

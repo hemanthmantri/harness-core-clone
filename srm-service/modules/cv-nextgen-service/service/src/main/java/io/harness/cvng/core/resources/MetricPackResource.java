@@ -45,9 +45,10 @@ public class MetricPackResource {
   @ExceptionMetered
   @ApiOperation(value = "get all metric packs for a connector type", nickname = "getMetricPacks")
   public RestResponse<List<MetricPackDTO>> getMetricPacks(@NotNull @BeanParam ProjectScopedProjectParams projectParams,
+      @QueryParam("connectorIdentifier") String connectorIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType) {
     return new RestResponse<>(metricPackService.getMetricPacks(dataSourceType, projectParams.getAccountIdentifier(),
-        projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier()));
+        projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier(), connectorIdentifier));
   }
 
   @POST

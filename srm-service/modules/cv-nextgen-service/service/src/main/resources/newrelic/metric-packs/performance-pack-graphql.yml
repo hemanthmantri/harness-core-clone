@@ -1,0 +1,36 @@
+identifier: Performance
+category: Performance
+metrics:
+  - name: Average Response Time (ms)
+    identifier: average_response_time_ms
+    type: RESP_TIME
+    path: SELECT average(`apm.service.transaction.duration`) FROM Metric
+    responseJsonPath: results.[0].['average.apm.service.duration']
+    validationPath: SELECT average(`apm.service.duration`) FROM Metric
+    validationResponseJsonPath: results.[0].['average.apm.service.duration']
+    included: true
+  - name: Calls per Minute
+    identifier: calls_per_minute
+    type: THROUGHPUT
+    path: SELECT rate(count(apm.service.transaction.duration), 1 minute) FROM Metric
+    validationPath: SELECT rate(count(apm.service.duration), 1 minute) FROM Metric
+    responseJsonPath: results.[0].['rate.count.apm.service.duration']
+    validationResponseJsonPath: results.[0].['rate.count.apm.service.duration']
+    included: true
+  - name: Errors per Minute
+    identifier: errors_per_minute
+    type: ERROR
+    path: SELECT count(`apm.service.transaction.error.count`) FROM Metric
+    validationPath: SELECT average(`apm.service.error.count`) FROM Metric
+    responseJsonPath: results.[0].['average.apm.service.error.count']
+    validationResponseJsonPath: results.[0].['average.apm.service.error.count']
+    included: true
+  - name: Apdex
+    identifier: apdex
+    type: APDEX
+    path: SELECT apdex(`apm.service.transaction.apdex`) FROM Metric
+    validationPath: SELECT apdex(`apm.service.apdex`) FROM Metric
+    responseJsonPath: results.[0].score
+    validationResponseJsonPath: results.[0].score
+    included: true
+

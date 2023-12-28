@@ -16,22 +16,22 @@ public class NewRelicUtils {
   private static final String ACCOUNTS_BASE_URL = "v1/accounts/";
   private static final String X_QUERY_KEY = "X-Query-Key";
   private static final String X_API_KEY = "API-Key";
-  private static final String NEW_API_BASE_URL = "applications.json";
+  private static final String NERDGRAPHQL_API_BASE_URL = "applications.json";
   private static final String INSIGHTS = "insights";
   private static final String INSIGHTS_DSL_FILENAME = "newrelic-applications.datacollection";
 
-  private static final String NEW_API_DSL_FILENAME = "newrelic-api-applications.datacollection";
+  private static final String NERDGRAPHQL_API_DSL_FILENAME = "newrelic-api-applications.datacollection";
   public static String getDSLFilename(NewRelicConnectorDTO newRelicConnectorDTO) {
     if (newRelicConnectorDTO.getUrl().contains(INSIGHTS)) {
       return INSIGHTS_DSL_FILENAME;
     }
-    return NEW_API_DSL_FILENAME;
+    return NERDGRAPHQL_API_DSL_FILENAME;
   }
   public static String getBaseUrl(NewRelicConnectorDTO newRelicConnectorDTO) {
     if (newRelicConnectorDTO.getUrl().contains(INSIGHTS)) {
       return newRelicConnectorDTO.getUrl() + ACCOUNTS_BASE_URL + newRelicConnectorDTO.getNewRelicAccountId() + "/";
     }
-    return newRelicConnectorDTO.getUrl() + NEW_API_BASE_URL;
+    return newRelicConnectorDTO.getUrl() + NERDGRAPHQL_API_BASE_URL;
   }
 
   public static Map<String, String> collectionHeaders(NewRelicConnectorDTO newRelicConnectorDTO) {

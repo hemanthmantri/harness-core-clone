@@ -15,11 +15,14 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import java.util.List;
 
 public interface MetricPackService {
-  List<MetricPackDTO> getMetricPacks(
-      DataSourceType dataSourceType, String accountId, String orgIdentifier, String projectIdentifier);
+  List<MetricPackDTO> getMetricPacks(DataSourceType dataSourceType, String accountId, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifer);
 
   List<MetricPack> getMetricPacks(
       String accountId, String orgIdentifier, String projectIdentifier, DataSourceType dataSourceType);
+
+  List<MetricPack> getMetricPacks(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, DataSourceType dataSourceType);
 
   MetricPack getMetricPack(String accountId, String orgIdentifier, String projectIdentifier,
       DataSourceType dataSourceType, String identifier);

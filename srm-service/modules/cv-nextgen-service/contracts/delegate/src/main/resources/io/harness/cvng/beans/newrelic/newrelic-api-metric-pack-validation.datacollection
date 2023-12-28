@@ -1,0 +1,35 @@
+Var index = 0
+Var tempList = []
+Var one = 1
+Var lengthOfItems = Env:queries.length()
+Var requests = []
+Var emptySpace = ""
+Var queryConcat = concat(" WHERE appName = '", Env:appName, "'  SINCE 1 HOURS AGO TIMESERIES ")
+Var returnList = []
+Var queryBegin = concat("{actor {account(id: ", Env:accountId, ") {nrql(query: \"")
+Var queryEnd = "\") {results}}}}"
+Var body = {}
+while Var:index !=  Var:lengthOfItems {
+    Var query = Env:queries[Var:index]
+    Var jsonPath = Env:jsonPaths[Var:index]
+    Var metricName = Env:metricNames[Var:index]
+    Var fullQuery = concat(Var:queryBegin, Var:query, Var:queryConcat, Var:queryEnd)
+    print Var:fullQuery
+    Var:body.put("query",Var:fullQuery)
+    Var resp = sync-call(url=Env:graphqlURL, header=Env:commonHeaders, body=Var:body)
+    Var results = extract(Var:resp, $.data.actor.account.nrql)
+    Var value = extract(Var:results, Var:jsonPath)
+    Var validateMap = {}
+    Var:validateMap.put("query", Var:query)
+    Var:validateMap.put("metricName", Var:metricName)
+    Var:validateMap.put("value", Var:value)
+    print Var:jsonPath
+    print Var:metricName
+    print Var:results
+    print Var:value
+    Var:returnList.append(Var:validateMap)
+    print Var:returnList
+    index = Var:index + Var:one
+}
+
+return Var:returnList

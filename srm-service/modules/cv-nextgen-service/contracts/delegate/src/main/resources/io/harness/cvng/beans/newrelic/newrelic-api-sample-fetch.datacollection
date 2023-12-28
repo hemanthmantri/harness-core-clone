@@ -1,0 +1,11 @@
+Var body = {}
+Var queryBegin = concat("{actor {account(id: ", Env:accountId, ") {nrql(query: \"")
+Var queryEnd = "\") {results}}}}"
+Var fullQuery = concat(Var:queryBegin, Env:query, Var:queryEnd)
+Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
+print Var:fullQuery
+Var:body.put("query",Var:fullQuery)
+Var resp = sync-call(url=Env:graphqlURL, header=Env:commonHeaders, body=Var:body)
+Var results = extract(Var:resp, $.data.actor.account.nrql)
+print Var:results
+return Var:results
