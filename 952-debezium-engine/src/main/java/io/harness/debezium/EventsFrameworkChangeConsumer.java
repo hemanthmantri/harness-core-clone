@@ -57,31 +57,16 @@ public abstract class EventsFrameworkChangeConsumer implements MongoCollectionCh
       DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> recordCommitter) throws InterruptedException {
     log.info("Handling a batch of {} records for collection {}", records.size(), collectionName);
     Collections.reverse(records);
-    Map<String, ChangeEvent<String, String>> recordsMap = new HashMap<>();
-    for (ChangeEvent<String, String> record : records) {
-      if (!recordsMap.containsKey(record.key())) {
-        recordsMap.put(record.key(), record);
-      }
-    }
+    final Map<String, ChangeEvent<String, String>> recordsMap = new HashMap<>();
+    records.forEach(r -> recordsMap.putIfAbsent(r.key(), r));
+
+    final boolean debeziumEnabled = isDebeziumEnabled(collectionName);
+
     // Add the batch records to the stream(s)
     for (ChangeEvent<String, String> record : recordsMap.values()) {
       cnt++;
-      Optional<OpType> opType =
-          getOperationType(((EmbeddedEngineChangeEvent<String, String, List<Header>>) record).sourceRecord());
-      if (!opType.isEmpty()) {
-        DebeziumChangeEvent debeziumChangeEvent = DebeziumChangeEvent.newBuilder()
-                                                      .setKey(getKeyOrDefault(record))
-                                                      .setValue(getValueOrDefault(record))
-                                                      .setOptype(opType.get().toString())
-                                                      .setTimestamp(System.currentTimeMillis())
-                                                      .build();
-        String collection = Arrays.stream(collectionName.split("\\.")).collect(Collectors.toList()).get(1);
-        boolean debeziumEnabled = cfClient.boolVariation(FeatureName.DEBEZIUM_ENABLED.toString(),
-            Target.builder().identifier(collection + "." + mode).build(), false);
-        Producer producer = producerFactory.get(record.destination(), redisStreamSize, mode, configuration);
-        if (debeziumEnabled) {
-          producer.send(Message.newBuilder().setData(debeziumChangeEvent.toByteString()).build());
-        }
+      if (debeziumEnabled) {
+        process(record);
       }
       try {
         recordCommitter.markProcessed(record);
@@ -90,6 +75,27 @@ public abstract class EventsFrameworkChangeConsumer implements MongoCollectionCh
       }
     }
     recordCommitter.markBatchFinished();
+  }
+
+  private void process(ChangeEvent<String, String> record) {
+    Optional<OpType> opType =
+        getOperationType(((EmbeddedEngineChangeEvent<String, String, List<Header>>) record).sourceRecord());
+    if (opType.isPresent()) {
+      DebeziumChangeEvent debeziumChangeEvent = DebeziumChangeEvent.newBuilder()
+                                                    .setKey(getKeyOrDefault(record))
+                                                    .setValue(getValueOrDefault(record))
+                                                    .setOptype(opType.get().toString())
+                                                    .setTimestamp(System.currentTimeMillis())
+                                                    .build();
+      Producer producer = producerFactory.get(record.destination(), redisStreamSize, mode, configuration);
+      producer.send(Message.newBuilder().setData(debeziumChangeEvent.toByteString()).build());
+    }
+  }
+
+  private boolean isDebeziumEnabled(String collectionName) {
+    String collection = Arrays.stream(collectionName.split("\\.")).collect(Collectors.toList()).get(1);
+    return cfClient.boolVariation(
+        FeatureName.DEBEZIUM_ENABLED.toString(), Target.builder().identifier(collection + "." + mode).build(), false);
   }
 
   @VisibleForTesting
