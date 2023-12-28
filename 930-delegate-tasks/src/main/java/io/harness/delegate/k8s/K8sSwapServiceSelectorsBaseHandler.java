@@ -30,7 +30,7 @@ import io.harness.k8s.exception.KubernetesExceptionMessages;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.releasehistory.IK8sRelease;
-import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;

@@ -13,11 +13,14 @@ import static io.harness.logging.LogLevel.INFO;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.CodePulse;
+import io.harness.annotations.dev.HarnessModuleComponent;
+import io.harness.annotations.dev.ProductModule;
 import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfig;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
-import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -34,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@CodePulse(module = ProductModule.CDS, unitCoverageRequired = true, components = {HarnessModuleComponent.CDS_K8S})
 public abstract class TrafficRoutingResourceCreator {
   private static final int K8S_RESOURCE_NAME_MAX = 253;
   private static final String STABLE_PLACE_HOLDER = "stable";
@@ -41,6 +45,11 @@ public abstract class TrafficRoutingResourceCreator {
   private static final String CANARY_PLACE_HOLDER = "canary";
 
   protected K8sTrafficRoutingConfig k8sTrafficRoutingConfig;
+
+  public List<KubernetesResource> createTrafficRoutingResources(
+      String namespace, String releaseName, Set<String> availableApiVersions, LogCallback logCallback) {
+    return createTrafficRoutingResources(namespace, releaseName, null, null, availableApiVersions, logCallback);
+  }
 
   public List<KubernetesResource> createTrafficRoutingResources(String namespace, String releaseName,
       KubernetesResource primaryService, KubernetesResource secondaryService, Set<String> availableApiVersions,

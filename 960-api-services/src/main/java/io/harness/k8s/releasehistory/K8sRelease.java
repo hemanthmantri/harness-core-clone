@@ -35,6 +35,7 @@ import io.harness.exception.sanitizer.ExceptionMessageSanitizer;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

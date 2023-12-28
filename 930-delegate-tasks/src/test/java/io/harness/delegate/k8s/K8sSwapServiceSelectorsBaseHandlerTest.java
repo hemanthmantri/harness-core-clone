@@ -56,7 +56,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.releasehistory.IK8sRelease;
 import io.harness.k8s.releasehistory.IK8sReleaseHistory;
 import io.harness.k8s.releasehistory.K8sLegacyRelease;
-import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 

@@ -91,7 +91,7 @@ public class SMITrafficRoutingResourceCreatorTest extends CategoryTest {
     SMITrafficRoutingResourceCreator smiTrafficRoutingResourceCreator =
         new SMITrafficRoutingResourceCreator(k8sTrafficRoutingConfig);
     List<KubernetesResource> trafficRoutingManifests = smiTrafficRoutingResourceCreator.createTrafficRoutingResources(
-        namespace, releaseName, null, null, apiVersions, logCallback);
+        namespace, releaseName, apiVersions, logCallback);
 
     assertThat(trafficRoutingManifests.size()).isEqualTo(1);
     assertEqualYaml(trafficRoutingManifests.get(0), path);
@@ -112,8 +112,7 @@ public class SMITrafficRoutingResourceCreatorTest extends CategoryTest {
 
     SMITrafficRoutingResourceCreator smiTrafficRoutingResourceCreator =
         new SMITrafficRoutingResourceCreator(k8sTrafficRoutingConfig);
-    smiTrafficRoutingResourceCreator.createTrafficRoutingResources(
-        namespace, releaseName, null, null, apiVersions, logCallback);
+    smiTrafficRoutingResourceCreator.createTrafficRoutingResources(namespace, releaseName, apiVersions, logCallback);
   }
 
   @Test

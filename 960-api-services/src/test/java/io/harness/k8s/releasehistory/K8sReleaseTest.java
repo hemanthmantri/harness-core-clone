@@ -15,6 +15,7 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.rule.Owner;
 
 import io.kubernetes.client.openapi.models.V1Secret;

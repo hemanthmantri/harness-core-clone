@@ -335,6 +335,7 @@ java_library(
         "//960-api-services/src/main/java/io/harness/k8s/steadystate/model:module",
         "//960-api-services/src/main/java/io/harness/k8s/steadystate/watcher/event:module",
         "//960-api-services/src/main/java/io/harness/k8s/steadystate/watcher/workload:module",
+        "//960-api-services/src/main/java/io/harness/k8s/trafficrouting:module",
         "//960-api-services/src/main/java/io/harness/kustomize:module",
         "//960-api-services/src/main/java/io/harness/manifest:module",
         "//960-api-services/src/main/java/io/harness/manifest/handler:module",

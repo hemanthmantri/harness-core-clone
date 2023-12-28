@@ -181,8 +181,7 @@ public class IstioTrafficRoutingResourceCreatorTest extends CategoryTest {
 
     IstioTrafficRoutingResourceCreator istioTrafficRoutingResourceCreator =
         new IstioTrafficRoutingResourceCreator(istioProviderConfig);
-    istioTrafficRoutingResourceCreator.createTrafficRoutingResources(
-        namespace, releaseName, null, null, apiVersions, logCallback);
+    istioTrafficRoutingResourceCreator.createTrafficRoutingResources(namespace, releaseName, apiVersions, logCallback);
   }
 
   @Test
@@ -204,7 +203,7 @@ public class IstioTrafficRoutingResourceCreatorTest extends CategoryTest {
         new IstioTrafficRoutingResourceCreator(istioProviderConfig);
 
     List<KubernetesResource> trafficRoutingManifests = istioTrafficRoutingResourceCreator.createTrafficRoutingResources(
-        namespace, releaseName, null, null, apiVersions, logCallback);
+        namespace, releaseName, apiVersions, logCallback);
 
     assertThat(trafficRoutingManifests.size()).isEqualTo(1);
     assertEqualYaml(trafficRoutingManifests.get(0), path);

@@ -19,7 +19,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.k8s.trafficrouting.ConfigK8sTrafficRouting;
 import io.harness.cdng.k8s.trafficrouting.DefaultK8sTrafficRouting;
+import io.harness.cdng.k8s.trafficrouting.InheritK8sTrafficRouting;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.yaml.ParameterField;
@@ -132,6 +134,20 @@ public class K8sStepParametersCommandUnitsTest extends CategoryTest {
         K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Prepare,
         K8sCommandUnitConstants.TrafficRouting, K8sCommandUnitConstants.Apply,
         K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
+  }
+
+  @Test
+  @Owner(developers = MLUKIC)
+  @Category(UnitTests.class)
+  public void testK8sTrafficRoutingStepParametersWithTrafficRouting() {
+    assertCommandUnitsName(
+        K8sTrafficRoutingStepParameters.infoBuilder().trafficRouting(ConfigK8sTrafficRouting.builder().build()).build(),
+        K8sCommandUnitConstants.Init, K8sCommandUnitConstants.TrafficRouting, K8sCommandUnitConstants.Apply);
+
+    assertCommandUnitsName(K8sTrafficRoutingStepParameters.infoBuilder()
+                               .trafficRouting(InheritK8sTrafficRouting.builder().build())
+                               .build(),
+        K8sCommandUnitConstants.Init, K8sCommandUnitConstants.TrafficRouting, K8sCommandUnitConstants.Apply);
   }
 
   private void assertCommandUnitsName(K8sSpecParameters stepParameters, String... expectedCommandUnits) {

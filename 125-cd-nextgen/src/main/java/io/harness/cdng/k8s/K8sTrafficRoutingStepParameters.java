@@ -46,6 +46,7 @@ public class K8sTrafficRoutingStepParameters extends K8sTrafficRoutingBaseStepIn
   @NotNull
   @Override
   public List<String> getCommandUnits() {
-    return Arrays.asList(K8sCommandUnitConstants.TrafficRouting, K8sCommandUnitConstants.Apply);
+    return Arrays.asList(
+        K8sCommandUnitConstants.Init, K8sCommandUnitConstants.TrafficRouting, K8sCommandUnitConstants.Apply);
   }
 }

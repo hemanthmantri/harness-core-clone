@@ -20,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;

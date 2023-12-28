@@ -1101,6 +1101,7 @@ import io.harness.delegate.task.terraformcloud.response.TerraformCloudRunTaskRes
 import io.harness.delegate.task.terraformcloud.response.TerraformCloudValidateTaskResponse;
 import io.harness.delegate.task.terraformcloud.response.TerraformCloudWorkspacesTaskResponse;
 import io.harness.exception.runtime.hashicorp.HashiCorpVaultRuntimeException;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
 import io.harness.ng.core.dto.secrets.KerberosWinRmConfigDTO;
 import io.harness.ng.core.dto.secrets.NTLMConfigDTO;
@@ -2632,5 +2633,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sTrafficRoutingConfigType.class, 20002014);
     kryo.register(K8sTrafficRoutingRequest.class, 20002012);
     kryo.register(K8sTrafficRoutingResponse.class, 20002013);
+    kryo.register(TrafficRoutingInfoDTO.class, 20002016);
   }
 }

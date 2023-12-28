@@ -83,6 +83,8 @@ public class KubernetesExceptionHints {
       "Failed to patch traffic routing resource. \nPlease check that resource Version:[%s], Kind:[%s], Name:[%s] exists and can be patched.";
   public final String FAILED_TO_CREATE_PATCH =
       "Failed to create patch for traffic routing resource Version:[%s], Kind:[%s], Name:[%s]. Please check Traffic Routing Configuration in step.";
+  public final String GENERATING_TRAFFIC_ROUTING_RESOURCE_FAILED =
+      "Failed to generate traffic routing resource. \nPlease check that resource Version:[%s], Kind:[%s], Name:[%s] exists and can be patched.";
   public final String SCALE_CLI_FAILED_GENERIC =
       "Failed to scale resource. \nPlease check the inputs to the scale step: namespace(if provided), resource type or resource name.";
   public final String ROLLBACK_CLI_FAILED = "Check if resource %s exists";

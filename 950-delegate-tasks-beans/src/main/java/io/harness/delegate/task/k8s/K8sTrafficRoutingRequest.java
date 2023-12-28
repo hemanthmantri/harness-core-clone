@@ -16,8 +16,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfig;
-import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfigType;
 import io.harness.expression.Expression;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 
 import software.wings.beans.ServiceHookDelegateConfig;
 
@@ -39,8 +39,9 @@ public class K8sTrafficRoutingRequest implements K8sDeployRequest {
   CommandUnitsProgress commandUnitsProgress;
   @Expression(DISALLOW_SECRETS) String releaseName;
   @Builder.Default boolean shouldOpenFetchFilesLogStream = true;
-  K8sTrafficRoutingConfigType trafficRoutingConfigType;
   K8sTrafficRoutingConfig trafficRoutingConfig;
+  boolean useDeclarativeRollback;
+  TrafficRoutingInfoDTO trafficRoutingInfo;
 
   @Override
   public boolean hasTrafficRoutingConfig() {

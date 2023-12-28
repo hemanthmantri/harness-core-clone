@@ -254,6 +254,7 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestSource;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
@@ -554,5 +555,6 @@ public class K8sNgTaskRegister implements KryoRegistrar {
     kryo.register(K8sTrafficRoutingRequest.class, 20002012);
     kryo.register(K8sTrafficRoutingResponse.class, 20002013);
     kryo.register(K8sTrafficRoutingConfigType.class, 20002014);
+    kryo.register(TrafficRoutingInfoDTO.class, 20002016);
   }
 }

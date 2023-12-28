@@ -102,7 +102,7 @@ import io.harness.k8s.releasehistory.K8SLegacyReleaseHistory;
 import io.harness.k8s.releasehistory.K8sLegacyRelease;
 import io.harness.k8s.releasehistory.K8sRelease;
 import io.harness.k8s.releasehistory.K8sReleaseSecretHelper;
-import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 

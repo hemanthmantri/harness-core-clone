@@ -10,6 +10,7 @@ package io.harness.delegate.task.k8s;
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.ProductModule;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 
 import lombok.Builder;
 import lombok.Data;
@@ -17,4 +18,6 @@ import lombok.Data;
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = false, components = {HarnessModuleComponent.CDS_K8S})
 @Data
 @Builder
-public class K8sTrafficRoutingResponse implements K8sNGTaskResponse {}
+public class K8sTrafficRoutingResponse implements K8sNGTaskResponse {
+  TrafficRoutingInfoDTO info;
+}

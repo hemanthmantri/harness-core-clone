@@ -18,6 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.CDStepHelper;
+import io.harness.cdng.ReleaseMetadataFactory;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.executables.AsyncExecutableTaskHelper;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
@@ -33,10 +34,12 @@ import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.K8sTrafficRoutingRequest;
+import io.harness.delegate.task.k8s.K8sTrafficRoutingResponse;
 import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfig;
 import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfigType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -60,6 +63,7 @@ import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = true, components = {HarnessModuleComponent.CDS_K8S})
@@ -80,6 +84,7 @@ public class K8sTrafficRoutingStep
   @Inject K8sTrafficRoutingHelper k8sTrafficRoutingHelper;
   @Inject private AsyncExecutableTaskHelper asyncExecutableTaskHelper;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  @Inject private ReleaseMetadataFactory releaseMetadataFactory;
 
   @Override
   public void validateResources(Ambiance ambiance, StepBaseParameters stepParameters) {
@@ -106,6 +111,9 @@ public class K8sTrafficRoutingStep
     K8sTrafficRoutingStepParameters k8sTrafficRoutingStepParameters =
         (K8sTrafficRoutingStepParameters) stepParameters.getSpec();
 
+    // TODO: placeholder until we implement the retrieval of this object from collection or sweeping output
+    TrafficRoutingInfoDTO trafficRoutingInfoDTO = null;
+
     K8sTrafficRoutingConfig k8sTrafficRoutingConfig = fetchTrafficRoutingConfig(k8sTrafficRoutingStepParameters);
 
     K8sTrafficRoutingRequestBuilder k8sTrafficRoutingRequestBuilder =
@@ -116,8 +124,9 @@ public class K8sTrafficRoutingStep
             .timeoutIntervalInMin(CDStepHelper.getTimeoutInMin(stepParameters))
             .k8sInfraDelegateConfig(cdStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .accountId(accountId)
-            .trafficRoutingConfigType(k8sTrafficRoutingStepParameters.getType())
-            .trafficRoutingConfig(k8sTrafficRoutingConfig);
+            .trafficRoutingConfig(k8sTrafficRoutingConfig)
+            .trafficRoutingInfo(trafficRoutingInfoDTO)
+            .useDeclarativeRollback(k8sStepHelper.isDeclarativeRollbackEnabled(ambiance));
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
 
@@ -158,20 +167,34 @@ public class K8sTrafficRoutingStep
       return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
     }
 
+    if (k8sTaskExecutionResponse.getK8sNGTaskResponse() instanceof K8sTrafficRoutingResponse) {
+      K8sTrafficRoutingResponse k8sTrafficRoutingResponse =
+          (K8sTrafficRoutingResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+      TrafficRoutingInfoDTO trafficRoutingInfoDTO = k8sTrafficRoutingResponse.getInfo();
+      // TODO: placeholder for action of saving traffic routing info into collection or sweeping output
+    }
+
     return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 
   private K8sTrafficRoutingConfig fetchTrafficRoutingConfig(
       K8sTrafficRoutingStepParameters k8sTrafficRoutingStepParameters) {
-    return K8sTrafficRoutingConfigType.CONFIG.equals(k8sTrafficRoutingStepParameters.getType())
-        ? k8sTrafficRoutingHelper
-              .validateAndGetTrafficRoutingConfig(
-                  (ConfigK8sTrafficRouting) k8sTrafficRoutingStepParameters.getTrafficRouting())
-              .orElse(null)
-        : k8sTrafficRoutingHelper
-              .validateAndGetInheritedTrafficRoutingConfig(
-                  (InheritK8sTrafficRouting) k8sTrafficRoutingStepParameters.getTrafficRouting())
-              .orElse(null);
+    Optional<K8sTrafficRoutingConfig> optionalK8sTrafficRoutingConfig = Optional.empty();
+    if (K8sTrafficRoutingConfigType.CONFIG.equals(k8sTrafficRoutingStepParameters.getType())) {
+      optionalK8sTrafficRoutingConfig = k8sTrafficRoutingHelper.validateAndGetTrafficRoutingConfig(
+          (ConfigK8sTrafficRouting) k8sTrafficRoutingStepParameters.getTrafficRouting());
+    } else if (K8sTrafficRoutingConfigType.INHERIT.equals(k8sTrafficRoutingStepParameters.getType())) {
+      optionalK8sTrafficRoutingConfig = k8sTrafficRoutingHelper.validateAndGetInheritedTrafficRoutingConfig(
+          (InheritK8sTrafficRouting) k8sTrafficRoutingStepParameters.getTrafficRouting());
+    }
+
+    if (optionalK8sTrafficRoutingConfig.isPresent()) {
+      K8sTrafficRoutingConfig k8sTrafficRoutingConfig = optionalK8sTrafficRoutingConfig.get();
+      k8sTrafficRoutingConfig.setType(k8sTrafficRoutingStepParameters.getType());
+      return k8sTrafficRoutingConfig;
+    }
+
+    return null;
   }
 
   @Override
