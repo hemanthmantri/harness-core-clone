@@ -8,8 +8,10 @@
 package io.serializer.utils;
 
 import static io.harness.rule.OwnerRule.BRIJESH;
+import static io.harness.rule.OwnerRule.RISHIKESH;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.InputSetValidatorType;
@@ -63,5 +65,19 @@ public class NGRuntimeInputUtilsTest extends CategoryTest {
         + InputSetValidatorType.REGEX.getYamlName() + "(\"random\")";
     assertEquals(
         "\"value\"", NGRuntimeInputUtils.extractParameters(text, InputSetValidatorType.ALLOWED_VALUES.getYamlName()));
+  }
+
+  @Test
+  @Owner(developers = RISHIKESH)
+  @Category(UnitTests.class)
+  public void testExtractDefaultValueFromNullInput() {
+    String defaultValueString = "null.default(3)";
+    assertThat(NGRuntimeInputUtils.extractDefaultValueFromNullInput(defaultValueString)).isEqualTo("3");
+
+    String defaultValuesWithAllowedValues = "null.allowedValues(2,5).default(5)";
+    assertThat(NGRuntimeInputUtils.extractDefaultValueFromNullInput(defaultValuesWithAllowedValues)).isEqualTo("5");
+
+    String noDefaultValues = "null.allowedValues(2,5)";
+    assertThat(NGRuntimeInputUtils.extractDefaultValueFromNullInput(noDefaultValues)).isEqualTo(noDefaultValues);
   }
 }

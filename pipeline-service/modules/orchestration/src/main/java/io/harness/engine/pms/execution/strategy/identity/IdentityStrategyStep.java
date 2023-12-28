@@ -56,6 +56,7 @@ public class IdentityStrategyStep implements ChildrenExecutable<IdentityStepPara
     try (CloseableIterator<NodeExecution> iterator =
              // Use original planExecutionId that belongs to the originalNodeExecutionId and not current
              // planExecutionId(ambiance.getPlanExecutionId)
+        // provided Direction as ASC to keep the order maintained while retry with repeat looping strategy
         nodeExecutionService.fetchChildrenNodeExecutionsIterator(
             originalStrategyNodeExecution.getAmbiance().getPlanExecutionId(),
             stepParameters.getOriginalNodeExecutionId(), Direction.ASC,

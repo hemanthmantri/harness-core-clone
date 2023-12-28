@@ -12,6 +12,7 @@ import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.InputSetValidatorType;
 import io.harness.common.NGExpressionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.pms.yaml.ParameterField;
@@ -99,6 +100,16 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
     boolean isTypeString = this.referenceType.getRawClass().equals(String.class);
 
     InputSetValidator inputSetValidator = getInputSetValidator(text);
+
+    if (EmptyPredicate.isNotEmpty(text) && text.contains("null.")) {
+      try {
+        String defaultValue = NGRuntimeInputUtils.extractDefaultValueFromNullInput(text);
+        log.warn(String.format(
+            "Text containing null with default is: %s and extracted default value is: %s test", text, defaultValue));
+      } catch (Exception e) {
+        log.error(String.format("Exception while extracting default value from text: %s", text), e);
+      }
+    }
 
     if (NGExpressionUtils.matchesInputSetPattern(text)) {
       String defaultValue = NGRuntimeInputUtils.extractParameters(text, "default");

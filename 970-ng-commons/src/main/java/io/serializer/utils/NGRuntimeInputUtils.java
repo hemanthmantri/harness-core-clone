@@ -18,6 +18,8 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGRuntimeInputUtils {
+  private static final String DEFAULT_CONSTANT = "default";
+
   public String extractParameters(String text, String validatorTypeString) {
     String validatorValueString = null;
     // Checking the pattern when field ends with validatorTypeString
@@ -48,5 +50,18 @@ public class NGRuntimeInputUtils {
       }
     }
     return validatorValueString;
+  }
+
+  public String extractDefaultValueFromNullInput(String input) {
+    String toBeFoundInputDefaultString = "." + DEFAULT_CONSTANT + "(";
+    int foundIndex = input.indexOf(toBeFoundInputDefaultString);
+    if (foundIndex != -1) {
+      int startIndex = foundIndex + toBeFoundInputDefaultString.length();
+      int lastIndex = input.indexOf(')', startIndex);
+      if (lastIndex != -1) {
+        return input.substring(startIndex, lastIndex);
+      }
+    }
+    return input;
   }
 }

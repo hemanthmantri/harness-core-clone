@@ -203,8 +203,6 @@ import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secretusage.SecretRuntimeUsageService;
 import io.harness.secretusage.SecretRuntimeUsageServiceImpl;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.NGTriggerRegistrars;
-import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.spec.server.pipeline.v1.ApprovalsApi;
