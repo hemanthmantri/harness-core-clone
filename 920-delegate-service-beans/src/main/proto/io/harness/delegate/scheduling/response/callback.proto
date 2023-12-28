@@ -18,5 +18,6 @@ message TaskStatusCallback {
   string account_id = 1;                  // Account ID
   TaskId task_id = 2;                     // Task ID
   Status status = 3;                      // Task execution status
-  google.protobuf.Timestamp sent_at = 4;  // Timestamp when the message was sent
+  string error = 4;                       // Error message if any
+  google.protobuf.Timestamp sent_at = 5;  // Timestamp when the message was sent
 }

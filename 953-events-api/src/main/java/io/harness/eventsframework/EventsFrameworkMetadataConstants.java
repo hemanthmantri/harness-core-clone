@@ -49,6 +49,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String INPUTSET_ENTITY = "inputset";
   public static final String DELEGATE_ENTITY = "delegate";
   public static final String DELEGATE_CONFIGURATION_ENTITY = "delegateconfiguration";
+  public static final String DELEGATE_TASK_RESPONSE_ENTITY = "delegateTaskResponse";
   public static final String FILE_ENTITY = "file";
   public static final String USER_SCOPE_RECONCILIATION = "userScopeReconciliation";
   public static final String CHAOS_EXPERIMENT = "chaosexperiment";

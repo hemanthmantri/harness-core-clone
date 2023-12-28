@@ -23,6 +23,7 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PL)
 public final class EventsFrameworkConstants {
   public static final String DUMMY_REDIS_URL = "dummyRedisUrl";
+  public static final int DEFAULT_MAX_TOPIC_SIZE = 100_000;
 
   public static final String ENTITY_CRUD = "entity_crud";
   public static final String SETUP_USAGE = "setup_usage";
@@ -273,4 +274,7 @@ public final class EventsFrameworkConstants {
   public static final int IDP_CATALOG_ENTITIES_SYNC_CAPTURE_EVENT_MAX_TOPIC_SIZE = 100000;
   public static final Duration IDP_CATALOG_ENTITIES_SYNC_CAPTURE_EVENT_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final int IDP_CATALOG_ENTITIES_SYNC_CAPTURE_EVENT_BATCH_SIZE = 1;
+
+  // === Delegate Service Constants ===
+  public static final String TASK_RESPONSE_TOPIC = "task_response_topic";
 }

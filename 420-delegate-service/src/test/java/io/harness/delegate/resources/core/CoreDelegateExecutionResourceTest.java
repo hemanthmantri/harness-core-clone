@@ -24,6 +24,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.Status;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.scheduler.ExecutionStatus;
 import io.harness.delegate.beans.scheduler.InitializeExecutionInfraResponse;
@@ -34,9 +35,11 @@ import io.harness.delegate.core.beans.ResponseCode;
 import io.harness.delegate.core.beans.SetupInfraResponse;
 import io.harness.delegate.core.beans.StatusCode;
 import io.harness.executionInfra.ExecutionInfrastructureService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.taskresponse.TaskResponseService;
+import io.harness.taskresponse.event.TaskResponseEventProducer;
 
 import software.wings.jersey.KryoMessageBodyProvider;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
@@ -78,7 +81,8 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
   private static final String RUNNER_TYPE = "K8S";
   @Mock private HttpServletRequest httpServletRequest;
   @Mock private DelegateTaskServiceClassic taskServiceClassic;
-  @Mock private TaskResponseService taskResponseService;
+  @Mock private HPersistence persistence;
+  @Mock private TaskResponseEventProducer eventProducer;
   @Mock private ExecutionInfrastructureService infraService;
   @Mock private DelegateTaskService taskService;
 
@@ -88,8 +92,8 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
     // test.
     initMocks(this);
     final ResourceConfig resourceConfig = new ResourceConfig();
-    resourceConfig.register(
-        new CoreDelegateExecutionResource(taskServiceClassic, infraService, taskResponseService, taskService));
+    final var responseService = new TaskResponseService(persistence, eventProducer, infraService, taskService);
+    resourceConfig.register(new CoreDelegateExecutionResource(taskServiceClassic, responseService, taskService));
     resourceConfig.register(new ProtocolBufferMessageBodyProvider());
     resourceConfig.register(new AbstractBinder() {
       @Override
@@ -237,13 +241,15 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
   public void whenExecuteOkThen200AndExecutionSucceededCallback() {
     final var data = buildExecuteResponse();
 
+    when(taskService.fetchDelegateTask(ACCOUNT_ID, TASK_ID)).thenReturn(Optional.of(buildTask()));
+
     final Response actual =
         client()
             .target(EXECUTION_RESPONSE_URL)
             .request()
             .post(entity(data, ProtocolBufferMediaType.APPLICATION_PROTOBUF), new GenericType<>() {});
 
-    verify(taskResponseService).handleResponse(ACCOUNT_ID, TASK_ID, data.getStatus(), DELEGATE_ID);
+    verify(eventProducer).handleTaskResponse(ACCOUNT_ID, TASK_ID, Status.SUCCESS, "");
     assertThat(actual.getStatus()).isEqualTo(200);
   }
 
@@ -253,7 +259,7 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
   public void whenExecuteAndGenericExceptionThen500() {
     final var data = buildExecuteResponse();
 
-    doThrow(new NullPointerException()).when(taskResponseService).handleResponse(any(), any(), any(), any());
+    doThrow(new NullPointerException()).when(eventProducer).handleTaskResponse(any(), any(), any(), any());
 
     final Response actual =
         client()
@@ -274,8 +280,8 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
             .request()
             .post(entity(null, ProtocolBufferMediaType.APPLICATION_PROTOBUF), new GenericType<>() {});
     assertThat(actual.getStatus()).isEqualTo(400);
-    verify(infraService).deleteInfra(ACCOUNT_ID, INFRA_ID);
     verifyNoMoreInteractions(infraService);
+    verifyNoMoreInteractions(eventProducer);
   }
 
   @Test
@@ -292,8 +298,8 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
             .request()
             .post(entity(data, ProtocolBufferMediaType.APPLICATION_PROTOBUF), new GenericType<>() {});
     assertThat(actual.getStatus()).isEqualTo(500);
-    verify(infraService).deleteInfra(ACCOUNT_ID, INFRA_ID);
     verifyNoMoreInteractions(infraService);
+    verifyNoMoreInteractions(eventProducer);
   }
 
   @Test
@@ -348,7 +354,8 @@ public class CoreDelegateExecutionResourceTest extends JerseyTest {
   public void whenCleanupInfraAndGenericExceptionThen500() {
     final var data = buildCleanupInfraResponse(ResponseCode.RESPONSE_OK);
 
-    when(taskService.fetchDelegateTask(ACCOUNT_ID, TASK_ID)).thenThrow(new RuntimeException());
+    when(eventProducer.handleTaskResponse(ACCOUNT_ID, TASK_ID, Status.SUCCESS, "")).thenThrow(new RuntimeException());
+    when(taskService.fetchDelegateTask(ACCOUNT_ID, TASK_ID)).thenReturn(Optional.of(buildTask()));
 
     final Response actual =
         client()

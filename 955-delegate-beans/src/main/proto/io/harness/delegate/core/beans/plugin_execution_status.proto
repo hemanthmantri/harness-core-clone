@@ -27,7 +27,7 @@ message ExecutionStatus {
   string id = 1;                                // Id of the task
   string type = 2;                              // Task type
   StatusCode code = 3;                          // Execution status
-  string errorMessage = 4;                      // Error message
+  string error = 4;                             // Error message if any
   google.protobuf.Duration execution_time = 5;  // Duration of the execution
   oneof data {
     google.protobuf.Any proto_data = 6;  // for executions with proto spec.

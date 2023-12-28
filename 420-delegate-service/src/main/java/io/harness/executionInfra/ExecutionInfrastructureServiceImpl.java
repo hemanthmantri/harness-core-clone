@@ -44,7 +44,6 @@ public class ExecutionInfrastructureServiceImpl implements ExecutionInfrastructu
       final String accountId, final String infraRefId, final String delegateId, final String delegateName) {
     final var updateOperation = persistence.createUpdateOperations(ExecutionInfraLocation.class)
                                     .set(ExecutionInfraLocationKeys.createdByDelegateId, delegateId)
-                                    .set(ExecutionInfraLocationKeys.delegateGroupName, delegateName)
                                     .set(ExecutionInfraLocationKeys.delegateGroupName, delegateName);
     return persistence.update(findInfra(accountId, infraRefId), updateOperation).getUpdatedExisting();
   }
