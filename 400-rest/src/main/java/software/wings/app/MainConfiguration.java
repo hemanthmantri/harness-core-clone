@@ -261,10 +261,10 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("maxAccountsToDeleteInParallel") private int maxAccountsToDeleteInParallel;
   @JsonProperty("runAccountDeletionOnWeekdays") private boolean runAccountDeletionOnWeekdays;
   @JsonProperty(value = "disableNotificationTemplateRegister") private boolean disableNotificationTemplateRegister;
-
   private int applicationPort;
   private boolean sslEnabled;
   @JsonProperty(value = "moveGitPollingToRunnable") private boolean moveGitPollingToRunnable;
+  @JsonProperty(value = "enableAccountDeletionJob") private boolean enableAccountDeletionJob;
   private static final String IS_OPTION_HEAD_HTTP_METHOD_BLOCKED = "IS_OPTION_HEAD_REQUEST_METHOD_BLOCKED";
 
   /**

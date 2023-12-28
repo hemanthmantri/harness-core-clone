@@ -1377,10 +1377,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed cleaning up manager versions.", injector.getInstance(ManagerVersionsCleanUpJob.class)),
         1, 5L, TimeUnit.MINUTES);
-
-    ScheduledExecutorService cgJobExecutor =
-        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("cgJobExecutor")));
-    cgJobExecutor.scheduleWithFixedDelay(injector.getInstance(AccountDeletionJob.class), 0, 1, TimeUnit.HOURS);
+    if (configuration.isEnableAccountDeletionJob()) {
+      ScheduledExecutorService cgJobExecutor =
+          injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("cgJobExecutor")));
+      cgJobExecutor.scheduleWithFixedDelay(injector.getInstance(AccountDeletionJob.class), 0, 1, TimeUnit.HOURS);
+    }
   }
 
   private void scheduleJobsDelegateService(

@@ -824,3 +824,4 @@ awsServiceEndpointUrls:
 
 maxAccountsToDeleteInParallel: 6
 runAccountDeletionOnWeekdays: ${RUN_ACCOUNT_DELETION_ON_WEEKDAYS:-false}
+enableAccountDeletionJob: ${ENABLE_ACCOUNT_DELETION_JOB:-false}
