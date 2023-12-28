@@ -8,6 +8,7 @@
 package io.harness.pms.helpers;
 
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.VINICIUS;
 import static io.harness.rule.OwnerRule.VIVEK_DIXIT;
 
@@ -132,6 +133,24 @@ public class YamlExpressionResolveHelperTest extends CategoryTest {
                        -> yamlExpressionResolveHelper.resolveExpressionsInYaml(
                            arrayTypeString, "planExecutionId", ResolveInputYamlType.RESOLVE_ALL_EXPRESSIONS))
         .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void resolveExpressionsInYamlTestWillNullPipelineYaml() throws IOException {
+    String arrayTypeString = "pipeline: null";
+    EngineExpressionEvaluator expressionEvaluator =
+        prepareEngineExpressionEvaluator(YamlUtils.read(arrayTypeString, Map.class));
+    Optional<NodeExecution> nodeExecution =
+        Optional.ofNullable(NodeExecution.builder().ambiance(Ambiance.newBuilder().build()).build());
+    doReturn(nodeExecution).when(nodeExecutionService).getPipelineNodeExecutionWithProjections(any(), any());
+    doReturn(expressionEvaluator).when(pmsEngineExpressionService).prepareExpressionEvaluator(any());
+    doReturn(new Subject<>()).when(expressionsObserverFactory).getSubjectForSecretsRuntimeUsages(any());
+    assertThatCode(()
+                       -> yamlExpressionResolveHelper.resolveExpressionsInYaml(
+                           arrayTypeString, "planExecutionId", ResolveInputYamlType.RESOLVE_ALL_EXPRESSIONS))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
