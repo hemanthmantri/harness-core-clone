@@ -79,6 +79,7 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -374,7 +375,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
           String.format("Remediation Tracker: %s is already closed.", remediationTrackerId));
     }
 
-    if (!body.getArtifactId().isEmpty()) {
+    if (!StringUtils.isEmpty(body.getArtifactId())) {
       ArtifactInfo artifactInfo = remediationTracker.getArtifactInfos().get(body.getArtifactId());
       if (artifactInfo == null) {
         throw new InvalidArgumentsException(String.format("ArtifactId: %s not present.", body.getArtifactId()));
