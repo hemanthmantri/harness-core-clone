@@ -16,9 +16,8 @@ import io.harness.persistence.UserProvider;
 import io.harness.remote.client.CGRestUtils;
 import io.harness.repositories.remediation_tracker.RemediationTrackerRepository;
 import io.harness.spec.server.ssca.v1.model.ComponentFilter;
-import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
-import io.harness.spec.server.ssca.v1.model.EnvironmentTypeFilter;
-import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
+import io.harness.spec.server.ssca.v1.model.CreateTicketRequest;
+import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequest;
 import io.harness.spec.server.ssca.v1.model.NameOperator;
 import io.harness.spec.server.ssca.v1.model.Operator;
 import io.harness.spec.server.ssca.v1.model.PipelineInfo;
@@ -230,7 +229,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
 
   @Override
   public boolean excludeArtifact(
-      String accountId, String orgId, String projectId, String remediationTrackerId, ExcludeArtifactRequestBody body) {
+      String accountId, String orgId, String projectId, String remediationTrackerId, ExcludeArtifactRequest body) {
     RemediationTrackerEntity remediationTracker =
         repository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
@@ -364,7 +363,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
 
   @Override
   public String createTicket(
-      String projectId, String remediationTrackerId, String orgId, CreateTicketRequestBody body, String accountId) {
+      String projectId, String remediationTrackerId, String orgId, CreateTicketRequest body, String accountId) {
     RemediationTrackerEntity remediationTracker =
         repository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
@@ -417,13 +416,13 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
     if (body.getCveFilter() != null) {
       filterCriteria.add(
           getFilterCriteria(RemediationTrackerEntityKeys.vulnerabilityInfo + "." + CVEVulnerabilityInfoKeys.cve,
-              body.getCveFilter().getCve(), body.getCveFilter().getOperator()));
+              body.getCveFilter().getValue(), body.getCveFilter().getOperator()));
     }
 
     if (body.getComponentNameFilter() != null) {
       filterCriteria.add(
           getFilterCriteria(RemediationTrackerEntityKeys.vulnerabilityInfo + "." + VulnerabilityInfoKeys.component,
-              body.getComponentNameFilter().getComponentName(), body.getComponentNameFilter().getOperator()));
+              body.getComponentNameFilter().getValue(), body.getComponentNameFilter().getOperator()));
     }
     if (!filterCriteria.isEmpty()) {
       criteria = criteria.andOperator(filterCriteria.toArray(Criteria[] ::new));
@@ -495,8 +494,7 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
 
   @Override
   public List<io.harness.spec.server.ssca.v1.model.EnvironmentInfo> getAllEnvironmentsInArtifact(String accountId,
-      String orgId, String projectId, String remediationTrackerId, String artifactId,
-      EnvironmentTypeFilter environmentType) {
+      String orgId, String projectId, String remediationTrackerId, String artifactId, EnvType environmentType) {
     RemediationTrackerEntity remediationTracker =
         repository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndUuid(
@@ -743,9 +741,9 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
   }
 
   private List<io.harness.spec.server.ssca.v1.model.EnvironmentInfo> buildEnvironmentInfos(
-      List<EnvironmentInfo> infos, EnvironmentTypeFilter environmentType) {
+      List<EnvironmentInfo> infos, EnvType environmentType) {
     return infos.stream()
-        .filter(info -> isEnvironmentTypeMatch(environmentType, info.getEnvType()))
+        .filter(info -> environmentType == null || environmentType == info.getEnvType())
         .map(info
             -> new io.harness.spec.server.ssca.v1.model.EnvironmentInfo()
                    .identifier(info.getEnvIdentifier())
@@ -753,19 +751,6 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
                    .type(RemediationTrackerMapper.mapEnvType(info.getEnvType())))
         .distinct()
         .collect(Collectors.toList());
-  }
-
-  private boolean isEnvironmentTypeMatch(EnvironmentTypeFilter environmentType, EnvType envType) {
-    switch (environmentType) {
-      case PROD:
-        return envType == EnvType.Production;
-      case PREPROD:
-        return envType == EnvType.PreProduction;
-      case ALL:
-        return true;
-      default:
-        return false;
-    }
   }
 
   private EnvironmentInfo buildEnvironmentInfo(CdInstanceSummary summary, ArtifactDetails details) {

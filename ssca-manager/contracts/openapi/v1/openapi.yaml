@@ -1000,7 +1000,7 @@ paths:
           description: Bad Request
         '500':
           description: Internal Server Error
-      operationId: close
+      operationId: closeRemediationTracker
       x-stoplight:
         id: 6h8djptt7lurc
       description: Close Remediation Tracker.
@@ -1136,12 +1136,7 @@ paths:
         - x-api-key: []
       parameters:
         - $ref: '#/components/parameters/AccountHeader'
-        - schema:
-            type: string
-            $ref: '#/components/schemas/EnvironmentTypeFilter'
-          in: query
-          name: env_type
-          description: Provide type of environments to be returned.
+        - $ref: '#/components/parameters/EnvType'
   '/v1/orgs/{org}/projects/{project}/remediations/{remediation}/artifacts/{artifact}/details':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
@@ -1222,11 +1217,7 @@ paths:
       operationId: createTicket
       responses:
         '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateTicketResponseBody'
+          $ref: '#/components/responses/CreateTicketResponseBody'
         '400':
           description: Bad Request
         '500':
@@ -1237,10 +1228,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/AccountHeader'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateTicketRequestBody'
+        $ref: '#/components/requestBodies/CreateTicketRequestBody'
       tags:
         - Remediation
       security:
@@ -1279,7 +1267,7 @@ paths:
         - schema:
             type: array
             items:
-             $ref: '#/components/schemas/ExemptionStatusDTO'
+              $ref: '#/components/schemas/ExemptionStatusDTO'
           in: query
           name: status
           description: 'status of the exemption, all statuses will be returned if this is null'
@@ -3061,8 +3049,8 @@ components:
       required:
         - remediation_condition
       description: Create Request Body For Remediation tracker.
-    ExcludeArtifactRequestBody:
-      title: ExcludeArtifactRequestBody
+    ExcludeArtifactRequest:
+      title: ExcludeArtifactRequest
       x-stoplight:
         id: c88vbs4xqv9pt
       type: object
@@ -3275,7 +3263,7 @@ components:
           properties:
             operator:
               $ref: '#/components/schemas/NameOperator'
-            component_name:
+            value:
               type: string
               x-stoplight:
                 id: vof1ccaymi456
@@ -3290,7 +3278,7 @@ components:
           properties:
             operator:
               $ref: '#/components/schemas/NameOperator'
-            cve:
+            value:
               type: string
               x-stoplight:
                 id: ib4i6p3weisqo
@@ -3387,7 +3375,7 @@ components:
         - Equals
         - StartsWith
         - Contains
-    CreateTicketRequestBody:
+    CreateTicketRequest:
       type: object
       x-examples:
         Example 1:
@@ -3808,8 +3796,8 @@ components:
         - identifier
         - name
         - type
-    CreateTicketResponseBody:
-      title: CreateTicketResponseBody
+    CreateTicketResponse:
+      title: CreateTicketResponse
       x-stoplight:
         id: ujqcv3bxhtqq1
       type: object
@@ -4051,6 +4039,17 @@ components:
       schema:
         type: string
       description: SSCA Enforcement Exemption Id
+    EnvType:
+      name: EnvType
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - Prod
+          - PreProd
+      allowEmptyValue: true
+      description: Environment Type
   requestBodies:
     SbomProcessRequestBody:
       content:
@@ -4102,7 +4101,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ExcludeArtifactRequestBody'
+            $ref: '#/components/schemas/ExcludeArtifactRequest'
     OrchestrationStepDriftRequestBody:
       content:
         application/json:
@@ -4129,6 +4128,11 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/RemediationArtifactDeploymentsListingRequestBody'
+    CreateTicketRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateTicketRequest'
   securitySchemes:
     x-api-key:
       name: x-api-key
@@ -4483,6 +4487,12 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/EnvironmentInfo'
+    CreateTicketResponseBody:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateTicketResponse'
     ExemptionListResponseDTO:
       description: ''
       content:

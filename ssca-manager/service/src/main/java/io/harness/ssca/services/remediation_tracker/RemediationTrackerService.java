@@ -6,10 +6,9 @@
  */
 package io.harness.ssca.services.remediation_tracker;
 
-import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
+import io.harness.spec.server.ssca.v1.model.CreateTicketRequest;
 import io.harness.spec.server.ssca.v1.model.EnvironmentInfo;
-import io.harness.spec.server.ssca.v1.model.EnvironmentTypeFilter;
-import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
+import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequest;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactDeploymentsListingRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactDeploymentsListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactDetailsResponse;
@@ -21,6 +20,7 @@ import io.harness.spec.server.ssca.v1.model.RemediationListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerCreateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerUpdateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackersOverallSummaryResponseBody;
+import io.harness.ssca.beans.EnvType;
 import io.harness.ssca.entities.remediation_tracker.RemediationTrackerEntity;
 
 import java.util.List;
@@ -43,7 +43,7 @@ public interface RemediationTrackerService {
   boolean close(String accountId, String orgId, String projectId, String remediationTrackerId);
 
   boolean excludeArtifact(
-      String accountId, String orgId, String projectId, String remediationTrackerId, ExcludeArtifactRequestBody body);
+      String accountId, String orgId, String projectId, String remediationTrackerId, ExcludeArtifactRequest body);
 
   void updateArtifactsAndEnvironments(RemediationTrackerEntity remediationTracker);
 
@@ -53,7 +53,7 @@ public interface RemediationTrackerService {
       String accountId, String orgId, String projectId);
 
   String createTicket(
-      String projectId, String remediationTrackerId, String orgId, CreateTicketRequestBody body, String accountId);
+      String projectId, String remediationTrackerId, String orgId, CreateTicketRequest body, String accountId);
 
   Page<RemediationListingResponse> listRemediations(
       String accountId, String orgId, String projectId, RemediationListingRequestBody body, Pageable pageable);
@@ -65,5 +65,5 @@ public interface RemediationTrackerService {
       String projectId, String remediationTrackerId, String artifactId,
       RemediationArtifactDeploymentsListingRequestBody body, Pageable pageable);
   List<EnvironmentInfo> getAllEnvironmentsInArtifact(String accountId, String orgId, String projectId,
-      String remediationTrackerId, String artifactId, EnvironmentTypeFilter environmentType);
+      String remediationTrackerId, String artifactId, EnvType environmentType);
 }

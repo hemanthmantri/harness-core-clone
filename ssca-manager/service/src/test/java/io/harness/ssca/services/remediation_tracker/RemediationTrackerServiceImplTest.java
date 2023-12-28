@@ -27,7 +27,7 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.repositories.remediation_tracker.RemediationTrackerRepository;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
+import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequest;
 import io.harness.spec.server.ssca.v1.model.NameOperator;
 import io.harness.spec.server.ssca.v1.model.RemediationCondition;
 import io.harness.spec.server.ssca.v1.model.RemediationListingRequestBody;
@@ -403,7 +403,7 @@ public class RemediationTrackerServiceImplTest extends SSCAManagerTestBase {
 
     remediationTrackerService.excludeArtifact(builderFactory.getContext().getAccountId(),
         builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier(),
-        remediationTrackerEntity.getUuid(), new ExcludeArtifactRequestBody().artifactId("artifactId"));
+        remediationTrackerEntity.getUuid(), new ExcludeArtifactRequest().artifactId("artifactId"));
     remediationTrackerEntity = remediationTrackerService.getRemediationTracker(remediationTrackerEntity.getUuid());
     assertThat(remediationTrackerEntity.getArtifactInfos().get("artifactId").isExcluded()).isTrue();
   }
@@ -454,9 +454,10 @@ public class RemediationTrackerServiceImplTest extends SSCAManagerTestBase {
             .listRemediations(builderFactory.getContext().getAccountId(),
                 builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier(),
                 new RemediationListingRequestBody()
-                    .cveFilter(new RemediationListingRequestBodyCveFilter().cve("CVE-").operator(NameOperator.CONTAINS))
+                    .cveFilter(
+                        new RemediationListingRequestBodyCveFilter().value("CVE-").operator(NameOperator.CONTAINS))
                     .componentNameFilter(new RemediationListingRequestBodyComponentNameFilter()
-                                             .componentName("remediation2")
+                                             .value("remediation2")
                                              .operator(NameOperator.EQUALS)),
                 pageable)
             .getContent();
@@ -477,7 +478,7 @@ public class RemediationTrackerServiceImplTest extends SSCAManagerTestBase {
             .listRemediations(builderFactory.getContext().getAccountId(),
                 builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier(),
                 new RemediationListingRequestBody().cveFilter(
-                    new RemediationListingRequestBodyCveFilter().cve("CVE-").operator(NameOperator.CONTAINS)),
+                    new RemediationListingRequestBodyCveFilter().value("CVE-").operator(NameOperator.CONTAINS)),
                 pageable)
             .getContent();
 

@@ -8,10 +8,9 @@ package io.harness.ssca.api;
 
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.spec.server.ssca.v1.RemediationApi;
-import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
+import io.harness.spec.server.ssca.v1.model.CreateTicketRequest;
 import io.harness.spec.server.ssca.v1.model.EnvironmentInfo;
-import io.harness.spec.server.ssca.v1.model.EnvironmentTypeFilter;
-import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequestBody;
+import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequest;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactDeploymentsListingRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactDeploymentsListingResponse;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactDetailsResponse;
@@ -26,6 +25,8 @@ import io.harness.spec.server.ssca.v1.model.RemediationTrackerUpdateRequestBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackerUpdateResponseBody;
 import io.harness.spec.server.ssca.v1.model.RemediationTrackersOverallSummaryResponseBody;
 import io.harness.spec.server.ssca.v1.model.SaveResponse;
+import io.harness.ssca.beans.EnvType;
+import io.harness.ssca.mapper.RemediationTrackerMapper;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerService;
 import io.harness.ssca.utils.PageResponseUtils;
 
@@ -61,14 +62,14 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response close(String org, String project, String remediation, String harnessAccount) {
+  public Response closeRemediationTracker(String org, String project, String remediation, String harnessAccount) {
     boolean response = remediationTrackerService.close(harnessAccount, org, project, remediation);
     return Response.ok().entity(new SaveResponse().status(response ? "SUCCESS" : "FAILURE")).build();
   }
 
   @Override
   public Response excludeArtifact(
-      String org, String project, String remediation, @Valid ExcludeArtifactRequestBody body, String harnessAccount) {
+      String org, String project, String remediation, @Valid ExcludeArtifactRequest body, String harnessAccount) {
     boolean response = remediationTrackerService.excludeArtifact(harnessAccount, org, project, remediation, body);
     return Response.ok().entity(new SaveResponse().status(response ? "SUCCESS" : "FAILURE")).build();
   }
@@ -127,16 +128,17 @@ public class RemediationTrackerApiImpl implements RemediationApi {
   }
 
   @Override
-  public Response getEnvironmentListForRemediation(String org, String project, String remediation, String artifact,
-      String harnessAccount, EnvironmentTypeFilter envType) {
+  public Response getEnvironmentListForRemediation(
+      String org, String project, String remediation, String artifact, String harnessAccount, String envType) {
+    EnvType env = RemediationTrackerMapper.mapEnvType(envType);
     List<EnvironmentInfo> response = remediationTrackerService.getAllEnvironmentsInArtifact(
-        harnessAccount, org, project, remediation, artifact, envType);
+        harnessAccount, org, project, remediation, artifact, env);
     return Response.ok().entity(response).build();
   }
 
   @Override
   public Response createTicket(
-      String orgId, String projectId, String remediation, @Valid CreateTicketRequestBody body, String harnessAccount) {
+      String orgId, String projectId, String remediation, @Valid CreateTicketRequest body, String harnessAccount) {
     String ticketId = remediationTrackerService.createTicket(projectId, remediation, orgId, body, harnessAccount);
     RemediationTrackerCreateResponseBody response = new RemediationTrackerCreateResponseBody().id(ticketId);
     return Response.ok().entity(response).build();

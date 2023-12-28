@@ -9,7 +9,7 @@ package io.harness.ssca.mapper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.spec.server.ssca.v1.model.CreateTicketRequestBody;
+import io.harness.spec.server.ssca.v1.model.CreateTicketRequest;
 import io.harness.spec.server.ssca.v1.model.EnvironmentType;
 import io.harness.spec.server.ssca.v1.model.PipelineInfo;
 import io.harness.spec.server.ssca.v1.model.RemediationArtifactDeploymentsListingResponse;
@@ -77,7 +77,7 @@ public class RemediationTrackerMapper {
     }
   }
 
-  public TicketRequestDto mapToTicketRequestDto(String remediationId, CreateTicketRequestBody requestBody) {
+  public TicketRequestDto mapToTicketRequestDto(String remediationId, CreateTicketRequest requestBody) {
     Map<String, List<String>> identifiersCopy = new HashMap<>();
 
     // If identifiers is not null, add it to identifiersCopy
@@ -216,6 +216,20 @@ public class RemediationTrackerMapper {
         return EnvironmentType.PROD;
       case Production:
         return EnvironmentType.PREPROD;
+      default:
+        throw new InvalidRequestException("Invalid environment type: " + environmentType);
+    }
+  }
+
+  public EnvType mapEnvType(String environmentType) {
+    if (environmentType == null) {
+      return null;
+    }
+    switch (environmentType) {
+      case "Prod":
+        return EnvType.Production;
+      case "PreProd":
+        return EnvType.PreProduction;
       default:
         throw new InvalidRequestException("Invalid environment type: " + environmentType);
     }
