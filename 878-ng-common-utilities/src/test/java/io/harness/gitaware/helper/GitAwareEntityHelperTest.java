@@ -30,6 +30,7 @@ import io.harness.exception.WingsException;
 import io.harness.gitaware.dto.FetchRemoteEntityRequest;
 import io.harness.gitaware.dto.GetFileGitContextRequestParams;
 import io.harness.gitaware.dto.GitContextRequestParams;
+import io.harness.gitsync.beans.StoreType;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
@@ -487,6 +488,7 @@ public class GitAwareEntityHelperTest extends CategoryTest {
     String filePath;
     String data;
     String branch;
+    StoreType storeType;
 
     @Override
     public void setData(String data) {

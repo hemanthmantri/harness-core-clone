@@ -274,6 +274,7 @@ public class EnvironmentOutboxEventHandlerTest extends CategoryTest {
                                                              .serviceRef(serviceRef)
                                                              .isV2(true)
                                                              .yaml("yaml")
+                                                             .yamlV2("yaml")
                                                              .build();
     EnvironmentUpdatedEvent environmentUpdatedEvent =
         EnvironmentUpdatedEvent.builder()
@@ -335,6 +336,7 @@ public class EnvironmentOutboxEventHandlerTest extends CategoryTest {
                                                              .environmentRef(environmentRef)
                                                              .serviceRef(serviceRef)
                                                              .yaml("oldYaml")
+                                                             .yamlV2("yamlV2")
                                                              .isV2(true)
                                                              .build();
     EnvironmentUpdatedEvent environmentUpdatedEvent =
@@ -395,6 +397,7 @@ public class EnvironmentOutboxEventHandlerTest extends CategoryTest {
                                                              .identifier(OVERRIDE_IDENTIFIER)
                                                              .serviceRef(serviceRef)
                                                              .yaml("newYaml")
+                                                             .yamlV2("newYaml")
                                                              .build();
 
     NGServiceOverridesEntity oldServiceOverridesEntity = NGServiceOverridesEntity.builder()
@@ -404,6 +407,7 @@ public class EnvironmentOutboxEventHandlerTest extends CategoryTest {
                                                              .environmentRef(environmentRef)
                                                              .serviceRef(serviceRef)
                                                              .yaml("oldYaml")
+                                                             .yamlV2("oldYaml")
                                                              .build();
     EnvironmentUpdatedEvent environmentUpdatedEvent =
         EnvironmentUpdatedEvent.builder()

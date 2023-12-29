@@ -22,13 +22,16 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.ScopeAware;
+import io.harness.ng.core.serviceoverridev2.beans.ServiceOverrideSpecConfig;
 import io.harness.ng.core.serviceoverridev2.beans.ServiceOverridesSpec;
 import io.harness.ng.core.serviceoverridev2.beans.ServiceOverridesType;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.gitaware.GitAware;
+import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.collect.ImmutableList;
 import dev.morphia.annotations.Entity;
+import java.io.IOException;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -38,6 +41,7 @@ import lombok.With;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -45,6 +49,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Slf4j
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = false,
     components = {HarnessModuleComponent.CDS_SERVICE_ENVIRONMENT})
 @Data
@@ -119,5 +124,18 @@ public class NGServiceOverridesEntity implements PersistentEntity, ScopeAware, G
   @Override
   public void setData(String data) {
     this.yamlV2 = data;
+    setSpecFromYamlV2();
+  }
+
+  private void setSpecFromYamlV2() {
+    try {
+      ServiceOverrideSpecConfig specConfig = YamlUtils.read(this.yamlV2, ServiceOverrideSpecConfig.class);
+      // overwrite spec from yamlV2
+      this.spec = specConfig.getSpec();
+    } catch (IOException ex) {
+      log.error(
+          String.format("Could not set spec from YAML for override : [%s] of type [%s]", this.identifier, this.type),
+          ex);
+    }
   }
 }

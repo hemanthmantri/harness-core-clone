@@ -29,6 +29,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class DummyServiceOverridesServiceV2Impl implements ServiceOverridesServiceV2 {
   @Override
   public Optional<NGServiceOverridesEntity> get(@NonNull String accountId, String orgIdentifier,
+      String projectIdentifier, @NonNull String serviceOverridesIdentifier, boolean loadFromCache,
+      boolean loadFromFallbackBranch) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<NGServiceOverridesEntity> getMetadata(@NonNull String accountId, String orgIdentifier,
       String projectIdentifier, @NonNull String serviceOverridesIdentifier) {
     return Optional.empty();
   }

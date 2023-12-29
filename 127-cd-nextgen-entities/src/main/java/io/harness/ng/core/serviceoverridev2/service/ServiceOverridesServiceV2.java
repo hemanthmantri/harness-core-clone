@@ -30,7 +30,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
     components = {HarnessModuleComponent.CDS_SERVICE_ENVIRONMENT})
 public interface ServiceOverridesServiceV2 {
   Optional<NGServiceOverridesEntity> get(@NonNull String accountId, String orgIdentifier, String projectIdentifier,
-      @NonNull String serviceOverridesIdentifier);
+      @NonNull String serviceOverridesIdentifier, boolean loadFromCache, boolean loadFromFallbackBranch);
+
+  Optional<NGServiceOverridesEntity> getMetadata(@NonNull String accountId, String orgIdentifier,
+      String projectIdentifier, @NonNull String serviceOverridesIdentifier);
 
   Optional<NGServiceOverridesEntity> getOverridesContainingYaml(@NonNull String accountId, String orgIdentifier,
       String projectIdentifier, @NonNull String serviceOverridesIdentifier);

@@ -333,9 +333,10 @@ public class EnvironmentResourceV2 {
         ServiceOverridesMapperV2.toRequestDTOV2(ngEnvironmentConfig, accountId);
 
     if (requestDTOV2.isPresent()) {
-      Optional<NGServiceOverridesEntity> envGlobalOverridesEntity = serviceOverridesServiceV2.get(accountId,
+      Optional<NGServiceOverridesEntity> envGlobalOverridesEntity = serviceOverridesServiceV2.getMetadata(accountId,
           environmentEntity.getOrgIdentifier(), environmentEntity.getProjectIdentifier(), envGlobalOverrideIdentifier);
 
+      // this will create inline overrides
       if (envGlobalOverridesEntity.isPresent()) {
         serviceOverridesResource.update(accountId, requestDTOV2.get(), null);
       } else {

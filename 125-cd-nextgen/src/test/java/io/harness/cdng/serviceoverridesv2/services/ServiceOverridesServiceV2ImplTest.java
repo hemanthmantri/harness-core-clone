@@ -109,9 +109,9 @@ public class ServiceOverridesServiceV2ImplTest extends CDNGTestBase {
   @Category(UnitTests.class)
   public void testGet() {
     serviceOverridesServiceV2.create(basicOverrideEntity);
-    Optional<NGServiceOverridesEntity> createOverrideEntity =
-        serviceOverridesServiceV2.get(basicOverrideEntity.getAccountId(), basicOverrideEntity.getOrgIdentifier(),
-            basicOverrideEntity.getProjectIdentifier(), basicOverrideEntity.getIdentifier());
+    Optional<NGServiceOverridesEntity> createOverrideEntity = serviceOverridesServiceV2.getMetadata(
+        basicOverrideEntity.getAccountId(), basicOverrideEntity.getOrgIdentifier(),
+        basicOverrideEntity.getProjectIdentifier(), basicOverrideEntity.getIdentifier());
     assertThat(createOverrideEntity).isPresent();
     assertBasicOverrideEntityProperties(createOverrideEntity.get());
   }
@@ -206,9 +206,9 @@ public class ServiceOverridesServiceV2ImplTest extends CDNGTestBase {
         serviceOverridesServiceV2.delete(basicOverrideEntity.getAccountId(), basicOverrideEntity.getOrgIdentifier(),
             basicOverrideEntity.getProjectIdentifier(), basicOverrideEntity.getIdentifier(), null);
     assertThat(isDeleted).isTrue();
-    Optional<NGServiceOverridesEntity> entityInDBPostDelete =
-        serviceOverridesServiceV2.get(basicOverrideEntity.getAccountId(), basicOverrideEntity.getOrgIdentifier(),
-            basicOverrideEntity.getProjectIdentifier(), basicOverrideEntity.getIdentifier());
+    Optional<NGServiceOverridesEntity> entityInDBPostDelete = serviceOverridesServiceV2.getMetadata(
+        basicOverrideEntity.getAccountId(), basicOverrideEntity.getOrgIdentifier(),
+        basicOverrideEntity.getProjectIdentifier(), basicOverrideEntity.getIdentifier());
     assertThat(entityInDBPostDelete).isEmpty();
   }
 
@@ -747,10 +747,11 @@ public class ServiceOverridesServiceV2ImplTest extends CDNGTestBase {
 
     assertThat(serviceOverridesServiceV2.deleteAllInOrg(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER)).isTrue();
 
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
         .isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER + "abcd", PROJECT_IDENTIFIER, "e3"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isNotPresent();
+    assertThat(
+        serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER + "abcd", PROJECT_IDENTIFIER, "e3"))
         .isPresent();
   }
 
@@ -815,11 +816,12 @@ public class ServiceOverridesServiceV2ImplTest extends CDNGTestBase {
     assertThat(serviceOverridesServiceV2.deleteAllInProject(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER))
         .isTrue();
 
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
         .isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e2"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e2"))
         .isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER + "abcd", PROJECT_IDENTIFIER, "e3"))
+    assertThat(
+        serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER + "abcd", PROJECT_IDENTIFIER, "e3"))
         .isPresent();
   }
 
@@ -884,10 +886,11 @@ public class ServiceOverridesServiceV2ImplTest extends CDNGTestBase {
                    ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, ENVIRONMENT_REF))
         .isTrue();
 
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
         .isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e3")).isPresent();
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isPresent();
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e3"))
+        .isPresent();
   }
 
   @Test
@@ -952,10 +955,10 @@ public class ServiceOverridesServiceV2ImplTest extends CDNGTestBase {
                    ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, ENVIRONMENT_REF, INFRA_IDENTIFIER))
         .isTrue();
 
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
         .isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, null, null, "e3")).isPresent();
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isPresent();
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, null, null, "e3")).isPresent();
   }
 
   @Test
@@ -1018,10 +1021,10 @@ public class ServiceOverridesServiceV2ImplTest extends CDNGTestBase {
     assertThat(serviceOverridesServiceV2.deleteAllOfService(ACCOUNT_IDENTIFIER, null, null, "account." + SERVICE_REF))
         .isTrue();
 
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e1"))
         .isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isNotPresent();
-    assertThat(serviceOverridesServiceV2.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e3"))
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, null, "e2")).isNotPresent();
+    assertThat(serviceOverridesServiceV2.getMetadata(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "e3"))
         .isNotPresent();
   }
 }

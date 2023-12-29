@@ -25,4 +25,7 @@ public interface ServiceOverrideRepositoryCustomV2 {
   List<NGServiceOverridesEntity> findAll(Criteria criteria);
 
   NGServiceOverridesEntity saveGitAware(NGServiceOverridesEntity overrideToSave);
+
+  NGServiceOverridesEntity getRemoteOverridesWithYaml(
+      NGServiceOverridesEntity ngServiceOverridesEntity, boolean loadFromCache, boolean loadFromFallbackBranch);
 }
