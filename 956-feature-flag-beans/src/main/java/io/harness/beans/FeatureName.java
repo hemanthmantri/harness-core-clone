@@ -908,7 +908,9 @@ public enum FeatureName {
       "FF to suppport selecting different infrastructure during environment propagation", CDC),
   SSCA_ENFORCEMENT_EXEMPTIONS_ENABLED("FF to enable exemption workflow in the SSCA enforcement step", SSCA),
   SSCA_MATCH_INSTANCE_IMAGE_NAME(
-      "Enable matching K8s instance image name with SSCA artifact to determine artifacts deployed", SSCA);
+      "Enable matching K8s instance image name with SSCA artifact to determine artifacts deployed", SSCA),
+  CDS_INPUT_YAML_IN_WEBHOOK_NOTIFICATION(
+      "FF to enable sending input set yaml as part of pipeline webhook notification", PIPELINE);
 
   // keep-sorted end
 

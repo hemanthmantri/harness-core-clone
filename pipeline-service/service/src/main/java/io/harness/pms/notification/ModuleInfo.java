@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
-import org.bson.Document;
 
 @CodePulse(module = ProductModule.CDS, unitCoverageRequired = true, components = {HarnessModuleComponent.CDS_PIPELINE})
 @OwnedBy(PIPELINE)
@@ -37,6 +36,7 @@ public class ModuleInfo {
   List<String> envGroups;
   List<String> infrastructures;
   List<String> artifactInfo;
+  String inputYaml;
 
   public static ModuleInfo getModuleInfo(Ambiance ambiance, PipelineExecutionSummaryEntity executionSummaryEntity) {
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(ambiance);
