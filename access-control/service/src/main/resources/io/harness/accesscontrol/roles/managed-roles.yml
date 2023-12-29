@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 69
+version: 70
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -178,6 +178,9 @@ roles:
         - core_gitxWebhooks_edit
         - core_gitxWebhooks_delete
         - core_gitxWebhooks_view
+        - ssca_remediationtracker_close
+        - ssca_remediationtracker_view
+        - ssca_remediationtracker_edit
       allowedScopeLevels:
         - project
       managed: true
@@ -239,6 +242,7 @@ roles:
         - cet_criticalevent_view
         - iac_workspace_view
         - core_gitxWebhooks_view
+        - ssca_remediationtracker_view
       allowedScopeLevels:
         - project
       managed: true
@@ -424,6 +428,9 @@ roles:
         - core_gitxWebhooks_edit
         - core_gitxWebhooks_delete
         - core_gitxWebhooks_view
+        - ssca_remediationtracker_close
+        - ssca_remediationtracker_view
+        - ssca_remediationtracker_edit
       allowedScopeLevels:
         - organization
       managed: true
@@ -487,6 +494,7 @@ roles:
         - cet_criticalevent_view
         - iac_workspace_view
         - core_gitxWebhooks_view
+        - ssca_remediationtracker_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -742,6 +750,9 @@ roles:
         - core_gitxWebhooks_edit
         - core_gitxWebhooks_delete
         - core_gitxWebhooks_view
+        - ssca_remediationtracker_close
+        - ssca_remediationtracker_view
+        - ssca_remediationtracker_edit
       allowedScopeLevels:
         - account
       managed: true
@@ -824,6 +835,7 @@ roles:
         - ccm_commitmentOrchestrator_view
         - iac_workspace_view
         - core_gitxWebhooks_view
+        - ssca_remediationtracker_view
       allowedScopeLevels:
         - account
       managed: true
