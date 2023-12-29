@@ -46,6 +46,7 @@ public class MultiServiceEnvDeploymentStageDetailsInfo implements DeploymentStag
   @Nullable private Set<String> serviceNames;
   @Nullable private String envGroup;
   @Nullable private String envGroupName;
+  @Nullable private String artifactDisplayName;
   public static final String NOT_AVAILABLE = "NA";
 
   @Override
@@ -63,6 +64,7 @@ public class MultiServiceEnvDeploymentStageDetailsInfo implements DeploymentStag
         .infras(StringUtils.defaultIfBlank(infraFormattedString, NOT_AVAILABLE))
         .environments(StringUtils.defaultIfBlank(environmentFormattedString, NOT_AVAILABLE))
         .envGroup(envGroupFormattedString)
+        .artifactDisplayName(StringUtils.defaultIfBlank(artifactDisplayName, null))
         .build();
   }
 

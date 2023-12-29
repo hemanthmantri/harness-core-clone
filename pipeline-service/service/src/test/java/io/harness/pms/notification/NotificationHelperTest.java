@@ -209,6 +209,7 @@ public class NotificationHelperTest extends CategoryTest {
     htmlInputSanitizer = mock(HtmlInputSanitizer.class);
     pmsExecutionService = mock(PMSExecutionService.class);
     notificationHelper = spy(new NotificationHelper());
+    WebhookNotificationServiceImpl webhookNotificationService = mock(WebhookNotificationServiceImpl.class);
     notificationHelper.notificationClient = notificationClient;
     notificationHelper.planExecutionService = planExecutionService;
     notificationHelper.pipelineServiceConfiguration = pipelineServiceConfiguration;
@@ -218,6 +219,7 @@ public class NotificationHelperTest extends CategoryTest {
     notificationHelper.pipelineExpressionHelper = pipelineExpressionHelper;
     notificationHelper.userNameSanitizer = htmlInputSanitizer;
     notificationHelper.pmsExecutionService = pmsExecutionService;
+    notificationHelper.webhookNotificationService = webhookNotificationService;
   }
 
   @Test

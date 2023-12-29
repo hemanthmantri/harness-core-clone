@@ -276,7 +276,20 @@ public class StageExecutionInfoServiceImpl implements StageExecutionInfoService 
         .service(StringUtils.defaultIfBlank(service, NOT_AVAILABLE))
         .infra(StringUtils.defaultIfBlank(infra, NOT_AVAILABLE))
         .environment(StringUtils.defaultIfBlank(environment, NOT_AVAILABLE))
+        .artifactDisplayName(StringUtils.defaultIfBlank(getDisplayName(stageExecutionBasicSummaryProjection), null))
         .build();
+  }
+
+  private String getDisplayName(StageExecutionBasicSummaryProjection stageExecutionBasicSummaryProjection) {
+    if (stageExecutionBasicSummaryProjection.getExecutionSummaryDetails() == null
+        || stageExecutionBasicSummaryProjection.getExecutionSummaryDetails().getServiceInfo() == null
+        || stageExecutionBasicSummaryProjection.getExecutionSummaryDetails().getServiceInfo().getArtifacts() == null) {
+      return "";
+    }
+    return stageExecutionBasicSummaryProjection.getExecutionSummaryDetails()
+        .getServiceInfo()
+        .getArtifacts()
+        .getArtifactDisplayName();
   }
 
   private void updateStageExecutionInfoFromStageExecutionInfoUpdateDTO(

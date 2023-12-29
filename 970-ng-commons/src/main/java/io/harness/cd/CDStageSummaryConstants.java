@@ -31,4 +31,5 @@ public final class CDStageSummaryConstants {
   public static final String STAGE_EXECUTION_IDENTIFIERS_KEY = "stageExecutionIdentifiers";
   public static final String STAGE_EXECUTION_IDENTIFIERS_PARAM_MESSAGE = "List of stage execution identifiers";
   public static final String PLAN_EXECUTION_ID_PARAM_MESSAGE = "The Pipeline Execution Id";
+  public static final String ARTIFACT_DISPLAY_NAME = "Artifact Display Name";
 }

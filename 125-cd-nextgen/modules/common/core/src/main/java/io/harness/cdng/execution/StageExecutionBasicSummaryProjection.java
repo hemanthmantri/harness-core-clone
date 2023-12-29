@@ -24,5 +24,7 @@ public interface StageExecutionBasicSummaryProjection {
 
   // createdAt and lastModifiedAt are mandatory for instantiation of StageExecutionInfo proxy at runtime
   Long getCreatedAt();
+
   Long getLastModifiedAt();
+  ExecutionSummaryDetails getExecutionSummaryDetails();
 }

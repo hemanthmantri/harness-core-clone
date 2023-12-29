@@ -69,4 +69,9 @@ public class CDStageSummaryResponseDTO {
   @Nullable
   String envGroup;
   // Maintain union of fields from subtypes of io.harness.cdng.creator.plan.stage.DeploymentStageDetailsInfo
+
+  @JsonProperty(CDStageSummaryConstants.ARTIFACT_DISPLAY_NAME)
+  @Schema(description = CDStageSummaryConstants.ARTIFACT_DISPLAY_NAME)
+  @Nullable
+  String artifactDisplayName;
 }

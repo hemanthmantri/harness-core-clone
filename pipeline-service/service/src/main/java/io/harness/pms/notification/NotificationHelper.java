@@ -81,6 +81,8 @@ public class NotificationHelper {
   @Inject HtmlInputSanitizer userNameSanitizer;
   @Inject PMSExecutionService pmsExecutionService;
 
+  @Inject WebhookNotificationServiceImpl webhookNotificationService;
+
   public Optional<PipelineEventType> getEventTypeForStage(NodeExecution nodeExecution) {
     if (!OrchestrationUtils.isStageNode(nodeExecution)) {
       return Optional.empty();
@@ -282,7 +284,8 @@ public class NotificationHelper {
     WebhookNotificationEventBuilder webhookNotificationEvent =
         WebhookNotificationEvent.builder()
             .triggeredBy(getTriggerExecutionInfo(pipelineExecutionSummaryEntity))
-            .moduleInfo(ModuleInfo.getModuleInfo(ambiance, pipelineExecutionSummaryEntity))
+            .moduleInfo(
+                webhookNotificationService.getModuleInfo(ambiance, pipelineExecutionSummaryEntity, pipelineEventType))
             .accountIdentifier(AmbianceUtils.getAccountId(ambiance))
             .orgIdentifier(orgIdentifier)
             .projectIdentifier(projectIdentifier)
