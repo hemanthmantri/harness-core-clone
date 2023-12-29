@@ -78,18 +78,6 @@ data:
   SSCA_ORCHESTRATION_IMAGE: '{{ .Values.ssca_images.ssca_plugin.image.repository }}:{{ .Values.ssca_images.ssca_plugin.image.tag }}'
   SSCA_ENFORCEMENT_IMAGE: '{{ .Values.ssca_images.ssca_plugin.image.repository }}:{{ .Values.ssca_images.ssca_plugin.image.tag }}'
   {{- end }}
-  INTERNAL_NG_MANAGER_TARGET: ng-manager:9979
-  INTERNAL_NG_MANAGER_AUTHORITY: ng-manager:9979
-  INTERNAL_CVNG_MANAGER_AUTHORITY: cv-nextgen:9979
-  INTERNAL_CVNG_MANAGER_TARGET: cv-nextgen:9979
-  INTERNAL_CI_MANAGER_TARGET: ci-manager:9979
-  INTERNAL_CI_MANAGER_AUTHORITY: ci-manager:9979
-  INTERNAL_STO_MANAGER_AUTHORITY: sto-manager:9979
-  INTERNAL_STO_MANAGER_TARGET: sto-manager:9979
-  INTERNAL_IACM_MANAGER_AUTHORITY: iacm-manager:9979
-  INTERNAL_IACM_MANAGER_TARGET: iacm-manager:9979
-  INTERNAL_IDP_SERVICE_TARGET: idp-service:9979
-  INTERNAL_IDP_SERVICE_AUTHORITY: idp-service:9979
   {{ include "harnesscommon.harnessfunctions.java17flags" (dict "context" $) | nindent 2 }}
   {{- if .Values.additionalConfigs }}
   {{- toYaml .Values.additionalConfigs | nindent 2 }}
