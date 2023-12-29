@@ -9,6 +9,7 @@ package io.harness.repositories.infrastructure.custom;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.SCM_BAD_REQUEST;
+import static io.harness.pms.pipeline.MoveConfigOperationType.INLINE_TO_REMOTE;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.CodePulse;
@@ -24,6 +25,7 @@ import io.harness.exception.HintException;
 import io.harness.exception.InternalServerErrorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ScmException;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.gitaware.dto.GitContextRequestParams;
 import io.harness.gitaware.helper.GitAwareContextHelper;
@@ -31,6 +33,7 @@ import io.harness.gitaware.helper.GitAwareEntityHelper;
 import io.harness.gitsync.beans.StoreType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.ng.core.infrastructure.dto.InfraMoveConfigOperationDTO;
 import io.harness.ng.core.infrastructure.entity.InfrastructureEntity;
 import io.harness.ng.core.infrastructure.entity.InfrastructureEntity.InfrastructureEntityKeys;
 import io.harness.ng.core.infrastructure.mappers.InfrastructureFilterHelper;
@@ -389,5 +392,71 @@ public class InfrastructureRepositoryCustomImpl implements InfrastructureReposit
         .is(environmentIdentifier)
         .and(InfrastructureEntityKeys.identifier)
         .is(infraIdentifier);
+  }
+
+  @Override
+  public InfrastructureEntity moveInfrastructure(
+      InfraMoveConfigOperationDTO moveConfigOperationDTO, InfrastructureEntity infrastructure) {
+    Criteria criteria = Criteria.where(InfrastructureEntityKeys.accountId)
+                            .is(infrastructure.getAccountId())
+                            .and(InfrastructureEntityKeys.orgIdentifier)
+                            .is(infrastructure.getOrgIdentifier())
+                            .and(InfrastructureEntityKeys.projectIdentifier)
+                            .is(infrastructure.getProjectIdentifier())
+                            .and(InfrastructureEntityKeys.envIdentifier)
+                            .is(infrastructure.getEnvIdentifier())
+                            .and(InfrastructureEntityKeys.identifier)
+                            .is(infrastructure.getIdentifier());
+
+    if (INLINE_TO_REMOTE.equals(moveConfigOperationDTO.getMoveConfigOperationType())) {
+      GitEntityInfo gitEntityInfo = GitAwareContextHelper.getGitRequestParamsInfo();
+      addGitParamsToInfrastructureEntity(infrastructure, gitEntityInfo);
+      return moveToRemote(criteria, infrastructure);
+    } else {
+      throw new UnsupportedOperationException(String.format("Move operation:[%s] not supported for infrastructures",
+          moveConfigOperationDTO.getMoveConfigOperationType()));
+    }
+  }
+
+  private InfrastructureEntity moveToRemote(Criteria criteria, InfrastructureEntity infraToMove) {
+    try {
+      Query query = new Query(criteria);
+      Update update = getUpdateOperationsForMovingInlineToRemote(infraToMove);
+      RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying]: Failed moving Infrastructure; attempt: {}",
+          "[Failed]: Failed moving Infrastructure; attempt: {}");
+
+      // create remote entity
+      Scope scope = Scope.of(
+          infraToMove.getAccountIdentifier(), infraToMove.getOrgIdentifier(), infraToMove.getProjectIdentifier());
+      String yamlToPush = infraToMove.getYaml();
+      gitAwareEntityHelper.createEntityOnGit(infraToMove, yamlToPush, scope);
+
+      // update in db
+      return updateInfrastructureEntityInMongo(query, update, retryPolicy);
+    } catch (ExplanationException | HintException | ScmException e) {
+      log.error(String.format("Error while moving infrastructure [%s] for operation: [%s]", infraToMove.getIdentifier(),
+                    INLINE_TO_REMOTE),
+          e);
+      throw e;
+    } catch (Exception e) {
+      log.error(String.format("Unexpected error while moving infrastructure [%s] for operation: [%s] ",
+                    infraToMove.getIdentifier(), INLINE_TO_REMOTE),
+          e);
+      throw new InternalServerErrorException(
+          String.format("Unexpected error while moving infrastructure [%s]: for operation: [%s]. Error: [%s]",
+              infraToMove.getIdentifier(), INLINE_TO_REMOTE, e.getMessage()),
+          e);
+    }
+  }
+
+  private Update getUpdateOperationsForMovingInlineToRemote(InfrastructureEntity infrastructure) {
+    Update update = new Update();
+    update.set(InfrastructureEntityKeys.repo, infrastructure.getRepo());
+    update.set(InfrastructureEntityKeys.storeType, StoreType.REMOTE);
+    update.set(InfrastructureEntityKeys.filePath, infrastructure.getFilePath());
+    update.set(InfrastructureEntityKeys.connectorRef, infrastructure.getConnectorRef());
+    update.set(InfrastructureEntityKeys.repoURL, infrastructure.getRepoURL());
+    update.set(InfrastructureEntityKeys.fallBackBranch, infrastructure.getFallBackBranch());
+    return update;
   }
 }

@@ -10,6 +10,7 @@ package io.harness.repositories.infrastructure.custom;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
+import io.harness.ng.core.infrastructure.dto.InfraMoveConfigOperationDTO;
 import io.harness.ng.core.infrastructure.entity.InfrastructureEntity;
 
 import com.mongodb.client.result.DeleteResult;
@@ -52,4 +53,7 @@ public interface InfrastructureRepositoryCustom {
 
   InfrastructureEntity getRemoteInfrastructureWithYaml(
       InfrastructureEntity infrastructure, boolean loadFromCache, boolean loadFromFallbackBranch);
+
+  InfrastructureEntity moveInfrastructure(
+      InfraMoveConfigOperationDTO moveConfigOperationDTO, InfrastructureEntity infrastructure);
 }

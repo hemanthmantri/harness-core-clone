@@ -8,6 +8,7 @@
 package io.harness.ng.core.infrastructure.resource;
 
 import static io.harness.NGCommonEntityConstants.FORCE_DELETE_MESSAGE;
+import static io.harness.NGCommonEntityConstants.INFRA_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.environment.resources.EnvironmentResourceV2.ENVIRONMENT_PARAM_MESSAGE;
@@ -46,6 +47,7 @@ import io.harness.cdng.service.steps.helpers.serviceoverridesv2.validators.Envir
 import io.harness.cdng.ssh.SshEntityHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.gitaware.helper.MoveConfigOperationType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
@@ -58,6 +60,9 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.infrastructure.InfrastructureType;
+import io.harness.ng.core.infrastructure.dto.InfraMoveConfigOperationDTO;
+import io.harness.ng.core.infrastructure.dto.InfraMoveConfigRequestDTO;
+import io.harness.ng.core.infrastructure.dto.InfraMoveConfigResponse;
 import io.harness.ng.core.infrastructure.dto.InfrastructureInputsMergedResponseDto;
 import io.harness.ng.core.infrastructure.dto.InfrastructureRequestDTO;
 import io.harness.ng.core.infrastructure.dto.InfrastructureResponse;
@@ -753,5 +758,47 @@ public class InfrastructureResource {
             -> CDNGRbacUtility.environmentResponseToPermissionCheckDTO(
                 infra.getEnvIdentifier(), infra.getAccountId(), infra.getOrgIdentifier(), infra.getProjectIdentifier()))
         .collect(Collectors.toSet());
+  }
+
+  @POST
+  @Path("/move-config/{infraIdentifier}")
+  @ApiOperation(value = "Move infra YAML from inline to remote", nickname = "moveInfraConfigs")
+  @Operation(operationId = "moveInfraConfigs", summary = "Move infra YAML from inline to remote",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Move infra YAML from inline to remote")
+      })
+  public ResponseDTO<InfraMoveConfigResponse>
+  moveConfig(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                 NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ENVIRONMENT_KEY, required = true) @NotNull @QueryParam(
+          NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY) String environmentIdentifier,
+      @Parameter(description = INFRA_PARAM_MESSAGE) @PathParam(INFRA_IDENTIFIER)
+      @ResourceIdentifier String infraIdentifier, @BeanParam InfraMoveConfigRequestDTO infraMoveConfigRequest) {
+    // check for environment update permission
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(ENVIRONMENT, environmentIdentifier), ENVIRONMENT_UPDATE_PERMISSION);
+
+    InfraMoveConfigOperationDTO moveConfigOperationDTO =
+        InfraMoveConfigOperationDTO.builder()
+            .repoName(infraMoveConfigRequest.getRepoName())
+            .branch(infraMoveConfigRequest.getBranch())
+            .moveConfigOperationType(
+                MoveConfigOperationType.getMoveConfigType(infraMoveConfigRequest.getMoveConfigOperationType()))
+            .connectorRef(infraMoveConfigRequest.getConnectorRef())
+            .baseBranch(infraMoveConfigRequest.getBaseBranch())
+            .commitMessage(infraMoveConfigRequest.getCommitMsg())
+            .isNewBranch(infraMoveConfigRequest.getIsNewBranch())
+            .filePath(infraMoveConfigRequest.getFilePath())
+            .build();
+
+    InfraMoveConfigResponse infraMoveResponse = infrastructureEntityService.moveInfrastructure(accountIdentifier,
+        orgIdentifier, projectIdentifier, environmentIdentifier, infraIdentifier, moveConfigOperationDTO);
+    return ResponseDTO.newResponse(infraMoveResponse);
   }
 }

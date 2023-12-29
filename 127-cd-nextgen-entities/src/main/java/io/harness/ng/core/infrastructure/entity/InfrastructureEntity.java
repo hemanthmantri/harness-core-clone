@@ -109,7 +109,7 @@ public class InfrastructureEntity implements PersistentEntity, GitAware, ScopeAw
   @Wither @Setter @NonFinal String connectorRef;
   @Wither @Setter @NonFinal String repoURL;
   @Wither @Setter @NonFinal String fallBackBranch;
-  @Setter @NonFinal String filePath;
+  @With @Setter @NonFinal String filePath;
 
   @Override
   public String getUuid() {

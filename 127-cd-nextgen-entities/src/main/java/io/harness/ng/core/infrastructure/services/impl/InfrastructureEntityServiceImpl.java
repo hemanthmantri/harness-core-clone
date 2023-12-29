@@ -12,6 +12,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.pms.pipeline.MoveConfigOperationType.INLINE_TO_REMOTE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.IDENTIFIER;
 import static io.harness.springdata.PersistenceUtils.DEFAULT_RETRY_POLICY;
 import static io.harness.utils.IdentifierRefHelper.MAX_RESULT_THRESHOLD_FOR_SPLIT;
@@ -20,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.OwnedBy;
@@ -39,6 +41,7 @@ import io.harness.exception.InternalServerErrorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ScmException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.gitaware.helper.GitAwareContextHelper;
@@ -47,11 +50,14 @@ import io.harness.gitsync.beans.StoreType;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitx.EntityGitDetailsGuard;
+import io.harness.gitx.GitXSettingsHelper;
 import io.harness.ng.DuplicateKeyExceptionParser;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ng.core.events.EnvironmentUpdatedEvent;
 import io.harness.ng.core.infrastructure.InfrastructureType;
+import io.harness.ng.core.infrastructure.dto.InfraMoveConfigOperationDTO;
+import io.harness.ng.core.infrastructure.dto.InfraMoveConfigResponse;
 import io.harness.ng.core.infrastructure.dto.InfrastructureInputsMergedResponseDto;
 import io.harness.ng.core.infrastructure.dto.InfrastructureYamlMetadata;
 import io.harness.ng.core.infrastructure.dto.NoInputMergeInputAction;
@@ -60,6 +66,8 @@ import io.harness.ng.core.infrastructure.entity.InfrastructureEntity.Infrastruct
 import io.harness.ng.core.infrastructure.services.InfrastructureEntityService;
 import io.harness.ng.core.service.services.impl.InputSetMergeUtility;
 import io.harness.ng.core.serviceoverridev2.service.ServiceOverridesServiceV2;
+import io.harness.ng.core.utils.CDGitXService;
+import io.harness.ng.core.utils.GitXUtils;
 import io.harness.ng.core.utils.ServiceOverrideV2ValidationHelper;
 import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HIterator;
@@ -70,6 +78,7 @@ import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.UpsertOptions;
 import io.harness.repositories.infrastructure.spring.InfrastructureRepository;
 import io.harness.setupusage.InfrastructureEntitySetupUsageHelper;
+import io.harness.utils.ExceptionCreationUtils;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.utils.YamlPipelineUtils;
 
@@ -139,6 +148,8 @@ public class InfrastructureEntityServiceImpl implements InfrastructureEntityServ
   @Inject @Named("environment-gitx-executor") private ExecutorService executorService;
   @Inject private EnvironmentService environmentService;
   private final GitAwareEntityHelper gitAwareEntityHelper;
+  @Inject private CDGitXService cdGitXService;
+  @Inject private GitXSettingsHelper gitXSettingsHelper;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING_FOR_PROJECT =
       "Infrastructure [%s] under Environment [%s] Project[%s], Organization [%s] in Account [%s] already exists";
@@ -1377,5 +1388,73 @@ public class InfrastructureEntityServiceImpl implements InfrastructureEntityServ
       // ignore this
     }
     return false;
+  }
+
+  @Override
+  public InfraMoveConfigResponse moveInfrastructure(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String environmentIdentifier, String infraIdentifier,
+      InfraMoveConfigOperationDTO moveConfigOperationDTO) {
+    validateMoveConfigRequest(moveConfigOperationDTO);
+    setupGitContext(moveConfigOperationDTO);
+    applyGitXSettingsIfApplicable(accountIdentifier, orgIdentifier, projectIdentifier);
+    if (!cdGitXService.isNewGitXEnabled(accountIdentifier, orgIdentifier, projectIdentifier)) {
+      throw new InvalidRequestException(
+          GitXUtils.getErrorMessageForGitSimplificationNotEnabled(orgIdentifier, projectIdentifier));
+    }
+
+    Optional<InfrastructureEntity> optionalInfrastructure =
+        getMetadata(accountIdentifier, orgIdentifier, projectIdentifier, environmentIdentifier, infraIdentifier);
+
+    if (optionalInfrastructure.isEmpty()) {
+      throw new InvalidRequestException(
+          String.format("Infra with the given identifier: %s and environment: %s does not exist", infraIdentifier,
+              environmentIdentifier));
+    }
+
+    InfrastructureEntity infrastructure = optionalInfrastructure.get();
+    if (StoreType.REMOTE.equals(infrastructure.getStoreType())
+        && INLINE_TO_REMOTE.equals(moveConfigOperationDTO.getMoveConfigOperationType())) {
+      throw new InvalidRequestException(
+          String.format("Infrastructure with the given identifier: %s is already remote", infraIdentifier));
+    }
+
+    InfrastructureEntity movedEntity =
+        infrastructureRepository.moveInfrastructure(moveConfigOperationDTO, infrastructure);
+    return InfraMoveConfigResponse.builder().identifier(movedEntity.getIdentifier()).success(true).build();
+  }
+
+  private void setupGitContext(InfraMoveConfigOperationDTO moveConfigDTO) {
+    if (INLINE_TO_REMOTE.equals(moveConfigDTO.getMoveConfigOperationType())) {
+      GitAwareContextHelper.populateGitDetails(
+          GitEntityInfo.builder()
+              .branch(moveConfigDTO.getBranch())
+              .filePath(moveConfigDTO.getFilePath())
+              .commitMsg(moveConfigDTO.getCommitMessage())
+              .isNewBranch(isNotEmpty(moveConfigDTO.getBranch()) && isNotEmpty(moveConfigDTO.getBaseBranch()))
+              .baseBranch(moveConfigDTO.getBaseBranch())
+              .connectorRef(moveConfigDTO.getConnectorRef())
+              .storeType(StoreType.REMOTE)
+              .repoName(moveConfigDTO.getRepoName())
+              .build());
+    }
+  }
+
+  private void validateMoveConfigRequest(InfraMoveConfigOperationDTO moveConfigOperationDTO) {
+    if (INLINE_TO_REMOTE.equals(moveConfigOperationDTO.getMoveConfigOperationType())) {
+      if (isEmpty(moveConfigOperationDTO.getFilePath())) {
+        ExceptionCreationUtils.throwInvalidRequestForEmptyField("filePath");
+      }
+    } else {
+      throw new UnsupportedOperationException(String.format(
+          "Move operation: [%s] not supported for infra", moveConfigOperationDTO.getMoveConfigOperationType()));
+    }
+  }
+
+  private void applyGitXSettingsIfApplicable(String accountIdentifier, String orgIdentifier, String projIdentifier) {
+    gitXSettingsHelper.enforceGitExperienceIfApplicable(accountIdentifier, orgIdentifier, projIdentifier);
+    gitXSettingsHelper.setDefaultStoreTypeForEntities(
+        accountIdentifier, orgIdentifier, projIdentifier, EntityType.INFRASTRUCTURE);
+    gitXSettingsHelper.setConnectorRefForRemoteEntity(accountIdentifier, orgIdentifier, projIdentifier);
+    gitXSettingsHelper.setDefaultRepoForRemoteEntity(accountIdentifier, orgIdentifier, projIdentifier);
   }
 }
