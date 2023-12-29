@@ -966,6 +966,8 @@ public class YamlUtilsTest extends CategoryTest {
         .isEqualTo("k: \"2014-10-01 20:30:00Z\"\n");
     assertThat(YamlUtils.writeYamlString(Map.of("k", new TextNode("2014-10-01 20:30:00"))))
         .isEqualTo("k: \"2014-10-01 20:30:00\"\n");
+    assertThat(YamlUtils.writeYamlString(Map.of("k", new TextNode("00:00:00.100")))).isEqualTo("k: \"00:00:00.100\"\n");
+    assertThat(YamlUtils.writeYamlString(Map.of("k", new TextNode("00:00:00")))).isEqualTo("k: 00:00:00\n");
   }
 
   @Test
