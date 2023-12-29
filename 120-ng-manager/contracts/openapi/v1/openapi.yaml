@@ -52,10 +52,31 @@ tags:
     x-displayName: 'Project Rancher Infrastructure [Beta]'
   - name: K8s Release Service Mapping
     description: This contains APIs for Fetching Release details regarding a pod.
-    x-displayName: K8s Release Service Mapping
+    x-displayName: 'K8s Release Service Mapping [Beta]'
   - name: EULA
     description: This contains APIs for EULA.
     x-displayName: 'EULA [Beta]'
+  - name: IP Allowlist
+    description: This contains APIs for IP Allowlist.
+    x-displayName: 'IP Allowlist [Beta]'
+  - name: GitX Webhooks
+    description: This contains APIs for Account GitX Webhooks.
+    x-displayName: 'Account GitX Webhooks [Beta]'
+  - name: Org GitX Webhooks
+    description: This contains APIs for Org GitX Webhooks.
+    x-displayName: 'Org GitX Webhooks [Beta]'
+  - name: Project GitX Webhooks
+    description: This contains APIs for Project GitX Webhooks.
+    x-displayName: 'Project GitX Webhooks [Beta]'
+  - name: Gitx Webhooks Events
+    description: This contains APIs for Account Gitx Webhooks Events.
+    x-displayName: 'Account Gitx Webhooks Events [Beta]'
+  - name: Org Gitx Webhooks Events
+    description: This contains APIs for Org Gitx Webhooks Events.
+    x-displayName: 'Org Gitx Webhooks Events [Beta]'
+  - name: Project Gitx Webhooks Events
+    description: This contains APIs for Project Gitx Webhooks Events.
+    x-displayName: 'Project Gitx Webhooks Events [Beta]'
 paths:
   '/v1/orgs/{org}/projects/{project}/services/{service}':
     get:
@@ -692,7 +713,6 @@ paths:
         - IP Allowlist
       x-internal: false
     parameters: []
-
   /v1/ip-allowlist/allowed/ip-address:
     get:
       summary: Check if IP address is allowed or not
@@ -709,15 +729,12 @@ paths:
           name: ip_address
           description: This is the IP address that needs to be checked if allowed or not
           required: true
-        - schema:
-            type: string
       security:
         - x-api-key: []
       tags:
         - IP Allowlist
       x-internal: true
     parameters: []
-
   /v1/secrets:
     post:
       summary: Create a secret
@@ -1518,7 +1535,7 @@ paths:
       tags:
         - EULA
       x-internal: false
-  v1/eula/validate-sign:
+  /v1/eula/validate-sign:
     get:
       summary: Validate specified agreement is signed or not
       operationId: validate-eula-sign

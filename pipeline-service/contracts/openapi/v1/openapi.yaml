@@ -29,6 +29,9 @@ tags:
   - name: Steps
     description: This contains APIs for Steps.
     x-displayName: 'Steps [Beta]'
+  - name: Schemas
+    description: This contains APIs for Schemas.
+    x-displayName: 'Schemas [Beta]'
 paths:
   '/v1/orgs/{org}/projects/{project}/pipelines':
     parameters:
@@ -758,9 +761,6 @@ paths:
         - name: node_execution_id
           in: query
           description: This filters approval instances based on runtime identifier of the step
-          pattern: '^[a-zA-Z_][0-9a-zA-Z_$]{0,127}$'
-          minLength: 1
-          maxLength: 128
           schema:
             type: string
       tags:
