@@ -113,7 +113,7 @@ public class GraphUpdateRedisConsumer implements PmsRedisConsumer {
       return;
     }
     ReadResult readResult = mapPlanExecutionToMessages(messages);
-    log.info("read: {}, processable: {}, bulkAcking : {}", messages.size(), readResult.planExecutionIds.size(),
+    log.debug("read: {}, processable: {}, bulkAcking : {}", messages.size(), readResult.planExecutionIds.size(),
         readResult.tobeAcked.length);
 
     try {
@@ -136,7 +136,7 @@ public class GraphUpdateRedisConsumer implements PmsRedisConsumer {
       if (messages.size() < eventConsumer.getBatchSize()) {
         // Adding thread sleep when the events read are less than the batch-size. This way when the load is high,
         // consumer will query the events quickly. And in case of low load, thread will sleep for some time.
-        log.info("Sleeping the thread for {}", sleepMs);
+        log.debug("Sleeping the thread for {}", sleepMs);
         if (!sleepMs.isNegative() && !sleepMs.isZero()) {
           sleep(sleepMs);
         }

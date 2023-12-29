@@ -152,7 +152,7 @@ public class PlanNodeExecutionStrategy extends AbstractNodeExecutionStrategy<Pla
   @VisibleForTesting
   void resolveParameters(Ambiance ambiance, PlanNode planNode) {
     String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    log.info("Starting to Resolve step parameters");
+    log.debug("Starting to Resolve step parameters");
     ExpressionMode expressionMode = planNode.getExpressionMode();
     Object resolvedStepParameters;
     // Passing the FeatureFlag.

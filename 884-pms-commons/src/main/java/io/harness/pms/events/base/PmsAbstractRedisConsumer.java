@@ -146,8 +146,6 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
       // will query the events quickly. And in case of low load, thread will sleep for some time.
       TimeUnit.MILLISECONDS.sleep(THREAD_SLEEP_TIME_IN_MILLIS);
     } else {
-      // Remove this log after one release.
-      log.info("Not sleeping the thread after reading one batch of events because redis has more events to be read");
       if (THREAD_SLEEP_MILLIS_WHEN_CONSUMER_IS_BUSY > 0) {
         TimeUnit.MILLISECONDS.sleep(THREAD_SLEEP_MILLIS_WHEN_CONSUMER_IS_BUSY);
       }

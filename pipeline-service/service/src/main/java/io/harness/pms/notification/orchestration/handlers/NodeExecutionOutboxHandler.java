@@ -95,7 +95,7 @@ public class NodeExecutionOutboxHandler implements NodeExecutionStartObserver, N
               sendStageExecutionEvents(nodeOutboxInfo);
               break;
             default:
-              log.info(String.format(NodeExecutionOutboxEventConstants.AUDIT_NOT_SUPPORTED_MSG, nodeGroup));
+              log.debug(String.format(NodeExecutionOutboxEventConstants.AUDIT_NOT_SUPPORTED_MSG, nodeGroup));
           }
         } catch (Exception ex) {
           log.error(String.format(NodeExecutionOutboxEventConstants.UNEXPECTED_ERROR_MSG, nodeGroup), ex);
@@ -129,7 +129,7 @@ public class NodeExecutionOutboxHandler implements NodeExecutionStartObserver, N
           nodeExecutionEvent = NodeExecutionEventUtils.mapAmbianceToTimeoutEvent(ambiance);
           break;
         default:
-          log.info(String.format("Currently Audits are not supported for status: %s", status.name()));
+          log.debug(String.format("Currently Audits are not supported for status: %s", status.name()));
       }
       // In case of Abort and Expire we need to send 2 events one being the PipelineEndEvent also!
       if (nodeExecutionEvent != null) {
