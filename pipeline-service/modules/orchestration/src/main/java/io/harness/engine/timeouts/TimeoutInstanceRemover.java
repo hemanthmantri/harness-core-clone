@@ -54,9 +54,7 @@ public class TimeoutInstanceRemover implements AsyncInformObserver, NodeStatusUp
     try (AutoLogContext autoLogContext = obtainAutoLogContext(nodeUpdateInfo)) {
       boolean isSuccess =
           EmptyPredicate.isEmpty(timeoutInstanceIds) || deleteTimeoutInstancesWithRetry(timeoutInstanceIds);
-      if (isSuccess) {
-        log.info("Timeout instances {} are removed successfully", timeoutInstanceIds);
-      } else {
+      if (!isSuccess) {
         log.error("Failed to delete timeout instances {}", timeoutInstanceIds);
       }
     } catch (Exception e) {

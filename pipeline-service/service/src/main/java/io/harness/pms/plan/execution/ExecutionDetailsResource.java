@@ -188,7 +188,6 @@ public class ExecutionDetailsResource {
           }) FilterPropertiesDTO filterProperties,
       @QueryParam("status") List<ExecutionStatus> statusesList, @QueryParam("myDeployments") boolean myDeployments,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
-    log.info("Get List of executions");
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
         filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, statusesList,
         myDeployments, false, showAllExecutions);
@@ -245,7 +244,6 @@ public class ExecutionDetailsResource {
           NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
       @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE)
       @DefaultValue("10") int size, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
-    log.info("Get List of executions");
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier, null, null,
         null, null, ExecutionStatus.getListExecutionStatus(StatusUtils.finalStatuses()), false, false, true);
     Pageable pageRequest;
@@ -305,7 +303,6 @@ public class ExecutionDetailsResource {
                 value = PipelineAPIConstants.LIST_EXECUTIONS,
                 description = "Sample List Pipeline Executions JSON Payload"))
       }) FilterPropertiesDTO filterProperties) {
-    log.info("Get List of executions");
     Criteria criteria = pmsExecutionService.formCriteriaOROperatorOnModules(accountId, orgId, projectId,
         pipelineIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, filterIdentifier);
     Pageable pageRequest;

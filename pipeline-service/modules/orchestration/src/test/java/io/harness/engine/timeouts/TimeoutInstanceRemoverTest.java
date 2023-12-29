@@ -97,12 +97,6 @@ public class TimeoutInstanceRemoverTest extends OrchestrationTestBase {
     logger.addAppender(listAppender);
 
     timeoutInstanceRemover.onNodeStatusUpdate(nodeUpdateInfo);
-
-    assertThat(listAppender.list)
-        .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
-        .containsExactly(
-            tuple(String.format("Timeout instances %s are removed successfully", timeoutInstanceIds), Level.INFO));
-
     verify(timeoutEngine).deleteTimeouts(any());
   }
 
