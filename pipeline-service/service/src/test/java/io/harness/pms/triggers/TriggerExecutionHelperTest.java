@@ -694,7 +694,7 @@ public class TriggerExecutionHelperTest extends CategoryTest {
     PlanExecution expectedPlanExecution = PlanExecution.builder().ambiance(ambiance).build();
     when(executionHelper.startExecution(pipelineEntityV1.getAccountId(), pipelineEntityV1.getOrgIdentifier(),
              pipelineEntityV1.getProjectIdentifier(), execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(),
-             false, null, null, null))
+             false, null, null, null, true))
         .thenReturn(expectedPlanExecution);
     PlanExecution actualPlanExecution = triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
         triggerDetails, triggerPayload, triggerWebhookEvent, null, null, null);
@@ -768,7 +768,7 @@ public class TriggerExecutionHelperTest extends CategoryTest {
              null, null, retryExecutionParameters, false, false))
         .thenReturn(execArgs);
     when(executionHelper.startExecution("acc", "default", "test", execArgs.getMetadata(),
-             execArgs.getPlanExecutionMetadata(), false, null, null, null))
+             execArgs.getPlanExecutionMetadata(), false, null, null, null, true))
         .thenReturn(PlanExecution.builder().ambiance(ambiance).build());
 
     triggerExecutionHelper.createPlanExecution(triggerDetails, null, null, null, null, null,
@@ -806,7 +806,7 @@ public class TriggerExecutionHelperTest extends CategoryTest {
              null, null, retryExecutionParameters, false, false))
         .thenReturn(execArgs);
     when(executionHelper.startExecution("acc", "default", "test", execArgs.getMetadata(),
-             execArgs.getPlanExecutionMetadata(), false, null, null, null))
+             execArgs.getPlanExecutionMetadata(), false, null, null, null, true))
         .thenReturn(PlanExecution.builder().ambiance(ambiance).build());
 
     triggerExecutionHelper.createPlanExecution(
@@ -848,7 +848,7 @@ public class TriggerExecutionHelperTest extends CategoryTest {
              null, null, retryExecutionParameters, false, false))
         .thenReturn(execArgs);
     when(executionHelper.startExecution("acc", "default", "test", execArgs.getMetadata(),
-             execArgs.getPlanExecutionMetadata(), false, null, null, null))
+             execArgs.getPlanExecutionMetadata(), false, null, null, null, true))
         .thenReturn(PlanExecution.builder().ambiance(ambiance).build());
 
     triggerExecutionHelper.createPlanExecution(triggerDetails, null, null, null, null, null,
@@ -895,7 +895,7 @@ public class TriggerExecutionHelperTest extends CategoryTest {
              null, null, retryExecutionParameters, false, false))
         .thenReturn(execArgs);
     when(executionHelper.startExecution("acc", "default", "test", execArgs.getMetadata(),
-             execArgs.getPlanExecutionMetadata(), false, null, null, null))
+             execArgs.getPlanExecutionMetadata(), false, null, null, null, true))
         .thenReturn(PlanExecution.builder().ambiance(ambiance).build());
 
     triggerExecutionHelper.createPlanExecution(triggerDetails, null, null, null, null, null,

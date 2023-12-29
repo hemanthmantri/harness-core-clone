@@ -865,7 +865,7 @@ public class ExecutionHelperTest extends CategoryTest {
         .when(orchestrationService)
         .startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
     PlanExecution createdPlanExecution = executionHelper.startExecution(
-        accountId, orgId, projectId, executionMetadata, planExecutionMetadata, false, null, null, null);
+        accountId, orgId, projectId, executionMetadata, planExecutionMetadata, false, null, null, null, true);
     assertThat(createdPlanExecution).isEqualTo(planExecution);
     verify(planCreatorMergeService, times(1))
         .createPlanVersioned(
@@ -919,7 +919,7 @@ public class ExecutionHelperTest extends CategoryTest {
     doReturn(plan.getPlanNodes()).when(planService).fetchNodes(planId);
 
     PlanExecution createdPlanExecution = executionHelper.startExecution(
-        accountId, orgId, projectId, executionMetadata, planExecutionMetadata, false, null, "prevId", null);
+        accountId, orgId, projectId, executionMetadata, planExecutionMetadata, false, null, "prevId", null, true);
     assertThat(createdPlanExecution).isEqualTo(planExecution);
     verify(orchestrationService, times(1)).startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
     verify(rollbackModeExecutionHelper, times(1))

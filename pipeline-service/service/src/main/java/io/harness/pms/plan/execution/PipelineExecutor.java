@@ -227,7 +227,7 @@ public class PipelineExecutor {
     PlanExecutionMetadata planExecutionMetadata = rollbackModeExecutionHelper.transformPlanExecutionMetadata(
         originalPlanExecutionMetadata, executionId, executionMode, stageNodeExecutionIds, notes);
     return executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier, executionMetadata,
-        planExecutionMetadata, false, null, originalExecutionId, null);
+        planExecutionMetadata, false, null, originalExecutionId, null, true);
   }
 
   private PlanExecutionResponseDto getPlanExecutionResponseDto(String accountId, String orgIdentifier,
@@ -235,10 +235,10 @@ public class PipelineExecutor {
     PlanExecution planExecution;
     if (useV2) {
       planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null, null, null);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null, null, null, true);
     } else {
       planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null, null, null);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null, null, null, true);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
@@ -300,11 +300,11 @@ public class PipelineExecutor {
     if (useV2) {
       planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
           execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, identifierOfSkipStages,
-          previousExecutionId, retryStagesIdentifier);
+          previousExecutionId, retryStagesIdentifier, runAllStages);
     } else {
       planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
           execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, identifierOfSkipStages,
-          previousExecutionId, retryStagesIdentifier);
+          previousExecutionId, retryStagesIdentifier, runAllStages);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)

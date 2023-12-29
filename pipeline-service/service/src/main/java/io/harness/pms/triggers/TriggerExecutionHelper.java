@@ -206,7 +206,7 @@ public class TriggerExecutionHelper {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       PlanExecution planExecution = executionHelper.startExecution(ngTriggerEntity.getAccountId(),
           ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), execArgs.getMetadata(),
-          execArgs.getPlanExecutionMetadata(), false, null, null, null);
+          execArgs.getPlanExecutionMetadata(), false, null, null, null, true);
       log.info("Plan execution created with planExecutionId {}, accountId {} and triggerId {}",
           planExecution.getAmbiance().getPlanExecutionId(), pipelineEntity.getAccountId(),
           triggerDetails.getNgTriggerEntity().getIdentifier());

@@ -848,7 +848,7 @@ public class RetryExecuteHelperTest extends CategoryTest {
 
     Plan newPlan = retryExecuteHelper.transformPlan(
         Plan.builder().planNodes(Arrays.asList(planNode1, planNode2, planNode3)).build(), identifierOfSkipStages, "abc",
-        stageIdentifierToRetryWith);
+        stageIdentifierToRetryWith, true);
 
     List<Node> updatedNodes = newPlan.getPlanNodes();
     List<Node> identityPlanNodes =
@@ -883,9 +883,19 @@ public class RetryExecuteHelperTest extends CategoryTest {
         .when(nodeExecutionService)
         .fetchStrategyNodeExecutions(any(), any());
 
+    // Testing with runAllStages as true
     newPlan = retryExecuteHelper.transformPlan(
         Plan.builder().planNodes(Arrays.asList(planNode1, planNode2, planNode3)).build(), identifierOfSkipStages, "abc",
-        stageIdentifierToRetryWith);
+        stageIdentifierToRetryWith, true);
+
+    updatedNodes = newPlan.getPlanNodes();
+    identityPlanNodes = updatedNodes.stream().filter(o -> o instanceof IdentityPlanNode).collect(Collectors.toList());
+
+    assertEquals(identityPlanNodes.size(), 1);
+
+    newPlan = retryExecuteHelper.transformPlan(
+        Plan.builder().planNodes(Arrays.asList(planNode1, planNode2, planNode3)).build(), identifierOfSkipStages, "abc",
+        stageIdentifierToRetryWith, false);
 
     updatedNodes = newPlan.getPlanNodes();
     identityPlanNodes = updatedNodes.stream().filter(o -> o instanceof IdentityPlanNode).collect(Collectors.toList());
@@ -1002,7 +1012,7 @@ public class RetryExecuteHelperTest extends CategoryTest {
 
     Plan newPlan = retryExecuteHelper.transformPlan(
         Plan.builder().planNodes(Arrays.asList(planNode1, planNode2, planNode3, planNode4)).build(),
-        identifierOfSkipStages, "abc", stageIdentifierToRetryWith);
+        identifierOfSkipStages, "abc", stageIdentifierToRetryWith, false);
 
     List<Node> updatedNodes = newPlan.getPlanNodes();
     List<Node> identityPlanNodes =

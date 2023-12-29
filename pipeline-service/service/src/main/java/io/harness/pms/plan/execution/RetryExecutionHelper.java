@@ -405,11 +405,12 @@ public class RetryExecutionHelper {
   }
 
   /**
-   *
-   * @param plan Initial plan created without considering retry
-   * @param identifierOfSkipStages identifier of stages that are to be skipped during the retry.
-   * @param previousExecutionId planExecutionId of the execution that is being retried.
+   * @param plan                        Initial plan created without considering retry
+   * @param identifierOfSkipStages      identifier of stages that are to be skipped during the retry.
+   * @param previousExecutionId         planExecutionId of the execution that is being retried.
    * @param stageIdentifiersToRetryWith stage identifiers of the stages from which the execution is being retried.
+   * @param runAllStages                this is added to decide if all matrix nodes needs to be retried or only the
+   *     failed ones
    * @return Returns the transformed Plan for the retry
    * This method operates on 3 kind of nodes:
    * 1. Nodes that belong to stages that are to be skipped: Convert all planNodes into IdentityNodes.
@@ -418,7 +419,7 @@ public class RetryExecutionHelper {
    * 3. Nodes belong to subsequent stages: Will remain as planNodes and will be executed as normal execution.
    */
   public Plan transformPlan(Plan plan, List<String> identifierOfSkipStages, String previousExecutionId,
-      List<String> stageIdentifiersToRetryWith) {
+      List<String> stageIdentifiersToRetryWith, boolean runAllStages) {
     List<Node> finalUpdatedPlanNodes = new ArrayList<>();
     // identifierOfSkipStages: previousStageIdentifiers we want to skip
     List<String> stageFqnForStagesToBeSkipped =
@@ -437,8 +438,8 @@ public class RetryExecutionHelper {
     List<Node> strategyNodes = new ArrayList<>();
     // Filtering the strategy nodes of stages that are being retried and populating the strategyNodes list with such
     // nodes. The nodes after filtering will remain as is and will not be converted into IdentityNodes.
-    planNodesToBeExecuted =
-        filterStrategyNodesForStagesBeingRetried(planNodesToBeExecuted, stageFqnForStagesBeingRetried, strategyNodes);
+    planNodesToBeExecuted = filterStrategyNodesForStagesBeingRetried(
+        planNodesToBeExecuted, stageFqnForStagesBeingRetried, strategyNodes, runAllStages);
 
     // Adding nodes to be re-executed in the finalUpdatedPlanNodes list.
     finalUpdatedPlanNodes.addAll(planNodesToBeExecuted);
@@ -481,10 +482,11 @@ public class RetryExecutionHelper {
     return identityNodesList;
   }
   private List<Node> filterStrategyNodesForStagesBeingRetried(
-      List<Node> planNodes, List<String> stagesFqnToRetryWith, List<Node> strategyNodes) {
+      List<Node> planNodes, List<String> stagesFqnToRetryWith, List<Node> strategyNodes, boolean runAllStages) {
     List<Node> filteredPlanNodesList = new ArrayList<>();
     for (Node node : planNodes) {
-      if (stagesFqnToRetryWith.contains(node.getStageFqn()) && node.getStepCategory() == StepCategory.STRATEGY) {
+      if (!runAllStages && stagesFqnToRetryWith.contains(node.getStageFqn())
+          && node.getStepCategory() == StepCategory.STRATEGY) {
         strategyNodes.add(node);
       } else {
         filteredPlanNodesList.add(node);
