@@ -1,0 +1,323 @@
+# Default values for debezium-service
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+## Global Docker image parameters
+## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+## Current available global Docker image parameters: imageRegistry, imagePullSecrets
+# --global.imageRegistry Global Docker image registry
+# --global.imagePullSecrets Global Docker registry secret names as an array
+# --global.storageClass Global StorageClass for Persistent Volume(s)
+java:
+  memory: "4096m"
+nameOverride: ""
+fullnameOverride: ""
+service:
+  annotations: {}
+  type: ClusterIP
+  port: 14552
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPU: ""
+  targetMemory: ""
+redis:
+  secrets:
+    kubernetesSecrets:
+      - secretName: ""
+        keys:
+          REDIS_USERNAME: ""
+          REDIS_PASSWORD: ""
+database:
+  mongo:
+    pmsharness:
+      enabled: false
+      protocol: ""
+      hosts: [ ]
+      extraArgs: ""
+      secrets:
+        kubernetesSecrets:
+          - secretName: ""
+            keys:
+              MONGO_USER: ""
+              MONGO_PASSWORD: ""
+        secretManagement:
+          externalSecretsOperator:
+            - secretStore:
+                name: ""
+                kind: ""
+              remoteKeys:
+                MONGO_USER:
+                  name: ""
+                  property: ""
+                MONGO_PASSWORD:
+                  name: ""
+                  property: ""
+    harness:
+      enabled: false
+      protocol: ""
+      hosts: [ ]
+      extraArgs: ""
+      secrets:
+        kubernetesSecrets:
+          - secretName: ""
+            keys:
+              MONGO_USER: ""
+              MONGO_PASSWORD: ""
+        secretManagement:
+          externalSecretsOperator:
+            - secretStore:
+                name: ""
+                kind: ""
+              remoteKeys:
+                MONGO_USER:
+                  name: ""
+                  property: ""
+                MONGO_PASSWORD:
+                  name: ""
+                  property: ""
+
+    ngharness:
+      enabled: false
+      protocol: ""
+      hosts: []
+      extraArgs: ""
+      secrets:
+        kubernetesSecrets:
+          - secretName: ""
+            keys:
+              MONGO_USER: ""
+              MONGO_PASSWORD: ""
+        secretManagement:
+          externalSecretsOperator:
+            - secretStore:
+                name: ""
+                kind: ""
+              remoteKeys:
+                MONGO_USER:
+                  name: ""
+                  property: ""
+                MONGO_PASSWORD:
+                  name: ""
+                  property: ""
+
+#    secretManagement:
+#      externalSecretsOperator:
+#        - secretStore:
+#            name: ""
+#            kind: ""
+#          remoteKeys:
+#            REDIS_USERNAME:
+#              name: ""
+#              property: ""
+#            REDIS_PASSWORD:
+#              name: ""
+#              property: ""
+waitForInitContainer:
+  image:
+    registry: docker.io
+    repository: harness/helm-init-container
+    pullPolicy: IfNotPresent
+    tag: "latest"
+    digest: ""
+    imagePullSecrets: []
+
+mongoSecrets:
+  userName:
+    name: harness-secrets
+    key: mongodbUsername
+  password:
+
+image:
+  registry: docker.io
+  digest: ""
+  repository: harness/pipeline-service-signed
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "1.41.3"
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "harness-default"
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: http-pms
+  timeoutSeconds: 2
+  periodSeconds: 5
+  failureThreshold: 5
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /api/health
+    port: http-pms
+  timeoutSeconds: 2
+  periodSeconds: 10
+  failureThreshold: 5
+startupProbe:
+  httpGet:
+    path: /api/health
+    port: http-pms
+  timeoutSeconds: 2
+  periodSeconds: 10
+  failureThreshold: 25
+ingress:
+  annotations: {}
+podAnnotations: {}
+podSecurityContext: {}
+global:
+  ingress:
+    # -- set ingress object classname
+    className: harness
+    # -- set host of ingressObjects
+    hosts:
+      - my-host.example.org
+    # -- set tls for ingress objects
+    tls:
+      enabled: true
+      secretName: ''
+    objects:
+      annotations: {}
+    # -- create ingress objects
+    enabled: false
+  commonAnnotations: {}
+  commonLabels: {}
+  database:
+    redis:
+      installed: true
+      protocol: "redis"
+      # --  provide default values if redis.installed is set to false
+      hosts:
+        - redis:6379
+      secretName: "redis-secret"
+      userKey: "redis-user"
+      passwordKey: "redis-password"
+      extraArgs: ""
+      secrets:
+        kubernetesSecrets:
+          - secretName: ""
+            keys:
+              REDIS_USERNAME: ""
+              REDIS_PASSWORD: ""
+        secretManagement:
+          externalSecretsOperator:
+            - secretStore:
+                name: ""
+                kind: ""
+              remoteKeys:
+                REDIS_USERNAME:
+                  name: ""
+                  property: ""
+                REDIS_PASSWORD:
+                  name: ""
+                  property: ""
+
+    mongo:
+      installed: true
+      protocol: mongodb
+      # --  provide default values if mongo.installed is set to false
+      hosts: []
+      secretName: ""
+      userKey: ""
+      passwordKey: ""
+      extraArgs: ""
+      secrets:
+        kubernetesSecrets:
+          - secretName: ""
+            keys:
+              MONGO_USER: ""
+              MONGO_PASSWORD: ""
+        secretManagement:
+          externalSecretsOperator:
+            - secretStore:
+                name: ""
+                kind: ""
+              remoteKeys:
+                MONGO_USER:
+                  name: ""
+                  property: ""
+                MONGO_PASSWORD:
+                  name: ""
+                  property: ""
+  stackDriverLoggingEnabled: false
+  ssca:
+    enabled: false
+
+config:
+  IS_ENABLED_PIPELINE: false
+  #TODO: Set these values when IS_ENABLED_PIPELINE is set to true.
+#  MONGODB_SSL_ENABLED_PIPELINE: ""
+#  COLLECTION_INCLUDE_LIST_PIPELINE: ""
+#  DEBEZIUM_NAME_PIPELINE: ""
+#  MONGODB_NAME_PIPELINE: ""
+#  DATABASE_INCLUDE_LIST_PIPELINE: ""
+#  REDIS_STREAM_SIZE_PIPELINE: ""
+#  SNAPSHOT_MODE_PIPELINE: ""
+#  MAX_QUEUE_SIZE_PIPELINE: ""
+#  MAX_BATCH_SIZE_PIPELINE: ""
+#  MAX_QUEUE_SIZE_IN_BYTES_PIPELINE: ""
+#  POLL_INTERVAL_MS_PIPELINE: ""
+#  FIELD_EXCLUDE_LIST_PIPELINE: ""
+#  MONGODB_CONNECTION_STRING_PIPELINE: ""
+#  LIST_OF_ERROR_CODES_FOR_OFFSET_RESET: ""
+
+  IS_ENABLED_APPLICATIONS: false
+  #TODO: Set these values when IS_ENABLED_APPLICATIONS is set to true.
+#  MONGODB_SSL_ENABLED_APPLICATIONS: ""
+#  COLLECTION_INCLUDE_LIST_APPLICATIONS: ""
+#  DEBEZIUM_NAME_APPLICATIONS: ""
+#  MONGODB_NAME_APPLICATIONS: ""
+#  DATABASE_INCLUDE_LIST_APPLICATIONS: ""
+#  REDIS_STREAM_SIZE_APPLICATIONS: ""
+#  SNAPSHOT_MODE_APPLICATIONS: ""
+#  MAX_QUEUE_SIZE_APPLICATIONS: ""
+#  MAX_BATCH_SIZE_APPLICATIONS: ""
+#  MAX_QUEUE_SIZE_IN_BYTES_APPLICATIONS: ""
+#  POLL_INTERVAL_MS_APPLICATIONS: ""
+#  FIELD_EXCLUDE_LIST_APPLICATIONS: ""
+#  MONGODB_CONNECTION_STRING_APPLICATIONS: ""
+
+  IS_ENABLED_PIPELINE_SNAPSHOT: false
+  #TODO: Set these values when IS_ENABLED_PIPELINE_SNAPSHOT is set to true.
+#  SNAPSHOT_EVENTS_FRAMEWORK_REDIS_URL: ""
+#  SNAPSHOT_EVENTS_FRAMEWORK_ENV_NAMESPACE: ""
+#  MONGODB_SSL_ENABLED_PIPELINE_SNAPSHOT: ""
+#  DATABASE_INCLUDE_LIST_PIPELINE_SNAPSHOT: ""
+#  COLLECTION_INCLUDE_LIST_PIPELINE_SNAPSHOT: ""
+#  REDIS_STREAM_SIZE_PIPELINE_SNAPSHOT: ""
+#  FIELD_EXCLUDE_LIST_PIPELINE_SNAPSHOT: ""
+#  MONGODB_CONNECTION_STRING_PIPELINE_SNAPSHOT: ""
+
+  IS_ENABLED_PLG: false
+  #TODO: Set these values when IS_ENABLED_PLG is set to true.
+#  MONGODB_SSL_ENABLED_PLG: ""
+#  COLLECTION_INCLUDE_LIST_PLG: ""
+#  DEBEZIUM_NAME_PLG: ""
+#  MONGODB_NAME_PLG: ""
+#  DATABASE_INCLUDE_LIST_PLG: ""
+#  REDIS_STREAM_SIZE_PLG: ""
+#  SNAPSHOT_MODE_PLG: ""
+#  MAX_QUEUE_SIZE_PLG: ""
+#  MAX_BATCH_SIZE_PLG: ""
+#  MAX_QUEUE_SIZE_IN_BYTES_PLG: ""
+#  POLL_INTERVAL_MS_PLG: ""
+#  MONGODB_CONNECTION_STRING_PLG: ""
+
+  IS_ENABLED_SSCA: false
+  #TODO: Set these values when IS_ENABLED_SSCA is set to true.
+#  MONGODB_SSL_ENABLED_SSCA: ""
+#  COLLECTION_INCLUDE_LIST_SSCA: ""
+#  DEBEZIUM_NAME_SSCA: ""
+#  MONGODB_NAME_SSCA: ""
+#  DATABASE_INCLUDE_LIST_SSCA: ""
+#  REDIS_STREAM_SIZE_SSCA: ""
+#  SNAPSHOT_MODE_SSCA: ""
+#  MAX_QUEUE_SIZE_SSCA: ""
+#  MAX_BATCH_SIZE_SSCA: ""
+#  MAX_QUEUE_SIZE_IN_BYTES_SSCA: ""
+#  POLL_INTERVAL_MS_SSCA: ""
+#  MONGODB_CONNECTION_STRING_SSCA: ""

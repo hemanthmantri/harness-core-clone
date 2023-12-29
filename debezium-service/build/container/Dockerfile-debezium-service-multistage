@@ -1,0 +1,48 @@
+# Copyright 2022 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
+# To be used when building in CIE
+FROM us.gcr.io/platform-205701/ubi/cie-agents/java-go-cie-agent:java-17.0.7_7 as builder
+
+RUN mkdir -p /app
+ARG GCP_KEY
+ENV SERVICE_NAME="debezium-service"
+COPY . /app
+
+WORKDIR /app
+
+ENV BUILD_PURPOSE=DEVELOPMENT
+
+RUN chmod +x \
+    /app/build/feature_build.sh \
+    /app/build/build_dist.sh \
+    /app/scripts/bazel/generate_credentials.sh \
+    && /app/scripts/bazel/generate_credentials.sh \
+    && /app/build/feature_build.sh $GCP_KEY
+
+FROM us.gcr.io/platform-205701/harness/ubi8/java17:17.0.7_7 as base
+
+# Add the capsule JAR and config.yml
+COPY --chown=65534:65534 --from=builder \
+  /app/dist/debezium-service/debezium-service-capsule.jar  \
+  /app/dist/debezium-service/config.yml \
+  /app/dist/debezium-service/classpath_metadata.json \
+  /app/dist/debezium-service/redisson-jcache.yaml \
+  /app/dist/debezium-service/enterprise-redisson-jcache.yaml \
+  /app/dist/debezium-service/debezium-service-protocol.info \
+  /app/dist/debezium-service/scripts \
+  /app/dist/debezium-service/default.jfc \
+  /app/dist/debezium-service/profile.jfc \
+  /app/dockerization/base-images/apm/*.sh \
+  /opt/harness/
+
+RUN chmod +x /opt/harness/*.sh
+RUN /opt/harness/inject-saas-apm-bins-into-dockerimage.sh && rm -rf /opt/harness/inject-saas-apm-bins-into-dockerimage.sh
+USER root
+RUN microdnf remove tar unzip gzip \
+    && microdnf clean all \
+    && rm -rf /var/cache/yum
+USER 65534
+CMD [ "/opt/harness/run.sh" ]

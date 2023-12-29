@@ -2839,3 +2839,7 @@ e2f5032ab4d24507d5c98bf7c7d22778c839835d:idp-service/config/config.yml:generic-a
 df822607f9be36230f267af16b1fd60a6b2b78eb:idp-service/chart/values.yaml:generic-api-key:236
 df822607f9be36230f267af16b1fd60a6b2b78eb:idp-service/chart/values.yaml:generic-api-key:245
 9757520f6a25d88e4fc61a4eaba76c3d9b6e54b3:120-ng-manager/config.yml:generic-api-key:60
+29a8b25b179f7ab7b66f9ce90c09ca8f5042fef5:debezium-service/charts/values.yaml:generic-api-key:14
+07f45971e619e9eea89dbc42719d0fb3cd1e3a97:debezium-service/charts/values.yaml:generic-api-key:570
+dd2d28159f8d9cdff2f122aa06dd855c9dec8c80:debezium-service/charts/values.yaml:generic-api-key:14
+d7a181e7918c630f2b4ba980b5df5b5fdea75069:debezium-service/charts/values.yaml:generic-api-key:570
