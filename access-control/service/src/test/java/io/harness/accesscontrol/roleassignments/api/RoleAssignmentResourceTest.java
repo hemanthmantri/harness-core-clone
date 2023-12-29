@@ -113,7 +113,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
@@ -828,28 +827,6 @@ public class RoleAssignmentResourceTest extends AccessControlTestBase {
       assertCheckUpdatePermission(roleAssignmentDTOs.size(), roleAssignmentDTOClone);
       verify(roleAssignmentService, times(roleAssignmentDTOs.size())).create(any());
     }
-  }
-
-  @Test
-  @Owner(developers = JIMIT_GANDHI)
-  @Category(UnitTests.class)
-  public void createMulti_WithDuplicateRoleAssignment_ThrowsDuplicateKeyException() {
-    List<RoleAssignmentDTO> roleAssignmentDTOs =
-        Lists.newArrayList(getRoleAssignmentDTO(), getRoleAssignmentDTO(), getRoleAssignmentDTO());
-    List<RoleAssignmentDTO> roleAssignmentDTOsClone = new ArrayList<>();
-    roleAssignmentDTOs.forEach(
-        roleAssignmentDTO -> roleAssignmentDTOsClone.add((RoleAssignmentDTO) HObjectMapper.clone(roleAssignmentDTO)));
-    preSyncDependencies(roleAssignmentDTOs, true, true, true);
-    preCheckUpdatePermission(roleAssignmentDTOs);
-    when(roleAssignmentService.create(any())).thenThrow(DuplicateKeyException.class);
-    ResponseDTO<List<RoleAssignmentResponseDTO>> roleAssignmentResponseDTOList = roleAssignmentResource.create(
-        harnessScopeParams, RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentDTOs).build());
-    for (RoleAssignmentDTO roleAssignmentDTOClone : roleAssignmentDTOsClone) {
-      assertSyncDependencies(roleAssignmentDTOs.size(), roleAssignmentDTOClone, true, true, true);
-      assertCheckUpdatePermission(roleAssignmentDTOs.size(), roleAssignmentDTOClone);
-      verify(roleAssignmentService, times(roleAssignmentDTOs.size())).create(any());
-    }
-    assertEquals(roleAssignmentResponseDTOList.getData().size(), 0);
   }
 
   @Test

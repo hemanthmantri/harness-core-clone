@@ -89,7 +89,6 @@ import javax.ws.rs.NotFoundException;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.RetryPolicy;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -648,10 +647,6 @@ public class RoleAssignmentResourceImpl implements RoleAssignmentResource {
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             roleAssignmentDTOMapper.toResponseDTO(roleAssignmentService.create(roleAssignment));
         createdRoleAssignments.add(roleAssignmentResponseDTO);
-      } catch (DuplicateKeyException e) {
-        log.warn(String.format(
-            "A role assignment with the same resource group, role and principal is already present in the scope %s",
-            roleAssignment.getScopeIdentifier()));
       } catch (Exception e) {
         log.error(String.format("Could not create role assignment %s", roleAssignment), e);
       }

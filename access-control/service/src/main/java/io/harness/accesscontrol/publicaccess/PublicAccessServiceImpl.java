@@ -31,7 +31,6 @@ import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ScopeLevel;
-import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.v2.model.ResourceFilter;
@@ -53,7 +52,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -178,13 +176,7 @@ public class PublicAccessServiceImpl implements PublicAccessService {
       RoleAssignment roleAssignment = buildRoleAssignment(scope.getLevel().toString(), scope.toString(),
           publicAccessRoleAssignmentMapping.getRoleIdentifier(),
           publicAccessRoleAssignmentMapping.getPrincipalIdentifier());
-      try {
-        roleAssignmentService.create(roleAssignment);
-      } catch (DuplicateKeyException e) {
-        throw new DuplicateFieldException(String.format(
-            "A role assignment with the same resource group, role and principal is already present in the scope %s",
-            roleAssignment.getScopeIdentifier()));
-      }
+      roleAssignmentService.create(roleAssignment);
     }
   }
 
