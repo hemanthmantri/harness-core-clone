@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: resourceTypeConfiguration
-version: 43
+version: 44
 resourceTypes:
   - identifier: ACCOUNT
     permissionKey: account
@@ -173,3 +173,5 @@ resourceTypes:
     permissionKey: remediationtracker
   - identifier: GITX_WEBHOOKS
     permissionKey: gitxWebhooks
+  - identifier: SSCA_ENFORCEMENT_EXEMPTION
+    permissionKey: enforcementexemption
