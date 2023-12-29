@@ -37,7 +37,7 @@ fi
 if [[ "${ENABLE_COVERAGE}" == "true" ]] ; then
     echo "functional code coverage is enabled"
     curl -o jacoco-0.8.7.zip https://repo1.maven.org/maven2/org/jacoco/jacoco/0.8.7/jacoco-0.8.7.zip
-    mkdir /opt/harness/jacoco-0.8.7 && unzip jacoco-0.8.7.zip -d /opt/harness/jacoco-0.8.7
+    mkdir /opt/harness/jacoco-0.8.7 && mv jacoco-0.8.7.zip /opt/harness/jacoco-0.8.7 && cd /opt/harness/jacoco-0.8.7 && jar -xvf jacoco-0.8.7.zip && rm -rf jacoco-0.8.7.zip && cd ..
     JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/jacoco-0.8.7/lib/jacocoagent.jar=port=6300,address=0.0.0.0,append=true,output=tcpserver,destfile=jacoco-remote.exec"
     echo "Using Jacoco Java Agent"
 fi
