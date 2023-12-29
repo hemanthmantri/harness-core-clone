@@ -64,9 +64,10 @@ public class ContainerStepGroupValidator {
         continue;
       }
 
-      if (!isNull(containerStepGroupStep.getStepGroup())) {
-        throw new InvalidArgumentsException(format("Nested step group [%s] not supported in container step group",
-            containerStepGroupStep.getStepGroup().get("identifier").asText()));
+      if (isContainerStepGroup(containerStepGroupStep)) {
+        throw new InvalidArgumentsException(
+            format("Nested container step group [%s] not supported in container step group",
+                containerStepGroupStep.getStepGroup().get("identifier").asText()));
       }
       if (containerStepGroupStep.getParallel() != null && !containerStepGroupStep.getParallel().isNull()) {
         List<ExecutionWrapperConfig> parallelSteps = getParallelStepElementConfigSections(containerStepGroupStep);
@@ -74,6 +75,16 @@ public class ContainerStepGroupValidator {
         validateContainerStepGroupSteps(parallelSteps);
       }
     }
+  }
+
+  private static boolean isContainerStepGroup(ExecutionWrapperConfig containerStepGroupStep) throws IOException {
+    if (isNull(containerStepGroupStep.getStepGroup())) {
+      return false;
+    }
+
+    StepGroupElementConfig stepGroupElementConfig =
+        YamlUtils.convert(containerStepGroupStep.getStepGroup(), StepGroupElementConfig.class);
+    return isContainerStepGroup(stepGroupElementConfig);
   }
 
   private static List<ExecutionWrapperConfig> getParallelStepElementConfigSections(

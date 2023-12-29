@@ -10,6 +10,7 @@ package io.harness.utils;
 import static io.harness.rule.OwnerRule.IVAN;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -77,7 +78,7 @@ public class ContainerStepGroupValidatorTest extends CategoryTest {
 
     assertThatThrownBy(() -> ContainerStepGroupValidator.validateContainerStepGroup(stepGroupElementConfig))
         .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessage("Nested step group [innerContainerStepGroup] not supported in container step group");
+        .hasMessage("Nested container step group [innerContainerStepGroup] not supported in container step group");
   }
 
   @Test
@@ -115,7 +116,7 @@ public class ContainerStepGroupValidatorTest extends CategoryTest {
 
     assertThatThrownBy(() -> ContainerStepGroupValidator.validateContainerStepGroup(stepGroupElementConfig))
         .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessage("Nested step group [innerContainerStepGroup] not supported in container step group");
+        .hasMessage("Nested container step group [innerContainerStepGroup] not supported in container step group");
   }
 
   @Test
@@ -165,8 +166,10 @@ public class ContainerStepGroupValidatorTest extends CategoryTest {
         + "                      namespace: tmp-dev-testing";
     StepGroupElementConfig stepGroupElementConfig = YamlUtils.read(parallelSteps, StepGroupElementConfig.class);
 
-    assertThatThrownBy(() -> ContainerStepGroupValidator.validateContainerStepGroup(stepGroupElementConfig))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessage("Nested step group [innerStepGroup] not supported in container step group");
+    try {
+      ContainerStepGroupValidator.validateContainerStepGroup(stepGroupElementConfig);
+    } catch (Exception ex) {
+      fail("Container step group should support nested non container step group");
+    }
   }
 }

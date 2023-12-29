@@ -10,7 +10,6 @@ package io.harness.plancreator.steps;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
-import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.ExpressionMode;
@@ -18,20 +17,18 @@ import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.plugin.ContainerCommandUnitConstants;
 
-import com.google.protobuf.ByteString;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(HarnessTeam.PIPELINE)
 public class InitContainerV2StepPlanCreator {
-  public PlanNode createPlanForField(
-      String runStepNodeId, StepParameters stepElementParameters, ByteString advisorParams, String stepType) {
+  public PlanNode createPlanForField(String runStepNodeId, StepParameters stepElementParameters,
+      AdviserObtainment adviserObtainment, String stepType) {
     return PlanNode.builder()
         .uuid(runStepNodeId)
         .name(ContainerCommandUnitConstants.InitContainer)
@@ -43,11 +40,7 @@ public class InitContainerV2StepPlanCreator {
             FacilitatorObtainment.newBuilder()
                 .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
                 .build())
-        .adviserObtainment(
-            AdviserObtainment.newBuilder()
-                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-                .setParameters(advisorParams)
-                .build())
+        .adviserObtainment(adviserObtainment)
         .skipGraphType(SkipType.NOOP)
         .skipExpressionChain(false)
         .expressionMode(ExpressionMode.RETURN_ORIGINAL_EXPRESSION_IF_UNRESOLVED)

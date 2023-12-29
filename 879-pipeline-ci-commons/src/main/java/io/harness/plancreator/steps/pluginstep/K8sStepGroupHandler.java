@@ -8,6 +8,9 @@
 package io.harness.plancreator.steps;
 
 import io.harness.plancreator.execution.StepsExecutionConfig;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -38,10 +41,20 @@ public class K8sStepGroupHandler implements StepGroupInfraHandler {
             .build();
     String initNodeId = "init-" + ctx.getCurrentField().getNode().getUuid();
 
-    String nextNodeId = stepsField.getNode().asArray().get(0).getField("step").getUuid();
-    ByteString advisorParametersInitStep = ByteString.copyFrom(
-        kryoSerializer.asBytes(OnSuccessAdviserParameters.builder().nextNodeId(nextNodeId).build()));
     return InitContainerV2StepPlanCreator.createPlanForField(
-        initNodeId, initContainerV2StepInfo, advisorParametersInitStep, "InitializeContainer");
+        initNodeId, initContainerV2StepInfo, getAdviserObtainment(stepsField), "InitializeContainer");
+  }
+
+  private AdviserObtainment getAdviserObtainment(YamlField stepsField) {
+    YamlField siblingField = GenericPlanCreatorUtils.obtainNextSiblingField(stepsField);
+    if (siblingField != null && siblingField.getNode().getUuid() != null) {
+      return AdviserObtainment.newBuilder()
+          .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+              OnSuccessAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
+          .build();
+    }
+
+    return null;
   }
 }
