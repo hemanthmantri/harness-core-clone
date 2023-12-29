@@ -9,7 +9,9 @@ package io.harness.idp.scorecard.datasourcelocations.locations.scm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.idp.common.Constants.ERROR_MESSAGE_KEY;
+import static io.harness.idp.scorecard.datapoints.constants.DataPoints.AUTHORIZATION_HEADER_ERROR;
 import static io.harness.idp.scorecard.datapoints.constants.DataPoints.SOURCE_LOCATION_ANNOTATION_ERROR;
+import static io.harness.idp.scorecard.datasourcelocations.constants.DataSourceLocations.AUTHORIZATION_HEADER;
 import static io.harness.idp.scorecard.datasourcelocations.constants.DataSourceLocations.REPOSITORY_NAME;
 import static io.harness.idp.scorecard.datasourcelocations.constants.DataSourceLocations.REPOSITORY_OWNER;
 import static io.harness.idp.scorecard.datasourcelocations.constants.DataSourceLocations.REPO_SCM;
@@ -30,6 +32,11 @@ public abstract class ScmBaseDslLoop extends DataSourceLocationLoop {
         || isEmpty(possibleReplaceableRequestBodyPairs.get(REPOSITORY_OWNER))
         || isEmpty(possibleReplaceableRequestBodyPairs.get(REPOSITORY_NAME))) {
       data.put(dataFetchDTO.getRuleIdentifier(), Map.of(ERROR_MESSAGE_KEY, SOURCE_LOCATION_ANNOTATION_ERROR));
+      return false;
+    }
+
+    if (isEmpty(replaceableHeaders.get(AUTHORIZATION_HEADER))) {
+      data.put(dataFetchDTO.getRuleIdentifier(), Map.of(ERROR_MESSAGE_KEY, AUTHORIZATION_HEADER_ERROR));
       return false;
     }
     return true;
