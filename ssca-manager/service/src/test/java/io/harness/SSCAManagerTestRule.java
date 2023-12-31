@@ -208,6 +208,13 @@ public class SSCAManagerTestRule implements InjectorRuleMixin, MethodRule, Mongo
       public ElasticSearchConfig elasticSearchConfig() {
         return ElasticSearchConfig.builder().url("url").apiKey("apiKey").indexName("harness-ssca").build();
       }
+
+      @Provides
+      @Singleton
+      @Named("sscaManagerServiceSecret")
+      public String sscaManagerServiceSecret() {
+        return "sscaManagerServiceSecret";
+      }
     });
 
     modules.add(new AbstractModule() {

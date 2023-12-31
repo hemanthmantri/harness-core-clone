@@ -14,8 +14,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface TicketServiceRestClientService {
-  TicketResponseDto createTicket(String accountId, String orgId, String projectId, TicketRequestDto ticketRequestDto);
+  TicketResponseDto createTicket(
+      String authToken, String accountId, String orgId, String projectId, TicketRequestDto ticketRequestDto);
 
-  List<TicketResponseDto> getTickets(
-      String module, Map<String, List<String>> identifiers, String accountId, String orgId, String projectId);
+  List<TicketResponseDto> getTickets(String authToken, String module, Map<String, List<String>> identifiers,
+      String accountId, String orgId, String projectId);
 }

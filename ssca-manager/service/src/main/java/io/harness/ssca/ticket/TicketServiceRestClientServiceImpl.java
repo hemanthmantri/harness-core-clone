@@ -21,14 +21,15 @@ public class TicketServiceRestClientServiceImpl implements TicketServiceRestClie
 
   @Override
   public TicketResponseDto createTicket(
-      String accountId, String orgId, String projectId, TicketRequestDto ticketRequestDto) {
-    return requestExecutor.execute(ticketServiceRestClient.createTicket(accountId, orgId, projectId, ticketRequestDto));
+      String authToken, String accountId, String orgId, String projectId, TicketRequestDto ticketRequestDto) {
+    return requestExecutor.execute(
+        ticketServiceRestClient.createTicket(authToken, accountId, orgId, projectId, ticketRequestDto));
   }
 
   @Override
-  public List<TicketResponseDto> getTickets(
-      String module, Map<String, List<String>> identifiers, String accountId, String orgId, String projectId) {
+  public List<TicketResponseDto> getTickets(String authToken, String module, Map<String, List<String>> identifiers,
+      String accountId, String orgId, String projectId) {
     return requestExecutor.execute(
-        ticketServiceRestClient.getTickets(module, identifiers, accountId, orgId, projectId));
+        ticketServiceRestClient.getTickets(authToken, module, identifiers, accountId, orgId, projectId));
   }
 }
