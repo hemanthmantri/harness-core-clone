@@ -20,6 +20,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.notification.ModuleInfo.ModuleInfoBuilder;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import com.google.common.collect.Lists;
@@ -58,7 +59,7 @@ public class WebhookNotificationServiceImpl implements WebhookNotificationServic
 
   private ModuleInfo getModuleInfoForPipelineLevel(
       PipelineExecutionSummaryEntity executionSummaryEntity, PipelineEventType eventType, boolean shouldAddInputYaml) {
-    ModuleInfo.ModuleInfoBuilder moduleInfo = ModuleInfo.builder();
+    ModuleInfoBuilder moduleInfo = ModuleInfo.builder();
     Map<String, Object> moduleInfoMap = executionSummaryEntity.getModuleInfo().get("cd");
     if (shouldAddInputYaml && eventType == PipelineEventType.PIPELINE_START) {
       PlanExecutionMetadata planExecutionMetadata =
@@ -95,7 +96,7 @@ public class WebhookNotificationServiceImpl implements WebhookNotificationServic
     Optional<Level> strategyLevel = AmbianceUtils.getStrategyLevelFromAmbiance(ambiance);
     String stageIdentifier =
         strategyLevel.isEmpty() ? currentLevel.getIdentifier() : strategyLevel.get().getIdentifier();
-    ModuleInfo.ModuleInfoBuilder moduleInfoBuilder = ModuleInfo.builder();
+    ModuleInfoBuilder moduleInfoBuilder = ModuleInfo.builder();
     if (shouldAddInputYaml && pipelineEventType == PipelineEventType.STAGE_START) {
       PlanExecutionMetadata planExecutionMetadata =
           planExecutionMetadataService.getWithFieldsIncludedFromSecondary(executionSummaryEntity.getPlanExecutionId(),
