@@ -30,6 +30,9 @@ import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.runtime.GcpClientRuntimeException;
 import io.harness.exception.runtime.SecretNotFoundRuntimeException;
+import io.harness.oidc.exception.OidcException;
+import io.harness.oidc.gcp.constants.GcpOidcServiceAccountAccessTokenResponse;
+import io.harness.oidc.gcp.delegate.GcpOidcTokenExchangeDetailsForDelegate;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
@@ -61,6 +64,9 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
     } catch (IOException e) {
       log.error("Could not get basic auth header", e);
       throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
+    } catch (OidcException e) {
+      log.error("Invalid OIDC token received");
+      throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
     }
     builds = gcrService.getBuilds(
         gcrInternalConfig, attributesRequest.getImagePath(), GcrApiService.MAX_NO_OF_TAGS_PER_IMAGE);
@@ -82,6 +88,9 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
     } catch (IOException e) {
       log.error("Could not get basic auth header", e);
       throw new GcpClientRuntimeException(e.getMessage());
+    } catch (OidcException e) {
+      log.error("Invalid OIDC token received");
+      throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
     }
     if (EmptyPredicate.isNotEmpty(attributesRequest.getTagRegex())) {
       lastSuccessfulBuild = gcrService.getLastSuccessfulBuildFromRegex(
@@ -102,6 +111,9 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
     } catch (IOException e) {
       log.error("Could not get basic auth header", e);
       throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
+    } catch (OidcException e) {
+      log.error("Invalid OIDC token received");
+      throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
     }
     boolean validateCredentials = gcrService.validateCredentials(gcrInternalConfig, attributesRequest.getImagePath());
     return ArtifactTaskExecutionResponse.builder().isArtifactServerValid(validateCredentials).build();
@@ -114,6 +126,9 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
       gcrInternalConfig = getGcrInternalConfig(attributesRequest);
     } catch (IOException e) {
       log.error("Could not get basic auth header", e);
+      throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
+    } catch (OidcException e) {
+      log.error("Invalid OIDC token received");
       throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
     }
     boolean verifyImageName = gcrService.verifyImageName(gcrInternalConfig, attributesRequest.getImagePath());
@@ -137,6 +152,23 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
       GcpConnectorCredentialDTO credential = attributesRequest.getGcpConnectorDTO().getCredential();
       if (credential.getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
         isUseDelegate = true;
+      } else if (credential.getGcpCredentialType() == GcpCredentialType.OIDC_AUTHENTICATION) {
+        // Exchange for SA access token
+        GcpOidcTokenExchangeDetailsForDelegate gcpOidcTokenExchangeDetailsForDelegate =
+            attributesRequest.getGcpOidcTokenExchangeDetailsForDelegate();
+        try {
+          GcpOidcServiceAccountAccessTokenResponse oidcServiceAccountAccessTokenResponse =
+              gcpOidcTokenExchangeDetailsForDelegate.exchangeOidcServiceAccountAccessToken();
+
+          if (oidcServiceAccountAccessTokenResponse.getExpireTime() > 0) {
+            return GcrRequestResponseMapper.toGcrInternalConfig(
+                attributesRequest, oidcServiceAccountAccessTokenResponse.getAccessToken());
+          } else {
+            throw new OidcException("Invalid Service Account Access Token received");
+          }
+        } catch (OidcException ex) {
+          throw ex;
+        }
       } else {
         SecretRefData secretRef = ((GcpManualDetailsDTO) credential.getConfig()).getSecretKeyRef();
         if (secretRef.getDecryptedValue() == null) {

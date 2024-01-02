@@ -15,6 +15,7 @@ java_library(
         "//980-commons/src/main/java/io/harness/network:module",
         "//oidc-core/src/main/java/io/harness/oidc/exception:module",
         "//oidc-core/src/main/java/io/harness/oidc/gcp/constants:module",
+        "@maven//:com_google_cloud_google_cloud_iamcredentials",
         "@maven//:com_google_inject_guice",
         "@maven//:com_intellij_annotations",
         "@maven//:com_squareup_okhttp3_okhttp",

@@ -14,9 +14,13 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @OwnedBy(HarnessTeam.PL)
+@Getter
+@AllArgsConstructor
 public class GcpOidcServiceAccountAccessTokenResponse {
-  @JsonProperty(SA_ACCESS_TOKEN) private String accessToken;
-  @JsonProperty(SA_ACCESS_TOKEN_EXPIRY) private String expireTime;
+  @JsonProperty(SA_ACCESS_TOKEN) private final String accessToken;
+  @JsonProperty(SA_ACCESS_TOKEN_EXPIRY) private final Long expireTime;
 }

@@ -602,7 +602,7 @@ public class ArtifactConfigToDelegateReqMapper {
     return ArtifactDelegateRequestUtils.getGcrDelegateRequest(
         (String) gcrArtifactConfig.getImagePath().fetchFinalValue(), tag, tagRegex, null,
         (String) gcrArtifactConfig.getRegistryHostname().fetchFinalValue(), connectorRef, gcpConnectorDTO,
-        encryptedDataDetails, ArtifactSourceType.GCR);
+        encryptedDataDetails, gcpOidcTokenExchangeDetailsForDelegate, ArtifactSourceType.GCR);
   }
   public GarDelegateRequest getGarDelegateRequest(GoogleArtifactRegistryConfig garArtifactConfig,
       GcpConnectorDTO gcpConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails, String connectorRef,

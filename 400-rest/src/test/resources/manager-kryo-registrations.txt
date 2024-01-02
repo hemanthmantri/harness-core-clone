@@ -3360,3 +3360,5 @@
 20002014:io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfigType
 20002015:io.harness.delegate.beans.connector.scm.github.GithubAnonymousDTO
 20002016:io.harness.k8s.trafficrouting.TrafficRoutingInfoDTO
+20002017:io.harness.oidc.accesstoken.OidcWorkloadAccessTokenRequest
+20002018:io.harness.oidc.gcp.delegate.GcpOidcTokenExchangeDetailsForDelegate

@@ -12,9 +12,17 @@ import io.harness.oidc.exception.OidcException;
 import io.harness.oidc.gcp.constants.GcpOidcServiceAccountAccessTokenRequest;
 import io.harness.oidc.gcp.constants.GcpOidcServiceAccountAccessTokenResponse;
 
-// import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequestOrBuilder;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
+import com.google.cloud.iam.credentials.v1.GenerateAccessTokenResponse;
+import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
+import com.google.cloud.iam.credentials.v1.IamCredentialsSettings;
 import com.google.inject.Singleton;
+import com.google.protobuf.Duration;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -36,7 +44,7 @@ public class GcpOidcAccessTokenUtility {
    */
   public static GcpOidcServiceAccountAccessTokenResponse getOidcServiceAccountAccessToken(
       String gcpOidcIamSaApiEndpoint, GcpOidcServiceAccountAccessTokenRequest gcpOidcServiceAccountAccessTokenRequest,
-      String workloadAccessToken) {
+      String workloadAccessToken, String serviceAccountEmail) {
     // Create an OkHttpClient with any desired configurations (e.g., timeouts, interceptors)
     OkHttpClient httpClient = new OkHttpClient.Builder()
                                   .connectionPool(Http.connectionPool)
@@ -58,7 +66,7 @@ public class GcpOidcAccessTokenUtility {
     // Make the POST request and handle the response
 
     Call<GcpOidcServiceAccountAccessTokenResponse> call = gcpOidcAccessTokenIamSaAPI.exchangeServiceAccountAccessToken(
-        "harness-pl-automation@pl-play.iam.gserviceaccount.com", gcpOidcServiceAccountAccessTokenRequest);
+        serviceAccountEmail, gcpOidcServiceAccountAccessTokenRequest);
 
     try {
       Response<GcpOidcServiceAccountAccessTokenResponse> response = call.execute();
@@ -75,6 +83,37 @@ public class GcpOidcAccessTokenUtility {
       String errorMsg = String.format("Exception encountered while exchanging OIDC Service Account Access Token %s", e);
       log.error(errorMsg);
       throw new OidcException(errorMsg);
+    }
+  }
+
+  public static GenerateAccessTokenResponse getOidcServiceAccountAccessTokenV2(
+      String workloadAccessToken, String serviceAccountEmail) throws IOException {
+    // Scopes for the access token
+    String scope = "https://www.googleapis.com/auth/cloud-platform";
+
+    // Create AccessToken from the OAuth 2.0 federated access token
+    GoogleCredentials credentials = GoogleCredentials.create(new AccessToken(workloadAccessToken, null));
+
+    // Create IAMCredentialsClient
+    IamCredentialsClient iamCredentialsClient =
+        IamCredentialsClient.create(IamCredentialsSettings.newBuilder()
+                                        .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                                        .build());
+
+    try {
+      // Generate access token
+      GenerateAccessTokenResponse response = iamCredentialsClient.generateAccessToken(
+          GenerateAccessTokenRequest.newBuilder()
+              .setName("projects/-/serviceAccounts/" + serviceAccountEmail)
+              .addAllScope(Collections.singletonList(scope))
+              .setLifetime(Duration.newBuilder().setSeconds(3600)) // Set token lifetime in seconds
+              .build());
+
+      return response;
+
+    } finally {
+      // Close the IAMCredentialsClient
+      iamCredentialsClient.close();
     }
   }
 }

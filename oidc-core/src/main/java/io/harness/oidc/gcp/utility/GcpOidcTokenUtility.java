@@ -141,8 +141,8 @@ public class GcpOidcTokenUtility {
             .scope(new ArrayList<>(Arrays.asList("https://www.googleapis.com/auth/cloud-platform")))
             .build();
     try {
-      return getOidcServiceAccountAccessToken(
-          oidcIamSaTokenExchangeEndpoint, gcpOidcServiceAccountAccessTokenRequest, accessToken);
+      return getOidcServiceAccountAccessToken(oidcIamSaTokenExchangeEndpoint, gcpOidcServiceAccountAccessTokenRequest,
+          accessToken, gcpOidcAccessTokenRequestDTO.getGcpOidcTokenRequestDTO().getServiceAccountEmail());
     } catch (OidcException ex) {
       log.error("OIDC error received while exchanging for access token {} ", ex);
       return null;

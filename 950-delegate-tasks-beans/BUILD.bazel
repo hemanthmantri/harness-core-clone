@@ -118,6 +118,7 @@ java_library(
         "//980-commons/src/main/java/software/wings/jersey:module",
         "//980-commons/src/main/java/software/wings/stencils:module",
         "//999-annotations/src/main/java/io/harness/annotations/dev:module",
+        "//oidc-core/src/main/java/io/harness/oidc/gcp/delegate:module",
         "//product/ci/scm/proto:ciscm_java_proto",
         "@maven//:com_amazonaws_aws_java_sdk_cloudformation",
         "@maven//:com_amazonaws_aws_java_sdk_core",

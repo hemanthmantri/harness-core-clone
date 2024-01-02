@@ -8,7 +8,8 @@
 package io.harness.oidc.gcp.delegate;
 
 import static io.harness.oidc.accesstoken.OidcAccessTokenUtility.getOidcWorkloadAccessToken;
-import static io.harness.oidc.gcp.accesstoken.GcpOidcAccessTokenUtility.getOidcServiceAccountAccessToken;
+// import static io.harness.oidc.gcp.accesstoken.GcpOidcAccessTokenUtility.getOidcServiceAccountAccessToken;
+import static io.harness.oidc.gcp.accesstoken.GcpOidcAccessTokenUtility.getOidcServiceAccountAccessTokenV2;
 import static io.harness.oidc.gcp.constants.GcpOidcIdTokenConstants.BEARER_TOKEN_TYPE;
 
 import io.harness.oidc.accesstoken.OidcWorkloadAccessTokenRequest;
@@ -17,6 +18,9 @@ import io.harness.oidc.exception.OidcException;
 import io.harness.oidc.gcp.constants.GcpOidcServiceAccountAccessTokenRequest;
 import io.harness.oidc.gcp.constants.GcpOidcServiceAccountAccessTokenResponse;
 
+import com.google.cloud.iam.credentials.v1.GenerateAccessTokenResponse;
+import java.io.IOException;
+import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import lombok.AllArgsConstructor;
@@ -32,6 +36,8 @@ public class GcpOidcTokenExchangeDetailsForDelegate {
   private String oidcIdToken; // GCP OIDC ID Token for OIDC credential type
   private String oidcAccessTokenStsEndpoint; // GCP STS Endpoint
   private String oidcAccessTokenIamSaEndpoint; // GCP IAM Credentials Endpoint
+
+  private String gcpServiceAccountEmail; // GCP Service Account Email
   private OidcWorkloadAccessTokenRequest
       oidcWorkloadAccessTokenRequestStructure; // Workload Access Token Request Structure
 
@@ -52,8 +58,17 @@ public class GcpOidcTokenExchangeDetailsForDelegate {
             .build();
 
     try {
+      /*
       return getOidcServiceAccountAccessToken(oidcAccessTokenIamSaEndpoint, gcpOidcServiceAccountAccessTokenRequest,
-          oidcWorkloadAccessTokenResponse.getAccess_token());
+          oidcWorkloadAccessTokenResponse.getAccess_token()); */
+      GenerateAccessTokenResponse generateAccessTokenResponse =
+          getOidcServiceAccountAccessTokenV2(oidcWorkloadAccessTokenResponse.getAccess_token(), gcpServiceAccountEmail);
+      return new GcpOidcServiceAccountAccessTokenResponse(
+          generateAccessTokenResponse.getAccessToken(), generateAccessTokenResponse.getExpireTime().getSeconds());
+    } catch (IOException ex) {
+      String exceptionMsg =
+          String.format("Unable to exchange for OIDC Access Token for GCP Service Account - %s " + ex);
+      throw new OidcException(exceptionMsg);
     } catch (OidcException ex) {
       throw ex;
     }

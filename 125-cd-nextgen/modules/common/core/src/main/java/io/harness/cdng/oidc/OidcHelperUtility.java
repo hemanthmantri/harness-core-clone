@@ -61,6 +61,7 @@ public class OidcHelperUtility {
         .oidcIdToken(oidcIdToken)
         .oidcAccessTokenStsEndpoint(gcpOidcTokenUtility.getOidcAccessTokenStsEndpoint())
         .oidcAccessTokenIamSaEndpoint(gcpOidcTokenUtility.getOidcAccessTokenIamEndpoint(gcpOidcTokenRequestDTO))
+        .gcpServiceAccountEmail(gcpOidcDetailsDTO.getServiceAccountEmail())
         .oidcWorkloadAccessTokenRequestStructure(oidcWorkloadAccessTokenRequest)
         .build();
   }

@@ -49,6 +49,7 @@ import io.harness.delegate.task.artifacts.googlecloudstorage.GoogleCloudStorageA
 import io.harness.delegate.task.artifacts.jenkins.JenkinsArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.nexus.NexusArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.s3.S3ArtifactDelegateRequest;
+import io.harness.oidc.gcp.delegate.GcpOidcTokenExchangeDetailsForDelegate;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -68,7 +69,8 @@ public class ArtifactDelegateRequestUtils {
 
   public GcrArtifactDelegateRequest getGcrDelegateRequest(String imagePath, String tag, String tagRegex,
       List<String> tagsList, String registryHostname, String connectorRef, GcpConnectorDTO gcpConnectorDTO,
-      List<EncryptedDataDetail> encryptedDataDetails, ArtifactSourceType sourceType) {
+      List<EncryptedDataDetail> encryptedDataDetails,
+      GcpOidcTokenExchangeDetailsForDelegate gcpOidcTokenExchangeDetailsForDelegate, ArtifactSourceType sourceType) {
     return GcrArtifactDelegateRequest.builder()
         .imagePath(trim(imagePath))
         .tag(trim(tag))
@@ -78,6 +80,7 @@ public class ArtifactDelegateRequestUtils {
         .connectorRef(connectorRef)
         .gcpConnectorDTO(gcpConnectorDTO)
         .encryptedDataDetails(encryptedDataDetails)
+        .gcpOidcTokenExchangeDetailsForDelegate(gcpOidcTokenExchangeDetailsForDelegate)
         .sourceType(sourceType)
         .build();
   }

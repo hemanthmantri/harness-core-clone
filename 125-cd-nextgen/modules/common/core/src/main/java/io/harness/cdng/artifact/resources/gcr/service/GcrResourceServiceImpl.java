@@ -101,8 +101,9 @@ public class GcrResourceServiceImpl implements GcrResourceService {
     // Get the OIDC credentials if credential type is OIDC.
     GcpOidcTokenExchangeDetailsForDelegate gcpOidcTokenExchangeDetailsForDelegate =
         oidcHelperUtility.getOidcTokenExchangeDetailsForDelegate(gcrConnectorRef.getAccountIdentifier(), connector);
-    GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(
-        imagePath, null, null, null, registryHostname, null, connector, encryptionDetails, ArtifactSourceType.GCR);
+    GcrArtifactDelegateRequest gcrRequest =
+        ArtifactDelegateRequestUtils.getGcrDelegateRequest(imagePath, null, null, null, registryHostname, null,
+            connector, encryptionDetails, gcpOidcTokenExchangeDetailsForDelegate, ArtifactSourceType.GCR);
     try {
       ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
           gcrRequest, ArtifactTaskType.GET_BUILDS, baseNGAccess, "Gcr Get Builds task failure due to error");
@@ -130,7 +131,7 @@ public class GcrResourceServiceImpl implements GcrResourceService {
         oidcHelperUtility.getOidcTokenExchangeDetailsForDelegate(gcrConnectorRef.getAccountIdentifier(), connector);
     GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(imagePath,
         gcrRequestDTO.getTag(), gcrRequestDTO.getTagRegex(), null, gcrRequestDTO.getRegistryHostname(), null, connector,
-        encryptionDetails, ArtifactSourceType.GCR);
+        encryptionDetails, gcpOidcTokenExchangeDetailsForDelegate, ArtifactSourceType.GCR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(gcrRequest, ArtifactTaskType.GET_LAST_SUCCESSFUL_BUILD, baseNGAccess,
             "Gcr Get last successful build task failure due to error");
@@ -151,8 +152,9 @@ public class GcrResourceServiceImpl implements GcrResourceService {
     // Get the OIDC credentials if credential type is OIDC.
     GcpOidcTokenExchangeDetailsForDelegate gcpOidcTokenExchangeDetailsForDelegate =
         oidcHelperUtility.getOidcTokenExchangeDetailsForDelegate(gcrConnectorRef.getAccountIdentifier(), connector);
-    GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(
-        imagePath, null, null, null, registryHostname, null, connector, encryptionDetails, ArtifactSourceType.GCR);
+    GcrArtifactDelegateRequest gcrRequest =
+        ArtifactDelegateRequestUtils.getGcrDelegateRequest(imagePath, null, null, null, registryHostname, null,
+            connector, encryptionDetails, gcpOidcTokenExchangeDetailsForDelegate, ArtifactSourceType.GCR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(gcrRequest, ArtifactTaskType.VALIDATE_ARTIFACT_SERVER, baseNGAccess,
             "Gcr validate artifact server task failure due to error");
@@ -169,8 +171,9 @@ public class GcrResourceServiceImpl implements GcrResourceService {
     // Get the OIDC credentials if credential type is OIDC.
     GcpOidcTokenExchangeDetailsForDelegate gcpOidcTokenExchangeDetailsForDelegate =
         oidcHelperUtility.getOidcTokenExchangeDetailsForDelegate(gcrConnectorRef.getAccountIdentifier(), connector);
-    GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(
-        imagePath, null, null, null, registryHostname, null, connector, encryptionDetails, ArtifactSourceType.GCR);
+    GcrArtifactDelegateRequest gcrRequest =
+        ArtifactDelegateRequestUtils.getGcrDelegateRequest(imagePath, null, null, null, registryHostname, null,
+            connector, encryptionDetails, gcpOidcTokenExchangeDetailsForDelegate, ArtifactSourceType.GCR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(gcrRequest, ArtifactTaskType.VALIDATE_ARTIFACT_SOURCE, baseNGAccess,
             "Gcr validate artifact source task failure due to error");
