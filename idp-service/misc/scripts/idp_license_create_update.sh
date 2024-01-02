@@ -103,7 +103,7 @@ do
         RESULT_HTTP_CODE=$(curl --write-out %{http_code} -s --output /dev/null -H "cache-control: no-cache" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer ${BEARER_AUTHORIZATION}" -X POST --data "${POST_DATA}" "https://app.harness.io/gateway/api/account/${ACCOUNT_IDENTIFIER}/ng/license?routingId=${ACCOUNT_IDENTIFIER}")
 
         if [[ "$RESULT_HTTP_CODE" -ne 200 ]] ; then
-            echo "Error in creating license for account $ACCOUNT_IDENTIFIER with data ${POST_DATA}"
+            echo "Error in creating license for account $ACCOUNT_IDENTIFIER with data ${POST_DATA} | Failed with http code ${RESULT_HTTP_CODE}"
             exit 1
         else
             echo "Created license for account $ACCOUNT_IDENTIFIER with data ${POST_DATA}"
@@ -130,7 +130,7 @@ do
         RESULT_HTTP_CODE=$(curl --write-out %{http_code} -s --output /dev/null -H "cache-control: no-cache" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer ${BEARER_AUTHORIZATION}" -X PUT --data "${PUT_DATA}" "https://app.harness.io/gateway/api/account/${ACCOUNT_IDENTIFIER}/ng/license?routingId=${ACCOUNT_IDENTIFIER}")
 
         if [[ "$RESULT_HTTP_CODE" -ne 200 ]] ; then
-            echo "Error in updating license for account $ACCOUNT_IDENTIFIER with data ${PUT_DATA}"
+            echo "Error in updating license for account $ACCOUNT_IDENTIFIER with data ${PUT_DATA} | Failed with http code ${RESULT_HTTP_CODE}"
             exit 1
         else
             echo "Updated license for account $ACCOUNT_IDENTIFIER with data ${PUT_DATA}"
