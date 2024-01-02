@@ -66,6 +66,7 @@ import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.migrations.MigrationModule;
 import io.harness.module.DelegateServiceModule;
+import io.harness.module.TaskResponseEventModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
@@ -585,6 +586,7 @@ public class NGMigrationApplication extends Application<MigratorConfig> {
         return configuration.getGrpcServerConfig();
       }
     });
+    modules.add(new TaskResponseEventModule(configuration.getDelegateServiceRedisConfig()));
     modules.add(new GrpcServiceConfigurationModule(configuration.getGrpcServerConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getLogStreamingServiceConfig().getServiceToken()));
