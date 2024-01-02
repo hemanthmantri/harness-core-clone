@@ -506,7 +506,7 @@ public class PipelineMigrationService extends NgMigrationService {
         ApprovalStageConfig.builder()
             .execution(ExecutionElementConfig.builder().steps(Collections.singletonList(stepWrapper)).build())
             .build());
-    approvalStageNode.setFailureStrategies(WorkflowHandler.getDefaultFailureStrategy());
+    approvalStageNode.setFailureStrategies(WorkflowHandler.getDefaultFailureStrategyParameter());
     String whenCondition = getWhenCondition(migrationContext, stageElement, stageIdentifier, functors);
     if (!Boolean.TRUE.toString().equals(whenCondition)) {
       approvalStageNode.setWhen(
@@ -1013,7 +1013,7 @@ public class PipelineMigrationService extends NgMigrationService {
         stageElement.getName(), migrationContext.getInputDTO().getIdentifierCaseFormat()));
     stageNode.setDescription(ParameterField.createValueField(""));
     stageNode.setPipelineStageConfig(pipelineStageConfig);
-    stageNode.setFailureStrategies(WorkflowHandler.getDefaultFailureStrategy());
+    stageNode.setFailureStrategies(WorkflowHandler.getDefaultFailureStrategyParameter());
     String whenCondition = getWhenCondition(migrationContext, stageElement, stageIdentifier, functors);
     if (!Boolean.TRUE.toString().equals(whenCondition)) {
       stageNode.setWhen(ParameterField.createValueField(StageWhenCondition.builder()

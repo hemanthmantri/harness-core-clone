@@ -795,24 +795,27 @@ public abstract class WorkflowHandler {
         context, null, inferServiceDefinitionType(context), steps, rollbackSteps, context.getIdentifierCaseFormat());
   }
 
-  public static ParameterField<List<FailureStrategyConfig>> getDefaultFailureStrategy() {
-    FailureStrategyConfig failureStrategyConfig =
-        FailureStrategyConfig.builder()
-            .onFailure(OnFailureConfig.builder()
-                           .errors(Lists.newArrayList(NGFailureType.ALL_ERRORS))
-                           .action(AbortFailureActionConfig.builder().build())
-                           .build())
-            .build();
-    return ParameterField.createValueField(Collections.singletonList(failureStrategyConfig));
+  public static FailureStrategyConfig getDefaultFailureStrategy() {
+    return FailureStrategyConfig.builder()
+        .onFailure(OnFailureConfig.builder()
+                       .errors(Lists.newArrayList(NGFailureType.ALL_ERRORS))
+                       .action(AbortFailureActionConfig.builder().build())
+                       .build())
+        .build();
   }
 
-  public ParameterField<List<FailureStrategyConfig>> getDefaultFailureStrategy(WorkflowMigrationContext context) {
+  public static ParameterField<List<FailureStrategyConfig>> getDefaultFailureStrategyParameter() {
+    return ParameterField.createValueField(Collections.singletonList(getDefaultFailureStrategy()));
+  }
+
+  public ParameterField<List<FailureStrategyConfig>> getDefaultFailureStrategyParameter(
+      WorkflowMigrationContext context) {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) context.getWorkflow().getOrchestrationWorkflow();
     List<FailureStrategy> failureStrategies = orchestrationWorkflow.getFailureStrategies();
 
     if (EmptyPredicate.isEmpty(failureStrategies)) {
-      return getDefaultFailureStrategy();
+      return getDefaultFailureStrategyParameter();
     }
 
     List<FailureStrategyConfig> failureStrategyConfigs = failureStrategies.stream()
@@ -820,8 +823,16 @@ public abstract class WorkflowHandler {
                                                              .filter(Objects::nonNull)
                                                              .collect(Collectors.toList());
 
+    Optional<FailureStrategyConfig> allErrorsFailureStrategy =
+        failureStrategyConfigs.stream()
+            .filter(config -> config.getOnFailure().getErrors().contains(NGFailureType.ALL_ERRORS))
+            .findAny();
+    if (allErrorsFailureStrategy.isEmpty()) {
+      failureStrategyConfigs.add(getDefaultFailureStrategy());
+    }
+
     if (EmptyPredicate.isEmpty(failureStrategyConfigs)) {
-      return getDefaultFailureStrategy();
+      return getDefaultFailureStrategyParameter();
     }
 
     return ParameterField.createValueField(failureStrategyConfigs);
@@ -854,7 +865,7 @@ public abstract class WorkflowHandler {
         ImmutableMap.<String, Object>builder()
             .put("type", "Deployment")
             .put("spec", stageConfig)
-            .put("failureStrategies", getDefaultFailureStrategy(context))
+            .put("failureStrategies", getDefaultFailureStrategyParameter(context))
             .put("variables", getVariables(migrationContext, context.getWorkflow(), stageConfig, true))
             .put("when", getSkipCondition())
             .build();
@@ -901,7 +912,7 @@ public abstract class WorkflowHandler {
         ImmutableMap.<String, Object>builder()
             .put("type", "Custom")
             .put("spec", customStageConfig)
-            .put("failureStrategies", getDefaultFailureStrategy(context))
+            .put("failureStrategies", getDefaultFailureStrategyParameter(context))
             .put("variables", getVariables(migrationContext, workflow, customStageConfig, true))
             .put("when", getSkipCondition())
             .build();
@@ -934,7 +945,7 @@ public abstract class WorkflowHandler {
     customStageNode.setName(MigratorUtility.generateName(phase.getName()));
     customStageNode.setIdentifier(
         MigratorUtility.generateIdentifier(phase.getName(), context.getIdentifierCaseFormat()));
-    customStageNode.setFailureStrategies(getDefaultFailureStrategy(context));
+    customStageNode.setFailureStrategies(getDefaultFailureStrategyParameter(context));
     customStageNode.setCustomStageConfig(customStageConfig);
     return customStageNode;
   }
@@ -951,7 +962,7 @@ public abstract class WorkflowHandler {
     stageNode.setName(MigratorUtility.generateName(phase.getName()));
     stageNode.setIdentifier(MigratorUtility.generateIdentifier(phase.getName(), context.getIdentifierCaseFormat()));
     stageNode.setDeploymentStageConfig(stageConfig);
-    stageNode.setFailureStrategies(getDefaultFailureStrategy(context));
+    stageNode.setFailureStrategies(getDefaultFailureStrategyParameter(context));
     List<NGVariable> variables = new ArrayList<>();
     List<GraphNode> steps = MigratorUtility.getStepsFromPhases(Collections.singletonList(phase));
     for (GraphNode step : steps) {
@@ -1059,7 +1070,7 @@ public abstract class WorkflowHandler {
         ImmutableMap.<String, Object>builder()
             .put("type", "Deployment")
             .put("spec", stageConfig)
-            .put("failureStrategies", getDefaultFailureStrategy(context))
+            .put("failureStrategies", getDefaultFailureStrategyParameter(context))
             .put("variables", getVariables(migrationContext, context.getWorkflow(), stageConfig, true))
             .put("when", getSkipCondition())
             .build();
@@ -1125,7 +1136,7 @@ public abstract class WorkflowHandler {
       customStageNode.setIdentifier(
           MigratorUtility.generateIdentifier("Always Skipped", context.getIdentifierCaseFormat()));
       customStageNode.setCustomStageConfig(customStageConfig);
-      customStageNode.setFailureStrategies(getDefaultFailureStrategy(context));
+      customStageNode.setFailureStrategies(getDefaultFailureStrategyParameter(context));
       stages.add(customStageNode);
     }
 
