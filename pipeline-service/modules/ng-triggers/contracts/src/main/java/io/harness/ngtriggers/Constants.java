@@ -141,6 +141,8 @@ public interface Constants {
   String MANDATE_GITHUB_AUTHENTICATION_TRUE_VALUE = "true";
   String PIPELINE_INPUTS_VALIDATION_ERROR = "PipelineInputsErrorMetadataV2";
   String MANDATE_CUSTOM_WEBHOOK_AUTHORIZATION = "mandate_custom_webhook_authorization";
+  String MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS =
+      "mandate_pipeline_create_edit_permission_to_create_edit_triggers";
   String MANDATE_CUSTOM_WEBHOOK_TRUE_VALUE = "true";
   String ENABLE_NODE_EXECUTION_AUDIT_EVENTS = "enable_node_execution_audit_events";
   String ENABLE_NODE_EXECUTION_AUDIT_EVENTS_TRUE_VALUE = "true";

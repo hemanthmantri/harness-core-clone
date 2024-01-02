@@ -9,6 +9,7 @@ package io.harness.ngtriggers.resource;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.Constants.MANDATE_CUSTOM_WEBHOOK_AUTHORIZATION;
+import static io.harness.ngtriggers.Constants.MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.NAMAN;
@@ -100,6 +101,7 @@ public class NGTriggerResourceImplTest extends CategoryTest {
   @Mock NGSettingsClient settingsClient;
   @Mock PmsFeatureFlagService pmsFeatureFlagService;
   @Mock Call<ResponseDTO<SettingValueResponseDTO>> request;
+  @Mock Call<ResponseDTO<SettingValueResponseDTO>> request2;
   @Mock FilterService filterService;
   @InjectMocks NGTriggerResourceImpl ngTriggerResource;
   @Mock NGTriggerElementMapper ngTriggerElementMapper;
@@ -139,6 +141,13 @@ public class NGTriggerResourceImplTest extends CategoryTest {
     SettingValueResponseDTO settingValueResponseDTO =
         SettingValueResponseDTO.builder().value("true").valueType(SettingValueType.BOOLEAN).build();
     when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(settingValueResponseDTO)));
+
+    when(settingsClient.getSetting(MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS, ACCOUNT_ID,
+             ORG_IDENTIFIER, PROJ_IDENTIFIER))
+        .thenReturn(request2);
+    when(settingsClient.getSetting(MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS, "", "", ""))
+        .thenReturn(request2);
+    when(request2.execute()).thenReturn(Response.success(ResponseDTO.newResponse(settingValueResponseDTO)));
 
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "ng-trigger-github-pr-v2.yaml";
@@ -311,7 +320,7 @@ public class NGTriggerResourceImplTest extends CategoryTest {
   @Test
   @Owner(developers = SRIDHAR)
   @Category(UnitTests.class)
-  public void testCreateCheckAccess() {
+  public void testCreateCheckAccess() throws IOException {
     doReturn(ngTriggerEntity).when(ngTriggerService).create(any());
 
     TriggerDetails triggerDetails = TriggerDetails.builder().ngTriggerEntity(ngTriggerEntity).build();
@@ -330,6 +339,29 @@ public class NGTriggerResourceImplTest extends CategoryTest {
     verify(accessControlClient, times(1))
         .checkForAccessOrThrow(any(), any(), eq(PipelineRbacPermissions.PIPELINE_EXECUTE));
     assertThat(responseDTO).isEqualTo(ngTriggerResponseDTO);
+
+    SettingValueResponseDTO settingValueResponse =
+        SettingValueResponseDTO.builder().value("false").valueType(SettingValueType.BOOLEAN).build();
+    when(settingsClient.getSetting(MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS, ACCOUNT_ID,
+             ORG_IDENTIFIER, PROJ_IDENTIFIER))
+        .thenReturn(request2);
+    when(settingsClient.getSetting(MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS, "", "", ""))
+        .thenReturn(request2);
+    when(request2.execute()).thenReturn(Response.success(ResponseDTO.newResponse(settingValueResponse)));
+
+    responseDTO =
+        ngTriggerResource
+            .create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, ngTriggerYaml, true, false)
+            .getData();
+    verify(accessControlClient, times(1))
+        .checkForAccessOrThrow(any(), any(), eq(PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT));
+    verify(accessControlClient, times(2))
+        .checkForAccessOrThrow(any(), any(), eq(PipelineRbacPermissions.PIPELINE_EXECUTE));
+    assertThat(responseDTO).isEqualTo(ngTriggerResponseDTO);
+
+    SettingValueResponseDTO settingValueResponseTrue =
+        SettingValueResponseDTO.builder().value("true").valueType(SettingValueType.BOOLEAN).build();
+    when(request2.execute()).thenReturn(Response.success(ResponseDTO.newResponse(settingValueResponseTrue)));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -517,6 +549,29 @@ public class NGTriggerResourceImplTest extends CategoryTest {
         .checkForAccessOrThrow(any(), any(), eq(PipelineRbacPermissions.PIPELINE_EXECUTE));
 
     assertThat(responseDTO).isEqualTo(ngTriggerResponseDTO);
+
+    SettingValueResponseDTO settingValueResponse =
+        SettingValueResponseDTO.builder().value("false").valueType(SettingValueType.BOOLEAN).build();
+    when(settingsClient.getSetting(MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS, ACCOUNT_ID,
+             ORG_IDENTIFIER, PROJ_IDENTIFIER))
+        .thenReturn(request2);
+    when(settingsClient.getSetting(MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS, "", "", ""))
+        .thenReturn(request2);
+    when(request2.execute()).thenReturn(Response.success(ResponseDTO.newResponse(settingValueResponse)));
+
+    responseDTO = ngTriggerResource
+                      .update("0", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER,
+                          ngTriggerYaml, true)
+                      .getData();
+    verify(accessControlClient, times(1))
+        .checkForAccessOrThrow(any(), any(), eq(PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT));
+    verify(accessControlClient, times(2))
+        .checkForAccessOrThrow(any(), any(), eq(PipelineRbacPermissions.PIPELINE_EXECUTE));
+    assertThat(responseDTO).isEqualTo(ngTriggerResponseDTO);
+
+    SettingValueResponseDTO settingValueResponseTrue =
+        SettingValueResponseDTO.builder().value("true").valueType(SettingValueType.BOOLEAN).build();
+    when(request2.execute()).thenReturn(Response.success(ResponseDTO.newResponse(settingValueResponseTrue)));
   }
 
   @Test(expected = EntityNotFoundException.class)

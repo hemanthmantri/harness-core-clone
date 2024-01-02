@@ -8,6 +8,7 @@
 package io.harness.ngtriggers.resource;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.Constants.MANDATE_CUSTOM_WEBHOOK_AUTHORIZATION;
+import static io.harness.ngtriggers.Constants.MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -108,8 +109,11 @@ public class NGTriggerResourceImpl implements NGTriggerResource {
       @NotNull @OrgIdentifier String orgIdentifier, @NotNull @ProjectIdentifier String projectIdentifier,
       @NotNull @ResourceIdentifier String targetIdentifier, @NotNull String yaml, boolean ignoreError,
       boolean withServiceV2) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of("PIPELINE", targetIdentifier), PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT);
+    if (getMandatoryPipelineCreateEditPermissionToCreateEditTriggers(
+            accountIdentifier, orgIdentifier, projectIdentifier)) {
+      accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+          Resource.of("PIPELINE", targetIdentifier), PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT);
+    }
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of("PIPELINE", targetIdentifier), PipelineRbacPermissions.PIPELINE_EXECUTE);
@@ -153,8 +157,11 @@ public class NGTriggerResourceImpl implements NGTriggerResource {
       @NotNull @OrgIdentifier String orgIdentifier, @NotNull @ProjectIdentifier String projectIdentifier,
       @NotNull @ResourceIdentifier String targetIdentifier, String triggerIdentifier, @NotNull String yaml,
       boolean ignoreError) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of("PIPELINE", targetIdentifier), PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT);
+    if (getMandatoryPipelineCreateEditPermissionToCreateEditTriggers(
+            accountIdentifier, orgIdentifier, projectIdentifier)) {
+      accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+          Resource.of("PIPELINE", targetIdentifier), PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT);
+    }
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of("PIPELINE", targetIdentifier), PipelineRbacPermissions.PIPELINE_EXECUTE);
@@ -324,6 +331,16 @@ public class NGTriggerResourceImpl implements NGTriggerResource {
             "true");
 
     return mandatoryAuth;
+  }
+
+  private boolean getMandatoryPipelineCreateEditPermissionToCreateEditTriggers(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    return Objects.equals(
+        NGRestUtils
+            .getResponse(settingsClient.getSetting(MANDATE_PIPELINE_CREATE_EDIT_PERMISSION_TO_CREATE_EDIT_TRIGGERS,
+                accountId, orgIdentifier, projectIdentifier))
+            .getValue(),
+        "true");
   }
 
   public ResponseDTO<BulkTriggersResponseDTO> bulkToggleTriggers(@NotNull @AccountIdentifier String accountIdentifier,
