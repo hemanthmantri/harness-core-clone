@@ -8,6 +8,7 @@
 package io.harness.ssca.services;
 
 import static io.harness.rule.OwnerRule.ARPITJ;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.REETIKA;
 import static io.harness.rule.OwnerRule.VARSHA_LALWANI;
 
@@ -15,6 +16,7 @@ import static junit.framework.TestCase.assertEquals;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -49,6 +51,7 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -438,6 +441,28 @@ public class ArtifactServiceImplTest extends SSCAManagerTestBase {
     assertThat(aggregation.toString())
         .isEqualTo(
             "{ \"aggregate\" : \"__collection__\", \"pipeline\" : [{ \"$sort\" : { \"createdAt\" : -1}}, { \"$group\" : { \"_id\" : \"$orchestrationId\", \"document\" : { \"$first\" : \"$$ROOT\"}}}, { \"$unwind\" : \"$document\"}, { \"$match\" : { \"document.allowlistviolationcount\" : 0, \"document.denylistviolationcount\" : 0}}, { \"$project\" : { \"orchestrationid\" : \"$document.orchestrationid\"}}]}");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetLastGeneratedArtifactFromTime() {
+    ArtifactEntity artifact = builderFactory.getArtifactEntityBuilder().build();
+    Mockito
+        .when(artifactRepository.findOne(
+            any(), eq(Sort.by(Sort.Direction.DESC, ArtifactEntityKeys.createdOn)), eq(new ArrayList<>())))
+        .thenReturn(artifact);
+
+    Instant time = Instant.now();
+    ArtifactEntity artifactEntity = artifactService.getLastGeneratedArtifactFromTime(
+        artifact.getAccountId(), artifact.getOrgId(), artifact.getProjectId(), artifact.getArtifactId(), time);
+    assertThat(artifactEntity).isEqualTo(artifact);
+    ArgumentCaptor<Criteria> argumentCaptor = ArgumentCaptor.forClass(Criteria.class);
+    verify(artifactRepository, times(1))
+        .findOne(argumentCaptor.capture(), eq(Sort.by(Sort.Direction.DESC, ArtifactEntityKeys.createdOn)),
+            eq(new ArrayList<>()));
+    Criteria criteria = argumentCaptor.getValue();
+    assertThat(criteria.getCriteriaObject().size()).isEqualTo(5);
   }
 
   @Test

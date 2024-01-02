@@ -589,7 +589,8 @@ public class ArtifactServiceImpl implements ArtifactService {
                             .is(artifactId)
                             .and(ArtifactEntityKeys.createdOn)
                             .lt(time);
-    return artifactRepository.findOne(criteria);
+    return artifactRepository.findOne(
+        criteria, Sort.by(Direction.DESC, ArtifactEntityKeys.createdOn), new ArrayList<>());
   }
 
   private List<ArtifactListingResponse> getArtifactListingResponses(
