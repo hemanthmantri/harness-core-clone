@@ -66,6 +66,7 @@ public enum CIStepInfoType {
   NIKTO(CI_LITE_ENGINE, "Nikto"),
   NMAP(CI_LITE_ENGINE, "Nmap"),
   OPENVAS(CI_LITE_ENGINE, "Openvas"),
+  OSV_SCANNER(CI_LITE_ENGINE, "OsvScanner"),
   OWASP(CI_LITE_ENGINE, "Owasp"),
   PRISMA_CLOUD(CI_LITE_ENGINE, "PrismaCloud"),
   PROWLER(CI_LITE_ENGINE, "Prowler"),

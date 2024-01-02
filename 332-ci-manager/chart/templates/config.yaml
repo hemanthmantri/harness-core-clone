@@ -90,6 +90,7 @@ data:
   GRYPE_IMAGE: harness/grype-job-runner:latest
   NMAP_IMAGE: harness/nmap-job-runner:latest
   NIKTO_IMAGE: harness/nikto-job-runner:latest
+  OSV_SCANNER_IMAGE: harness/osv-job-runner:latest
   OWASP_IMAGE: harness/owasp-dependency-check-job-runner:latest
   SYNK_IMAGE: harness/snyk-job-runner:latest
   SONARQUBE_IMAGE: harness/sonarqube-agent-job-runner:latest

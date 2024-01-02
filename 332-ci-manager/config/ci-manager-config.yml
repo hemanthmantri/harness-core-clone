@@ -273,6 +273,8 @@ ciExecutionServiceConfig:
         image: harness/nikto-job-runner
       - product: metasploit_.*
         image: harness/sto-plugin
+      - product: osv_.*
+        image: harness/osv-job-runner
       - product: owasp_default
         image: harness/owasp-dependency-check-job-runner
       - product: snyk_default

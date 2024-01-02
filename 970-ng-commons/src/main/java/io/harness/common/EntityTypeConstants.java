@@ -118,6 +118,7 @@ public interface EntityTypeConstants {
   String NIKTO = "Nikto";
   String NMAP = "Nmap";
   String OPENVAS = "Openvas";
+  String OSV_SCANNER = "OsvScaner";
   String OWASP = "Owasp";
   String PRISMA_CLOUD = "PrismaCloud";
   String PROWLER = "Prowler";

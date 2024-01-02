@@ -135,6 +135,7 @@ public class EntityYamlRootNames {
   public static final String NIKTO = "Nikto";
   public static final String NMAP = "Nmap";
   public static final String OPENVAS = "Openvas";
+  public static final String OSV_SCANNER = "OsvScanner";
   public static final String OWASP = "Owasp";
   public static final String PRISMA_CLOUD = "PrismaCloud";
   public static final String PROWLER = "Prowler";

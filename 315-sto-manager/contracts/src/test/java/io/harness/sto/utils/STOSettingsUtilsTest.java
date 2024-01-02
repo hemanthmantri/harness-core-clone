@@ -22,6 +22,7 @@ import io.harness.beans.steps.stepinfo.security.FossaStepInfo;
 import io.harness.beans.steps.stepinfo.security.MendStepInfo;
 import io.harness.beans.steps.stepinfo.security.MetasploitStepInfo;
 import io.harness.beans.steps.stepinfo.security.NmapStepInfo;
+import io.harness.beans.steps.stepinfo.security.OsvScannerStepInfo;
 import io.harness.beans.steps.stepinfo.security.ProwlerStepInfo;
 import io.harness.beans.steps.stepinfo.security.shared.STOGenericStepInfo;
 import io.harness.beans.steps.stepinfo.security.shared.STOYamlAdvancedSettings;
@@ -41,6 +42,7 @@ import io.harness.yaml.sto.variables.STOYamlAuthType;
 import io.harness.yaml.sto.variables.STOYamlBurpConfig;
 import io.harness.yaml.sto.variables.STOYamlCustomIngestConfig;
 import io.harness.yaml.sto.variables.STOYamlGenericConfig;
+import io.harness.yaml.sto.variables.STOYamlImageType;
 import io.harness.yaml.sto.variables.STOYamlLogLevel;
 import io.harness.yaml.sto.variables.STOYamlLogSerializer;
 import io.harness.yaml.sto.variables.STOYamlMetasploitConfig;
@@ -110,6 +112,8 @@ public class STOSettingsUtilsTest {
             .image(createImageSettings())
             .tool(createBDHToolData())
             .config(STOYamlGenericConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("bdh_repository.json"));
@@ -129,6 +133,8 @@ public class STOSettingsUtilsTest {
             .image(createImageSettings())
             .tool(createBDHToolData())
             .config(STOYamlGenericConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("bdh_repository.json"));
@@ -147,6 +153,8 @@ public class STOSettingsUtilsTest {
             .auth(createAuthSettings())
             .image(createImageSettings())
             .config(STOYamlGenericConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("mend_repository.json"));
@@ -165,6 +173,8 @@ public class STOSettingsUtilsTest {
             .auth(createAuthSettings())
             .image(createImageSettings())
             .config(STOYamlGenericConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("mend_repository.json"));
@@ -182,9 +192,30 @@ public class STOSettingsUtilsTest {
             .advanced(createAdvancedSettings(STOYamlLogSerializer.BASIC, STOYamlLogLevel.DEBUG, CLI_PARAMS, ""))
             .auth(createAuthSettings())
             .config(STOYamlGenericConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("fossa_repository.json"));
+  }
+
+  @Test
+  @Owner(developers = SERGEY)
+  @Category(UnitTests.class)
+  public void getOSVContainerEnvVariablesTest() throws IOException {
+    OsvScannerStepInfo step =
+        OsvScannerStepInfo.builder()
+            .mode(ParameterField.createValueField(STOYamlScanMode.ORCHESTRATION))
+            .target(createTarget(STOYamlTargetType.CONTAINER, TARGET_NAME, TARGET_VARIANT, WORKSPACE))
+            .ingestion(createIngestionSettings(INGESTION_FILE_NAME))
+            .advanced(createAdvancedSettings(STOYamlLogSerializer.BASIC, STOYamlLogLevel.DEBUG, CLI_PARAMS, ""))
+            .image(createImageSettings())
+            .config(STOYamlGenericConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
+            .build();
+
+    assertEnvVariables(step, getExpectedValue("osv_container.json"));
   }
 
   @Test
@@ -200,6 +231,8 @@ public class STOSettingsUtilsTest {
             .auth(createAuthSettings())
             .image(createImageSettings())
             .config(STOYamlGenericConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("awsecr.json"));
@@ -217,6 +250,8 @@ public class STOSettingsUtilsTest {
             .advanced(createAdvancedSettings(STOYamlLogSerializer.BASIC, STOYamlLogLevel.DEBUG, CLI_PARAMS, ""))
             .auth(createAuthSettings())
             .config(STOYamlProwlerConfig.HIPAA)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("prowler.json"));
@@ -234,6 +269,8 @@ public class STOSettingsUtilsTest {
             .advanced(createAdvancedSettings(STOYamlLogSerializer.BASIC, STOYamlLogLevel.DEBUG, CLI_PARAMS, ""))
             .instance(createInstanceSettings())
             .config(STOYamlNmapConfig.EXPLOIT)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("nmap.json"));
@@ -250,6 +287,8 @@ public class STOSettingsUtilsTest {
             .ingestion(createIngestionSettings(INGESTION_FILE_NAME))
             .advanced(createAdvancedSettings(STOYamlLogSerializer.BASIC, STOYamlLogLevel.DEBUG, CLI_PARAMS, ""))
             .config(STOYamlCustomIngestConfig.SARIF)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("customingest.json"));
@@ -267,6 +306,8 @@ public class STOSettingsUtilsTest {
             .advanced(createAdvancedSettings(STOYamlLogSerializer.BASIC, STOYamlLogLevel.DEBUG, CLI_PARAMS, ""))
             .instance(createInstanceSettings())
             .config(STOYamlMetasploitConfig.WEAK_SSH)
+            .identifier("1")
+            .retry(1)
             .build();
 
     assertEnvVariables(step, getExpectedValue("metasploit.json"));
@@ -284,6 +325,8 @@ public class STOSettingsUtilsTest {
             .advanced(createAdvancedSettings(STOYamlLogSerializer.BASIC, STOYamlLogLevel.DEBUG, CLI_PARAMS, ""))
             .instance(createInstanceSettings())
             .config(STOYamlBurpConfig.DEFAULT)
+            .identifier("1")
+            .retry(1)
             .build();
     assertEnvVariables(step, getExpectedValue("burp.json"));
   }
@@ -332,6 +375,7 @@ public class STOSettingsUtilsTest {
         .domain(ParameterField.createValueField(ACCESS_DOMAIN))
         .name(ParameterField.createValueField(IMAGE_NAME))
         .tag(ParameterField.createValueField(IMAGE_TAG))
+        .type(ParameterField.createValueField(STOYamlImageType.DOCKER_V2))
         .build();
   }
 

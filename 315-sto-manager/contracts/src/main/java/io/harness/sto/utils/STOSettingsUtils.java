@@ -29,6 +29,7 @@ import io.harness.beans.steps.stepinfo.security.MendStepInfo;
 import io.harness.beans.steps.stepinfo.security.MetasploitStepInfo;
 import io.harness.beans.steps.stepinfo.security.NiktoStepInfo;
 import io.harness.beans.steps.stepinfo.security.NmapStepInfo;
+import io.harness.beans.steps.stepinfo.security.OsvScannerStepInfo;
 import io.harness.beans.steps.stepinfo.security.PrismaCloudStepInfo;
 import io.harness.beans.steps.stepinfo.security.ProwlerStepInfo;
 import io.harness.beans.steps.stepinfo.security.SemgrepStepInfo;
@@ -605,6 +606,15 @@ public final class STOSettingsUtils {
     return map;
   }
 
+  private static Map<String, String> processSTOOsvScannerFields(
+      OsvScannerStepInfo stepInfo, String stepType, String identifier) {
+    Map<String, String> map = new HashMap<>();
+
+    map.putAll(processSTOImageFields(stepInfo.getImage(), stepType, identifier));
+
+    return map;
+  }
+
   private static Map<String, String> processSTOSemgrepFields(
       SemgrepStepInfo stepInfo, String stepType, String identifier) {
     Map<String, String> map = new HashMap<>();
@@ -787,6 +797,9 @@ public final class STOSettingsUtils {
         break;
       case METASPLOIT:
         map.putAll(processSTOMetasploitFields((MetasploitStepInfo) stepInfo, stepType, identifier));
+        break;
+      case OSV_SCANNER:
+        map.putAll(processSTOOsvScannerFields((OsvScannerStepInfo) stepInfo, stepType, identifier));
         break;
       case PRISMA_CLOUD:
         map.putAll(processSTOPrismaCloudFields((PrismaCloudStepInfo) stepInfo, stepType, identifier));
