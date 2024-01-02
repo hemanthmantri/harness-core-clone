@@ -153,7 +153,7 @@ public class ServiceNowTaskNgHelper {
       case GET_TICKET:
         return getTicket(serviceNowTaskNGParameters);
       case CREATE_TICKET:
-        return createTicket(serviceNowTaskNGParameters);
+        return createTicket(serviceNowTaskNGParameters, executionLogCallback);
       case CREATE_TICKET_USING_STANDARD_TEMPLATE:
         return createTicketUsingServiceNowStandardTemplate(serviceNowTaskNGParameters);
       case UPDATE_TICKET:
@@ -188,16 +188,18 @@ public class ServiceNowTaskNgHelper {
     }
   }
 
-  private ServiceNowTaskNGResponse createTicket(ServiceNowTaskNGParameters serviceNowTaskNGParameters) {
+  private ServiceNowTaskNGResponse createTicket(
+      ServiceNowTaskNGParameters serviceNowTaskNGParameters, LogCallback executionLogCallback) {
     validateServiceNowTaskInputs(serviceNowTaskNGParameters);
     if (!serviceNowTaskNGParameters.isUseServiceNowTemplate()) {
-      return createTicketWithoutTemplate(serviceNowTaskNGParameters);
+      return createTicketWithoutTemplate(serviceNowTaskNGParameters, executionLogCallback);
     } else {
       return createTicketUsingServiceNowTemplate(serviceNowTaskNGParameters);
     }
   }
 
-  private ServiceNowTaskNGResponse createTicketWithoutTemplate(ServiceNowTaskNGParameters serviceNowTaskNGParameters) {
+  private ServiceNowTaskNGResponse createTicketWithoutTemplate(
+      ServiceNowTaskNGParameters serviceNowTaskNGParameters, LogCallback executionLogCallback) {
     ServiceNowConnectorDTO serviceNowConnectorDTO = serviceNowTaskNGParameters.getServiceNowConnectorDTO();
     ServiceNowRestClient serviceNowRestClient = getServiceNowRestClient(serviceNowConnectorDTO.getServiceNowUrl());
 
@@ -224,6 +226,7 @@ public class ServiceNowTaskNgHelper {
       ServiceNowTicketNGBuilder serviceNowTicketNGBuilder = parseFromServiceNowTicketResponse(responseObj);
       ServiceNowTicketNG ticketNg = serviceNowTicketNGBuilder.build();
       log.info("ticketNumber created for ServiceNow: {}", ticketNg.getNumber());
+      checkForUpdatedFieldsOrLog(body, ticketNg, executionLogCallback);
 
       String ticketUrlFromTicketId = "";
       ticketUrlFromTicketId = getTicketUrlFromTicketIdOrNumber(
@@ -238,6 +241,34 @@ public class ServiceNowTaskNgHelper {
       throw new ServiceNowException(
           String.format("Error occurred while creating serviceNow ticket: %s", ExceptionUtils.getMessage(ex)),
           SERVICENOW_ERROR, USER, ex);
+    }
+  }
+  private void checkForUpdatedFieldsOrLog(
+      Map<String, String> fieldsFromUser, ServiceNowTicketNG ticketNg, LogCallback executionLogCallback) {
+    try {
+      Map<String, ServiceNowFieldValueNG> fieldsFromResponse = ticketNg.getFields();
+      List<String> fieldsIgnored = new ArrayList<>();
+      List<String> fieldsUpdatedWithDifferentValue = new ArrayList<>();
+      fieldsFromUser.forEach((key, value) -> {
+        if (!fieldsFromResponse.containsKey(key)) {
+          fieldsIgnored.add(key);
+        } else if (fieldsFromResponse.get(key).getValue() == null
+            || !fieldsFromResponse.get(key).getValue().equalsIgnoreCase(value)) {
+          fieldsUpdatedWithDifferentValue.add(key);
+        }
+      });
+      String fieldsIgnoredAsString = Joiner.on(", ").join(fieldsIgnored);
+      String fieldsUpdatedWithDifferentValueAsString = Joiner.on(", ").join(fieldsUpdatedWithDifferentValue);
+      if (!StringUtils.isBlank(fieldsIgnoredAsString)) {
+        saveLogs(executionLogCallback,
+            String.format("Fields %s are ignored/not updated by Servicenow", fieldsIgnoredAsString), LogLevel.WARN);
+      }
+      if (!StringUtils.isBlank(fieldsUpdatedWithDifferentValueAsString)) {
+        log.warn(String.format(
+            "Fields %s are Updated with different value by Servicenow", fieldsUpdatedWithDifferentValueAsString));
+      }
+    } catch (Exception ex) {
+      log.error("Error occurred while verifying for updated fields", ExceptionUtils.getMessage(ex), ex);
     }
   }
 

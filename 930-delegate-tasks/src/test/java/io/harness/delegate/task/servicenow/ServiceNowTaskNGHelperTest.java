@@ -49,6 +49,7 @@ import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
+import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.JsonUtils;
@@ -1206,15 +1207,17 @@ public class ServiceNowTaskNGHelperTest extends CategoryTest {
     ImmutableMap<String, JsonNode> responsemap =
 
         ImmutableMap.of("sys_id", JsonUtils.asTree(Collections.singletonMap("display_value", "123456789")),
-            "lastUpdated", JsonUtils.asTree(Collections.singletonMap("display_value", "123e9e")));
+            "lastUpdated", JsonUtils.asTree(Collections.singletonMap("display_value", "123e9e")), "SYS_Test",
+            JsonUtils.asTree(Collections.singletonMap("display_value", "123e9e")));
 
     JsonNode successResponse = JsonUtils.asTree(Collections.singletonMap("result", responsemap));
     Response<JsonNode> jsonNodeResponse = Response.success(successResponse);
     when(mockCall.execute()).thenReturn(jsonNodeResponse);
 
-    try (MockedConstruction<Retrofit> ignored = mockConstruction(Retrofit.class,
-             (mock, context) -> { when(mock.create(ServiceNowRestClient.class)).thenReturn(serviceNowRestClient); })) {
-      Map<String, String> fieldmap = ImmutableMap.of("value", "BEvalue2", "display_value", "UIvalue2");
+    try (MockedConstruction<Retrofit> ignored = mockConstruction(Retrofit.class, (mock, context) -> {
+      when(mock.create(ServiceNowRestClient.class)).thenReturn(serviceNowRestClient);
+    }); MockedConstruction<NGDelegateLogCallback> logCallback = mockConstruction(NGDelegateLogCallback.class)) {
+      Map<String, String> fieldmap = ImmutableMap.of("SYS_Name", "BEvalue2", "SYS_Test", "UIvalue2");
       ServiceNowConnectorDTO serviceNowConnectorDTO = getServiceNowConnector();
       ServiceNowTaskNGResponse response =
           serviceNowTaskNgHelper.getServiceNowResponse(ServiceNowTaskNGParameters.builder()
@@ -1226,9 +1229,12 @@ public class ServiceNowTaskNGHelperTest extends CategoryTest {
                                                            .build(),
               logStreamingTaskClient);
 
+      verify(logCallback.constructed().get(0), times(1))
+          .saveExecutionLog("Fields SYS_Name are ignored/not updated by Servicenow", LogLevel.WARN);
+
       assertThat(response.getTicket().getUrl())
           .isEqualTo("https://harness.service-now.com/nav_to.do?uri=/incident.do?sys_id=123456789");
-      assertThat(response.getTicket().getFields()).hasSize(2);
+      assertThat(response.getTicket().getFields()).hasSize(3);
       verify(secretDecryptionService).decrypt(any(), any());
     }
   }
