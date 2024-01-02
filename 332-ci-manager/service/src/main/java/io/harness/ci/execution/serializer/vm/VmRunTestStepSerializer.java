@@ -99,7 +99,7 @@ public class VmRunTestStepSerializer {
     String postCommand = RunTimeInputHandler.resolveStringParameter(
         "PostCommand", stepName, identifier, runTestsStepInfo.getPostCommand(), false);
     String args =
-        RunTimeInputHandler.resolveStringParameter("Command", stepName, identifier, runTestsStepInfo.getArgs(), true);
+        RunTimeInputHandler.resolveStringParameter("Command", stepName, identifier, runTestsStepInfo.getArgs(), false);
     String testAnnotations = RunTimeInputHandler.resolveStringParameter(
         "TestAnnotations", stepName, identifier, runTestsStepInfo.getTestAnnotations(), false);
     String testRoot = RunTimeInputHandler.resolveStringParameter(

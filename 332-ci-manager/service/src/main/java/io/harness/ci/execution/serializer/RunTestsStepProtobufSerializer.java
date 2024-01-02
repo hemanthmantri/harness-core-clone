@@ -82,8 +82,11 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
     if (StringUtils.isNotEmpty(postTestCommand)) {
       runTestsStepBuilder.setPostTestCommand(postTestCommand);
     }
-    runTestsStepBuilder.setArgs(
-        RunTimeInputHandler.resolveStringParameter("Args", "RunTests", identifier, runTestsStepInfo.getArgs(), true));
+    String args =
+        RunTimeInputHandler.resolveStringParameter("Args", "RunTests", identifier, runTestsStepInfo.getArgs(), false);
+    if (StringUtils.isNotEmpty(args)) {
+      runTestsStepBuilder.setArgs(args);
+    }
     runTestsStepBuilder.setContainerPort(port);
 
     String buildTool = RunTimeInputHandler.resolveBuildTool(runTestsStepInfo.getBuildTool());
