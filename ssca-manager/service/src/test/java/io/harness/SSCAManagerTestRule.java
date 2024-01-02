@@ -75,8 +75,12 @@ import io.harness.ssca.services.ScorecardServiceImpl;
 import io.harness.ssca.services.SscaPolicyEvaluationService;
 import io.harness.ssca.services.drift.SbomDriftService;
 import io.harness.ssca.services.drift.SbomDriftServiceImpl;
+import io.harness.ssca.services.exemption.ExemptionService;
+import io.harness.ssca.services.exemption.ExemptionServiceImpl;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerService;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerServiceImpl;
+import io.harness.ssca.services.user.UserService;
+import io.harness.ssca.services.user.UserServiceImpl;
 import io.harness.ssca.ticket.TicketServiceRestClientService;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -249,9 +253,10 @@ public class SSCAManagerTestRule implements InjectorRuleMixin, MethodRule, Mongo
         bind(SearchService.class).to(SearchServiceImpl.class);
         bind(ElasticsearchClient.class).toInstance(mock(ElasticsearchClient.class));
         bind(ElasticSearchIndexManager.class).annotatedWith(Names.named("SSCA")).to(SSCAIndexManager.class);
-
         bind(RemediationTrackerService.class).to(RemediationTrackerServiceImpl.class);
         bind(TicketServiceRestClientService.class).toInstance(mock(TicketServiceRestClientService.class));
+        bind(ExemptionService.class).toInstance(mock(ExemptionServiceImpl.class));
+        bind(UserService.class).toInstance(mock(UserServiceImpl.class));
         MapBinder<PolicyType, PolicyEvaluationService> policyEvaluationServiceMapBinder =
             MapBinder.newMapBinder(binder(), PolicyType.class, PolicyEvaluationService.class);
         policyEvaluationServiceMapBinder.addBinding(PolicyType.OPA)

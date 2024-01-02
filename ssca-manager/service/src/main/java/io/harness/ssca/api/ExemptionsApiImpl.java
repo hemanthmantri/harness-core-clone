@@ -7,6 +7,7 @@
 
 package io.harness.ssca.api;
 
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.spec.server.ssca.v1.ExemptionsApi;
 import io.harness.spec.server.ssca.v1.model.ExemptionInitiatorDTO;
 import io.harness.spec.server.ssca.v1.model.ExemptionRequestDTO;
@@ -21,33 +22,28 @@ import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import org.springframework.data.domain.PageRequest;
 
+@NextGenManagerAuth
 public class ExemptionsApiImpl implements ExemptionsApi {
   @Inject ExemptionService exemptionService;
   @Override
   public Response createExemptionForArtifact(
       String project, String org, String artifact, @Valid ExemptionRequestDTO body, String harnessAccount) {
-    ExemptionInitiatorDTO exemptionInitiatorDTO = body.getExemptionInitiator();
-    if (exemptionInitiatorDTO == null) {
-      exemptionInitiatorDTO = new ExemptionInitiatorDTO();
-    }
-    exemptionInitiatorDTO.setArtifactId(artifact);
-    exemptionInitiatorDTO.setProjectIdentifier(project);
-    body.setExemptionInitiator(exemptionInitiatorDTO);
-    return Response.ok(exemptionService.createExemption(harnessAccount, project, org, artifact, body)).build();
+    populateInitiationDetails(project, artifact, body);
+    return Response.status(Status.CREATED)
+        .entity(exemptionService.createExemption(harnessAccount, project, org, artifact, body))
+        .build();
   }
 
   @Override
   public Response createExemptionForProject(
       String org, String project, @Valid ExemptionRequestDTO body, String harnessAccount) {
-    ExemptionInitiatorDTO exemptionInitiatorDTO = body.getExemptionInitiator();
-    if (exemptionInitiatorDTO == null) {
-      exemptionInitiatorDTO = new ExemptionInitiatorDTO();
-    }
-    exemptionInitiatorDTO.setProjectIdentifier(project);
-    body.setExemptionInitiator(exemptionInitiatorDTO);
-    return Response.ok(exemptionService.createExemption(harnessAccount, project, org, null, body)).build();
+    populateInitiationDetails(project, body);
+    return Response.status(Status.CREATED)
+        .entity(exemptionService.createExemption(harnessAccount, project, org, null, body))
+        .build();
   }
 
   @Override
@@ -98,12 +94,7 @@ public class ExemptionsApiImpl implements ExemptionsApi {
   @Override
   public Response updateExemptionForArtifact(String org, String project, String exemption, String artifact,
       @Valid ExemptionRequestDTO body, String harnessAccount) {
-    ExemptionInitiatorDTO exemptionInitiatorDTO = body.getExemptionInitiator();
-    if (exemptionInitiatorDTO == null) {
-      exemptionInitiatorDTO = new ExemptionInitiatorDTO();
-    }
-    exemptionInitiatorDTO.setProjectIdentifier(project);
-    body.setExemptionInitiator(exemptionInitiatorDTO);
+    populateInitiationDetails(project, artifact, body);
     return Response.ok(exemptionService.updateExemption(harnessAccount, project, org, artifact, exemption, body))
         .build();
   }
@@ -111,12 +102,21 @@ public class ExemptionsApiImpl implements ExemptionsApi {
   @Override
   public Response updateExemptionForProject(
       String org, String project, String exemption, @Valid ExemptionRequestDTO body, String harnessAccount) {
+    populateInitiationDetails(project, body);
+    return Response.ok(exemptionService.updateExemption(harnessAccount, project, org, null, exemption, body)).build();
+  }
+
+  private static void populateInitiationDetails(String project, ExemptionRequestDTO body) {
+    populateInitiationDetails(project, null, body);
+  }
+
+  private static void populateInitiationDetails(String project, String artifact, ExemptionRequestDTO body) {
     ExemptionInitiatorDTO exemptionInitiatorDTO = body.getExemptionInitiator();
     if (exemptionInitiatorDTO == null) {
       exemptionInitiatorDTO = new ExemptionInitiatorDTO();
     }
+    exemptionInitiatorDTO.setArtifactId(artifact);
     exemptionInitiatorDTO.setProjectIdentifier(project);
     body.setExemptionInitiator(exemptionInitiatorDTO);
-    return Response.ok(exemptionService.updateExemption(harnessAccount, project, org, null, exemption, body)).build();
   }
 }

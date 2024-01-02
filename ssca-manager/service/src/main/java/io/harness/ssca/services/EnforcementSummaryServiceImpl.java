@@ -27,9 +27,14 @@ public class EnforcementSummaryServiceImpl implements EnforcementSummaryService 
   @Inject EnforcementSummaryRepo enforcementSummaryRepo;
   @Override
   public String persistEnforcementSummary(String enforcementId, List<EnforcementResultEntity> denyListResult,
-      List<EnforcementResultEntity> allowListResult, ArtifactEntity artifact, String pipelineExecutionId) {
+      List<EnforcementResultEntity> allowListResult, ArtifactEntity artifact, String pipelineExecutionId,
+      int exemptedComponentCount) {
     String status = EnforcementStatus.ENFORCEMENT_STATUS_PASS.getValue();
-    if (!denyListResult.isEmpty() || !allowListResult.isEmpty()) {
+    List<EnforcementResultEntity> activeDenyResultViolations =
+        denyListResult.stream().filter(violation -> !violation.isExempted()).toList();
+    List<EnforcementResultEntity> activeAllowResultViolations =
+        allowListResult.stream().filter(violation -> !violation.isExempted()).toList();
+    if (!activeDenyResultViolations.isEmpty() || !activeAllowResultViolations.isEmpty()) {
       status = EnforcementStatus.ENFORCEMENT_STATUS_FAIL.getValue();
     }
     EnforcementSummaryEntity summary = EnforcementSummaryEntity.builder()
@@ -46,8 +51,9 @@ public class EnforcementSummaryServiceImpl implements EnforcementSummaryService 
                                                          .url(artifact.getUrl())
                                                          .build())
                                            .orchestrationId(artifact.getOrchestrationId())
-                                           .denyListViolationCount(denyListResult.size())
-                                           .allowListViolationCount(allowListResult.size())
+                                           .denyListViolationCount(activeDenyResultViolations.size())
+                                           .allowListViolationCount(activeAllowResultViolations.size())
+                                           .exemptedComponentCount(exemptedComponentCount)
                                            .status(status)
                                            .createdAt(Instant.now().toEpochMilli())
                                            .build();

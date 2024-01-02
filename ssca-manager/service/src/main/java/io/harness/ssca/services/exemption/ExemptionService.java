@@ -13,6 +13,7 @@ import io.harness.spec.server.ssca.v1.model.ExemptionRequestDTO;
 import io.harness.spec.server.ssca.v1.model.ExemptionResponseDTO;
 import io.harness.spec.server.ssca.v1.model.ExemptionReviewRequestDTO;
 import io.harness.spec.server.ssca.v1.model.ExemptionStatusDTO;
+import io.harness.ssca.entities.exemption.Exemption;
 
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Pageable;
 
 @OwnedBy(HarnessTeam.SSCA)
 public interface ExemptionService {
+  List<Exemption> getApplicableExemptionsForEnforcement(
+      String accountId, String orgIdentifier, String projectIdentifier, String artifactId, List<String> componentNames);
   Page<ExemptionResponseDTO> getExemptions(String accountId, String orgIdentifier, String projectIdentifier,
       String artifactId, List<ExemptionStatusDTO> exemptionStatusDTOs, String searchTerm, Pageable pageable);
 

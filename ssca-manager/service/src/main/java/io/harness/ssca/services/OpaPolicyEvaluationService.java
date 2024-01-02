@@ -9,7 +9,6 @@ package io.harness.ssca.services;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.repositories.EnforcementResultRepo;
 import io.harness.spec.server.ssca.v1.model.EnforceSbomRequestBody;
 import io.harness.ssca.beans.OpaPolicyEvaluationResult;
 import io.harness.ssca.beans.PolicyEvaluationResult;
@@ -26,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.ws.rs.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -35,7 +33,6 @@ import org.apache.commons.collections4.CollectionUtils;
 @Slf4j
 public class OpaPolicyEvaluationService implements PolicyEvaluationService {
   @Inject PolicyMgmtService policyMgmtService;
-  @Inject EnforcementResultRepo enforcementResultRepo;
   @Inject NormalisedSbomComponentService normalisedSbomComponentService;
   @Override
   public PolicyEvaluationResult evaluatePolicy(String accountId, String orgIdentifier, String projectIdentifier,
@@ -57,7 +54,6 @@ public class OpaPolicyEvaluationService implements PolicyEvaluationService {
     List<EnforcementResultEntity> denyListViolations =
         getEnforcementResultEntitiesFromOpaViolations(accountId, orgIdentifier, projectIdentifier,
             body.getEnforcementId(), components, artifactEntity, opaPolicyEvaluationResult.getDenyListViolations());
-    enforcementResultRepo.saveAll(Stream.concat(denyListViolations.stream(), allowListViolations.stream()).toList());
     return PolicyEvaluationResult.builder()
         .denyListViolations(denyListViolations)
         .allowListViolations(allowListViolations)

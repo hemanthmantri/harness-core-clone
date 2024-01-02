@@ -111,10 +111,16 @@ public class ExemptionMapper {
   }
 
   public Operator toOperator(OperatorEntity operatorEntity) {
+    if (Objects.isNull(operatorEntity)) {
+      return null;
+    }
     return Operator.valueOf(operatorEntity.name());
   }
 
   public OperatorEntity toOperatorEntity(Operator operator) {
+    if (Objects.isNull(operator)) {
+      return null;
+    }
     return OperatorEntity.valueOf(operator.name());
   }
 

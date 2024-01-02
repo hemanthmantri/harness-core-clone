@@ -104,6 +104,8 @@ import io.harness.ssca.services.exemption.ExemptionService;
 import io.harness.ssca.services.exemption.ExemptionServiceImpl;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerService;
 import io.harness.ssca.services.remediation_tracker.RemediationTrackerServiceImpl;
+import io.harness.ssca.services.user.UserService;
+import io.harness.ssca.services.user.UserServiceImpl;
 import io.harness.ssca.ticket.TicketServiceRestClientService;
 import io.harness.ssca.ticket.TicketServiceRestClientServiceImpl;
 import io.harness.time.TimeModule;
@@ -194,6 +196,7 @@ public class SSCAManagerModule extends AbstractModule {
     bind(TicketServiceRestClientService.class).to(TicketServiceRestClientServiceImpl.class);
     bind(ExemptionService.class).to(ExemptionServiceImpl.class);
     bind(ExemptionsApi.class).to(ExemptionsApiImpl.class);
+    bind(UserService.class).to(UserServiceImpl.class);
     MapBinder<PolicyType, PolicyEvaluationService> policyEvaluationServiceMapBinder =
         MapBinder.newMapBinder(binder(), PolicyType.class, PolicyEvaluationService.class);
     policyEvaluationServiceMapBinder.addBinding(PolicyType.OPA)

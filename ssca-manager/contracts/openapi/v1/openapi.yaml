@@ -1242,7 +1242,7 @@ paths:
         required: true
         description: Remediation Tracker ID
       - $ref: '#/components/parameters/OrgParam'
-  '/v1/org/{org}/project/{project}/exemptions':
+  '/v1/orgs/{org}/projects/{project}/exemptions':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
       - $ref: '#/components/parameters/ProjectParam'
@@ -1288,7 +1288,7 @@ paths:
         - exemptions
       operationId: createExemptionForProject
       responses:
-        '200':
+        '201':
           description: ''
           content:
             application/json:
@@ -1309,7 +1309,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ExemptionRequestDTO'
-  '/v1/org/{org}/project/{project}/artifact/{artifact}/exemptions':
+  '/v1/orgs/{org}/projects/{project}/artifacts/{artifact}/exemptions':
     parameters:
       - $ref: '#/components/parameters/ProjectParam'
       - $ref: '#/components/parameters/OrgParam'
@@ -1318,7 +1318,7 @@ paths:
       summary: Create exemption for artifact
       operationId: createExemptionForArtifact
       responses:
-        '200':
+        '201':
           description: ''
           content:
             application/json:
@@ -1341,7 +1341,7 @@ paths:
         id: 5bwt1b8f89t9i
       tags:
         - exemptions
-  '/v1/org/{org}/project/{project}/exemptions/{exemption}':
+  '/v1/orgs/{org}/projects/{project}/exemptions/{exemption}':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
       - $ref: '#/components/parameters/ProjectParam'
@@ -1411,7 +1411,7 @@ paths:
         - $ref: '#/components/parameters/AccountHeader'
       tags:
         - exemptions
-  '/v1/org/{org}/project/{project}/artifact/{artifact}/exemptions/{exemption}':
+  '/v1/orgs/{org}/projects/{project}/artifacts/{artifact}/exemptions/{exemption}':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
       - $ref: '#/components/parameters/ProjectParam'
@@ -1482,7 +1482,7 @@ paths:
         - $ref: '#/components/parameters/AccountHeader'
       x-stoplight:
         id: aalia240812pt
-  '/v1/org/{org}/project/{project}/exemptions/{exemption}/review':
+  '/v1/orgs/{org}/projects/{project}/exemptions/{exemption}/review':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
       - $ref: '#/components/parameters/ProjectParam'
@@ -1514,7 +1514,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ExemptionReviewRequestDTO'
-  '/v1/org/{org}/project/{project}/artifact/{artifact}/exemptions/{exemption}/review':
+  '/v1/orgs/{org}/projects/{project}/artifacts/{artifact}/exemptions/{exemption}/review':
     parameters:
       - $ref: '#/components/parameters/OrgParam'
       - $ref: '#/components/parameters/ProjectParam'

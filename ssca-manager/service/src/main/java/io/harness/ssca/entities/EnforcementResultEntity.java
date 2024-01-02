@@ -19,8 +19,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.morphia.annotations.Entity;
 import java.util.List;
 import lombok.Builder;
+import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -53,4 +55,6 @@ public class EnforcementResultEntity implements PersistentEntity {
   @Field("packagemanager") String packageManager;
   List<String> license;
   String purl;
+  @NonFinal @Setter boolean isExempted;
+  @NonFinal @Setter String exemptionId;
 }

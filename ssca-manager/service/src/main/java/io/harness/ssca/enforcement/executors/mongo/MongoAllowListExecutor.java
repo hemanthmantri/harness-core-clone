@@ -7,7 +7,6 @@
 
 package io.harness.ssca.enforcement.executors.mongo;
 
-import io.harness.repositories.EnforcementResultRepo;
 import io.harness.repositories.SBOMComponentRepo;
 import io.harness.ssca.beans.AllowList;
 import io.harness.ssca.beans.AllowList.AllowListRuleType;
@@ -31,7 +30,6 @@ public class MongoAllowListExecutor implements IRuleExecutor<AllowList> {
   IRuleInterpreter mongoInterpreter = new MongoInterpreter();
   @Inject SBOMComponentRepo sbomComponentRepo;
 
-  @Inject EnforcementResultRepo enforcementResultRepo;
   @Inject EnforcementResultService enforcementResultService;
 
   @Override
@@ -51,8 +49,6 @@ public class MongoAllowListExecutor implements IRuleExecutor<AllowList> {
     if (allowList.getAllowListItem().getSuppliers() != null && allowList.getAllowListItem().getSuppliers().size() > 0) {
       result.addAll(executeAllowListRule(allowList, engine, AllowListRuleType.ALLOW_SUPPLIER_ITEM));
     }
-
-    enforcementResultRepo.saveAll(result);
 
     return result;
   }

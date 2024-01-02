@@ -7,8 +7,11 @@
 
 package io.harness.ssca.services;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.beans.FeatureName;
 import io.harness.exception.DuplicateEntityException;
+import io.harness.repositories.EnforcementResultRepo;
 import io.harness.spec.server.ssca.v1.model.Artifact;
 import io.harness.spec.server.ssca.v1.model.EnforceSbomRequestBody;
 import io.harness.spec.server.ssca.v1.model.EnforceSbomResponseBody;
@@ -18,10 +21,18 @@ import io.harness.ssca.beans.PolicyEvaluationResult;
 import io.harness.ssca.beans.PolicyType;
 import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.ArtifactEntity.ArtifactEntityKeys;
+import io.harness.ssca.entities.EnforcementResultEntity;
 import io.harness.ssca.entities.EnforcementSummaryEntity;
+import io.harness.ssca.entities.exemption.Exemption;
+import io.harness.ssca.services.exemption.ExemptionHelper;
+import io.harness.ssca.services.exemption.ExemptionService;
 
 import com.google.inject.Inject;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -36,6 +47,8 @@ public class EnforcementStepServiceImpl implements EnforcementStepService {
   @Inject EnforcementResultService enforcementResultService;
   @Inject FeatureFlagService featureFlagService;
   @Inject Map<PolicyType, PolicyEvaluationService> policyEvaluationServiceMapBinder;
+  @Inject EnforcementResultRepo enforcementResultRepo;
+  @Inject ExemptionService exemptionService;
 
   @Override
   public EnforceSbomResponseBody enforceSbom(
@@ -65,14 +78,28 @@ public class EnforcementStepServiceImpl implements EnforcementStepService {
       policyEvaluationResult = policyEvaluationServiceMapBinder.get(PolicyType.SSCA)
                                    .evaluatePolicy(accountId, orgIdentifier, projectIdentifier, body, artifactEntity);
     }
+    int exemptedComponentCount = 0;
+    if (featureFlagService.isFeatureFlagEnabled(accountId, FeatureName.SSCA_ENFORCEMENT_EXEMPTIONS_ENABLED.name())) {
+      Map<String, String> exemptedComponents = findExemptedComponentsWithExemptionIds(
+          accountId, orgIdentifier, projectIdentifier, artifactId, policyEvaluationResult);
+      if (isNotEmpty(exemptedComponents)) {
+        exemptedComponentCount = exemptedComponents.size();
+        policyEvaluationResult.getDenyListViolations().forEach(
+            resultEntity -> checkAndMarkViolationAsExempted(exemptedComponents, resultEntity));
+        policyEvaluationResult.getAllowListViolations().forEach(
+            resultEntity -> checkAndMarkViolationAsExempted(exemptedComponents, resultEntity));
+      }
+    }
+    enforcementResultRepo.saveAll(Stream
+                                      .concat(policyEvaluationResult.getDenyListViolations().stream(),
+                                          policyEvaluationResult.getAllowListViolations().stream())
+                                      .toList());
     String status = enforcementSummaryService.persistEnforcementSummary(body.getEnforcementId(),
         policyEvaluationResult.getDenyListViolations(), policyEvaluationResult.getAllowListViolations(), artifactEntity,
-        body.getPipelineExecutionId());
-
+        body.getPipelineExecutionId(), exemptedComponentCount);
     EnforceSbomResponseBody responseBody = new EnforceSbomResponseBody();
     responseBody.setEnforcementId(body.getEnforcementId());
     responseBody.setStatus(status);
-
     return responseBody;
   }
 
@@ -124,5 +151,31 @@ public class EnforcementStepServiceImpl implements EnforcementStepService {
                    .packageManager(enforcementResultEntity.getPackageManager())
                    .violationType(enforcementResultEntity.getViolationType())
                    .violationDetails(enforcementResultEntity.getViolationDetails()));
+  }
+
+  private Map<String, String> findExemptedComponentsWithExemptionIds(String accountId, String orgIdentifier,
+      String projectIdentifier, String artifactId, PolicyEvaluationResult policyEvaluationResult) {
+    Set<String> componentNames = new HashSet<>();
+    Set<String> uniqueComponents = new HashSet<>();
+    for (EnforcementResultEntity resultEntity : policyEvaluationResult.getDenyListViolations()) {
+      componentNames.add(resultEntity.getName());
+      uniqueComponents.add(ExemptionHelper.getUniqueComponentKeyFromEnforcementResultEntity(resultEntity));
+    }
+    for (EnforcementResultEntity resultEntity : policyEvaluationResult.getAllowListViolations()) {
+      componentNames.add(resultEntity.getName());
+      uniqueComponents.add(ExemptionHelper.getUniqueComponentKeyFromEnforcementResultEntity(resultEntity));
+    }
+    List<Exemption> exemptions = exemptionService.getApplicableExemptionsForEnforcement(
+        accountId, orgIdentifier, projectIdentifier, artifactId, componentNames.stream().toList());
+    return ExemptionHelper.getExemptedComponents(uniqueComponents, exemptions);
+  }
+
+  private static void checkAndMarkViolationAsExempted(
+      Map<String, String> exemptedComponents, EnforcementResultEntity resultEntity) {
+    String uniqueComponentKey = ExemptionHelper.getUniqueComponentKeyFromEnforcementResultEntity(resultEntity);
+    if (exemptedComponents.containsKey(uniqueComponentKey)) {
+      resultEntity.setExempted(true);
+      resultEntity.setExemptionId(exemptedComponents.get(uniqueComponentKey));
+    }
   }
 }
