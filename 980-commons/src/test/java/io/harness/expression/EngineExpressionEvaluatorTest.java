@@ -421,7 +421,8 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
         .isEqualTo("values-for-abc.yaml");
     assertThat(evaluator.evaluateExpression("<+if ((<+j> == null) || (empty(<+j>))) {\"emptyVar\";} else {<+f>;}>   "))
         .isEqualTo("emptyVar");
-    assertThat(evaluator.evaluateExpression("<+if ((<+f> == null) || (empty(<+f>))) {\"emptyVar\";} else {<+f>;}>   "))
+    assertThat(
+        evaluator.evaluateExpression("<+if ((<+f> == null) || (empty(<+f>))) {\"emptyVar\";} else {\"<+f>\";}>   "))
         .isEqualTo("abc");
     assertThat(evaluator.evaluateExpression("<+variables.v18>")).isEqualTo("values-for-abc.yaml");
     // concat expressions
