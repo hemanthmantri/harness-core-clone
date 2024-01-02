@@ -6,7 +6,7 @@
  */
 package io.harness.ssca.services.remediation_tracker;
 
-import static io.harness.authorization.AuthorizationServiceHeader.SSCA_SERVICE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.spec.server.ssca.v1.model.Operator.EQUALS;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -16,9 +16,8 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.UserProvider;
 import io.harness.remote.client.CGRestUtils;
 import io.harness.repositories.remediation_tracker.RemediationTrackerRepository;
-import io.harness.security.SecurityContextBuilder;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.ServiceTokenGenerator;
-import io.harness.security.dto.ServicePrincipal;
 import io.harness.spec.server.ssca.v1.model.ComponentFilter;
 import io.harness.spec.server.ssca.v1.model.CreateTicketRequest;
 import io.harness.spec.server.ssca.v1.model.ExcludeArtifactRequest;
@@ -68,7 +67,6 @@ import com.google.inject.name.Named;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,7 +82,6 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -117,13 +114,10 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
 
   private String sscaManagerServiceSecret;
 
-  private ServiceTokenGenerator tokenGenerator;
-
   @Inject
   public RemediationTrackerServiceImpl(
       @Named("sscaManagerServiceSecret") String sscaManagerServiceSecret, ServiceTokenGenerator tokenGenerator) {
     this.sscaManagerServiceSecret = sscaManagerServiceSecret;
-    this.tokenGenerator = tokenGenerator;
   }
 
   @Override
@@ -389,11 +383,9 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
           String.format("Remediation Tracker: %s is already closed.", remediationTrackerId));
     }
 
-    SecurityContextBuilder.setContext(new ServicePrincipal(SSCA_SERVICE.getServiceId()));
-    String authToken = tokenGenerator.getServiceTokenWithDuration(
-        sscaManagerServiceSecret, Duration.ofHours(4), SecurityContextBuilder.getPrincipal());
+    String authToken = NextGenAuthenticationFilter.AUTHORIZATION_HEADER;
 
-    if (!StringUtils.isEmpty(body.getArtifactId())) {
+    if (!isEmpty(body.getArtifactId())) {
       ArtifactInfo artifactInfo = remediationTracker.getArtifactInfos().get(body.getArtifactId());
       if (artifactInfo == null) {
         throw new InvalidArgumentsException(String.format("ArtifactId: %s not present.", body.getArtifactId()));
@@ -417,6 +409,12 @@ public class RemediationTrackerServiceImpl implements RemediationTrackerService 
       String ticketId = ticketResponseDto.getExternalId();
 
       remediationTracker.setTicketId(ticketId);
+
+      Criteria criteria = Criteria.where(RemediationTrackerEntityKeys.uuid).is(remediationTracker.getUuid());
+      Update update = new Update();
+      update.set(RemediationTrackerEntityKeys.ticketId, ticketId);
+      repository.update(new Query(criteria), update);
+
       return ticketId;
     }
   }
