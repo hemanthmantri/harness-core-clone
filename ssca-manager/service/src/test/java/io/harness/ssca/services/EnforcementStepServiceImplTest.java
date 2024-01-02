@@ -31,9 +31,9 @@ import io.harness.ssca.beans.OpaPolicyEvaluationResult;
 import io.harness.ssca.beans.PolicyType;
 import io.harness.ssca.beans.Violation;
 import io.harness.ssca.enforcement.constants.ViolationType;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;

@@ -9,8 +9,8 @@ package io.harness.ssca.search;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.search.beans.ArtifactFilter;
 import io.harness.ssca.search.entities.SSCAArtifact;
 

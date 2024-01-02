@@ -19,7 +19,7 @@ import io.harness.spec.server.ssca.v1.model.SbomProcessRequestBody;
 import io.harness.ssca.beans.EnvType;
 import io.harness.ssca.beans.SbomDTO;
 import io.harness.ssca.beans.remediation_tracker.PatchedPendingArtifactEntitiesResult;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import java.time.Instant;
 import java.util.List;

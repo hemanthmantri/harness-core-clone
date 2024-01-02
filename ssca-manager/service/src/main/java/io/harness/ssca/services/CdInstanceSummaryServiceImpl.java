@@ -19,10 +19,10 @@ import io.harness.ssca.beans.SLSAVerificationSummary;
 import io.harness.ssca.beans.instance.ArtifactCorrelationDetailsDTO;
 import io.harness.ssca.beans.instance.ArtifactDetailsDTO;
 import io.harness.ssca.beans.instance.InstanceDTO;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.CdInstanceSummary;
 import io.harness.ssca.entities.CdInstanceSummary.CdInstanceSummaryKeys;
 import io.harness.ssca.entities.EnforcementSummaryEntity.EnforcementSummaryEntityKeys;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.helpers.CdInstanceSummaryServiceHelper;
 import io.harness.ssca.utils.PipelineUtils;
 

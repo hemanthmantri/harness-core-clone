@@ -18,8 +18,8 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.repositories.MigrationRepo;
 import io.harness.ssca.beans.ElasticSearchConfig;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.entities.migration.MigrationEntity;
 import io.harness.ssca.helpers.BatchProcessor;
 

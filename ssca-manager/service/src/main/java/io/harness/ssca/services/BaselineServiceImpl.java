@@ -11,8 +11,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.repositories.BaselineRepository;
 import io.harness.ssca.beans.BaselineDTO;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.BaselineEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.google.inject.Inject;
 import javax.ws.rs.NotFoundException;

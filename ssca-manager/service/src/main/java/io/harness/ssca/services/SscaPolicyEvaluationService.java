@@ -15,8 +15,8 @@ import io.harness.ssca.beans.RuleDTO;
 import io.harness.ssca.enforcement.ExecutorRegistry;
 import io.harness.ssca.enforcement.constants.RuleExecutorType;
 import io.harness.ssca.enforcement.rule.Engine;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.google.inject.Inject;
 import java.util.List;

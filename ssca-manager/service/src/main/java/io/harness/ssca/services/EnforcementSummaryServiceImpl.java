@@ -11,10 +11,10 @@ import io.harness.repositories.EnforcementSummaryRepo;
 import io.harness.spec.server.ssca.v1.model.EnforcementSummaryDTO;
 import io.harness.ssca.beans.Artifact;
 import io.harness.ssca.enforcement.constants.EnforcementStatus;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
 import io.harness.ssca.entities.EnforcementSummaryEntity;
 import io.harness.ssca.entities.EnforcementSummaryEntity.EnforcementSummaryEntityKeys;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.transformers.EnforcementSummaryTransformer;
 
 import com.google.inject.Inject;

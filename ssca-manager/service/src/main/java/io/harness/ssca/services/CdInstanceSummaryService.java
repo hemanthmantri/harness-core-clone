@@ -9,8 +9,8 @@ package io.harness.ssca.services;
 
 import io.harness.spec.server.ssca.v1.model.ArtifactDeploymentViewRequestBody;
 import io.harness.ssca.beans.instance.InstanceDTO;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.CdInstanceSummary;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;

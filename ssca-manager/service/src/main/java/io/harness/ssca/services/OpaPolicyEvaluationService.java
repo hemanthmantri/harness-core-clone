@@ -13,10 +13,10 @@ import io.harness.spec.server.ssca.v1.model.EnforceSbomRequestBody;
 import io.harness.ssca.beans.OpaPolicyEvaluationResult;
 import io.harness.ssca.beans.PolicyEvaluationResult;
 import io.harness.ssca.beans.Violation;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity.NormalizedSBOMEntityKeys;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.google.inject.Inject;
 import java.time.Duration;

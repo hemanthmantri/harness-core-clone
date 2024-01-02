@@ -11,7 +11,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.spec.server.ssca.v1.model.EnforceSbomRequestBody;
 import io.harness.ssca.beans.PolicyEvaluationResult;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 @OwnedBy(HarnessTeam.SSCA)
 public interface PolicyEvaluationService {

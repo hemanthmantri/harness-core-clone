@@ -36,12 +36,12 @@ import io.harness.spec.server.ssca.v1.model.ArtifactListingRequestBody.PolicyVio
 import io.harness.spec.server.ssca.v1.model.ArtifactListingResponse;
 import io.harness.ssca.api.ArtifactApiUtils;
 import io.harness.ssca.beans.EnvType;
-import io.harness.ssca.entities.ArtifactEntity;
-import io.harness.ssca.entities.ArtifactEntity.ArtifactEntityKeys;
 import io.harness.ssca.entities.CdInstanceSummary;
 import io.harness.ssca.entities.CdInstanceSummary.CdInstanceSummaryBuilder;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity.NormalizedSBOMComponentEntityBuilder;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity.ArtifactEntityKeys;
 import io.harness.ssca.utils.PageResponseUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

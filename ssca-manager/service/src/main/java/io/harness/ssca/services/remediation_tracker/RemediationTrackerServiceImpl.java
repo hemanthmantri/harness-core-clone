@@ -42,8 +42,8 @@ import io.harness.ssca.beans.remediation_tracker.PatchedPendingArtifactEntitiesR
 import io.harness.ssca.beans.ticket.TicketRequestDto;
 import io.harness.ssca.beans.ticket.TicketResponseDto;
 import io.harness.ssca.enforcement.executors.mongo.filter.denylist.fields.VersionField;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.CdInstanceSummary;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.entities.remediation_tracker.ArtifactInfo;
 import io.harness.ssca.entities.remediation_tracker.CVEVulnerability.CVEVulnerabilityInfoKeys;
 import io.harness.ssca.entities.remediation_tracker.DeploymentsCount;

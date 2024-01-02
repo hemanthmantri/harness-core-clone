@@ -8,7 +8,7 @@
 package io.harness.ssca.services;
 
 import io.harness.ssca.S3Config;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;

@@ -18,7 +18,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.services.ArtifactService;
 
 import java.util.Set;

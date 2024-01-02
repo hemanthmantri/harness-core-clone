@@ -13,7 +13,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.ssca.beans.instance.InstanceDTO;
 import io.harness.ssca.beans.instance.K8sInstanceInfoDTO;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.services.ArtifactService;
 
 import com.google.inject.Inject;

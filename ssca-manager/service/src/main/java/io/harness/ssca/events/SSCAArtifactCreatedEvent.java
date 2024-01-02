@@ -16,7 +16,7 @@ import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceConstants;
 import io.harness.ng.core.ResourceScope;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.events.utils.SSCAOutboxEvents;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

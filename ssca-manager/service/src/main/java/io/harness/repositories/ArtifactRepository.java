@@ -11,7 +11,7 @@ import static io.harness.annotations.dev.HarnessTeam.SSCA;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import java.util.Optional;
 import org.springframework.data.domain.Sort;

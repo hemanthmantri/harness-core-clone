@@ -26,7 +26,7 @@ import io.harness.ssca.beans.drift.DriftBase;
 import io.harness.ssca.beans.drift.LicenseDrift;
 import io.harness.ssca.beans.drift.LicenseDriftResults;
 import io.harness.ssca.beans.drift.LicenseDriftStatus;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.entities.drift.DriftEntity;
 import io.harness.ssca.entities.drift.DriftEntity.DriftEntityKeys;
 import io.harness.ssca.helpers.SbomDriftCalculator;

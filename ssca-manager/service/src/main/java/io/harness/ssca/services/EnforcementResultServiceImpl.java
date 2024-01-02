@@ -14,10 +14,10 @@ import io.harness.ssca.beans.AllowList.AllowListItem;
 import io.harness.ssca.beans.AllowList.AllowListRuleType;
 import io.harness.ssca.beans.DenyList.DenyListItem;
 import io.harness.ssca.beans.Supplier;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
 import io.harness.ssca.entities.EnforcementResultEntity.EnforcementResultEntityKeys;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.transformers.EnforcementResultTransformer;
 
 import com.google.inject.Inject;

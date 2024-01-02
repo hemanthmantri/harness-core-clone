@@ -8,9 +8,9 @@
 package io.harness.ssca.services;
 
 import io.harness.spec.server.ssca.v1.model.EnforcementSummaryDTO;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
 import io.harness.ssca.entities.EnforcementSummaryEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import java.util.List;
 import java.util.Optional;

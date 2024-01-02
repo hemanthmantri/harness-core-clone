@@ -30,9 +30,9 @@ import io.harness.spec.server.ssca.v1.model.ComponentFilter;
 import io.harness.spec.server.ssca.v1.model.ComponentFilter.FieldNameEnum;
 import io.harness.spec.server.ssca.v1.model.LicenseFilter;
 import io.harness.spec.server.ssca.v1.model.Operator;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity.NormalizedSBOMEntityKeys;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

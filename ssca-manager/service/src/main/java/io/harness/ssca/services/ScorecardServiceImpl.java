@@ -19,9 +19,9 @@ import io.harness.spec.server.ssca.v1.model.SbomScorecardRequestBody;
 import io.harness.spec.server.ssca.v1.model.SbomScorecardResponseBody;
 import io.harness.spec.server.ssca.v1.model.ScorecardInfo;
 import io.harness.ssca.beans.Scorecard;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.ScorecardEntity;
 import io.harness.ssca.entities.ScorecardEntity.Checks;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import com.google.inject.Inject;
 import java.time.Instant;

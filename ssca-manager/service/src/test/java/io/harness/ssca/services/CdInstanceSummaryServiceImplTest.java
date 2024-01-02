@@ -28,9 +28,9 @@ import io.harness.spec.server.ssca.v1.model.ArtifactDeploymentViewRequestBody.Po
 import io.harness.ssca.beans.EnvType;
 import io.harness.ssca.beans.instance.ArtifactDetailsDTO;
 import io.harness.ssca.beans.instance.InstanceDTO;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.CdInstanceSummary;
 import io.harness.ssca.entities.CdInstanceSummary.CdInstanceSummaryBuilder;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 import io.harness.ssca.helpers.CdInstanceSummaryServiceHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

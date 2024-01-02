@@ -11,8 +11,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
 import io.harness.repositories.ArtifactRepository;
-import io.harness.ssca.entities.ArtifactEntity;
-import io.harness.ssca.entities.ArtifactEntity.ArtifactEntityKeys;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity.ArtifactEntityKeys;
 
 import com.google.inject.Inject;
 import com.mongodb.client.FindIterable;

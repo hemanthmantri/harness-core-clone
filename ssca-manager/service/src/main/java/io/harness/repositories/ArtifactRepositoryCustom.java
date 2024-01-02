@@ -10,7 +10,7 @@ package io.harness.repositories;
 import static io.harness.annotations.dev.HarnessTeam.SSCA;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import java.util.List;
 import org.springframework.data.domain.Page;

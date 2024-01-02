@@ -11,9 +11,9 @@ import io.harness.spec.server.ssca.v1.model.EnforcementResultDTO;
 import io.harness.ssca.beans.AllowList.AllowListItem;
 import io.harness.ssca.beans.AllowList.AllowListRuleType;
 import io.harness.ssca.beans.DenyList.DenyListItem;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

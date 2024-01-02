@@ -7,7 +7,7 @@
 
 package io.harness.ssca.services;
 
-import io.harness.ssca.entities.ArtifactEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import java.io.File;
 

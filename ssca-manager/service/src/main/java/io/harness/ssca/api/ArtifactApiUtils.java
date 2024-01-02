@@ -7,9 +7,9 @@
 
 package io.harness.ssca.api;
 
-import io.harness.ssca.entities.ArtifactEntity.ArtifactEntityKeys;
 import io.harness.ssca.entities.CdInstanceSummary.CdInstanceSummaryKeys;
 import io.harness.ssca.entities.NormalizedSBOMComponentEntity.NormalizedSBOMEntityKeys;
+import io.harness.ssca.entities.artifact.ArtifactEntity.ArtifactEntityKeys;
 
 import lombok.extern.slf4j.Slf4j;
 

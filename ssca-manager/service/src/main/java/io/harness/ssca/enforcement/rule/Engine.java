@@ -9,8 +9,8 @@ package io.harness.ssca.enforcement.rule;
 
 import io.harness.ssca.enforcement.ExecutorRegistry;
 import io.harness.ssca.enforcement.constants.RuleExecutorType;
-import io.harness.ssca.entities.ArtifactEntity;
 import io.harness.ssca.entities.EnforcementResultEntity;
+import io.harness.ssca.entities.artifact.ArtifactEntity;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
