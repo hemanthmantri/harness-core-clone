@@ -20,6 +20,7 @@ import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 import retrofit2.http.Url;
 
 @OwnedBy(IDP)
@@ -27,6 +28,7 @@ public interface BackstageResourceClient {
   String CATALOG_API = "{accountIdentifier}/idp/api/catalog";
   String LAYOUT_API = "{accountIdentifier}/idp/api/layout";
   String HARNESS_REFRESH_API = "{accountIdentifier}/idp/api/harness/provider";
+  String SCAFFOLDER_API = "{accountIdentifier}/idp/api/scaffolder";
 
   @GET Call<Object> getCatalogEntities(@Url String url);
 
@@ -63,4 +65,8 @@ public interface BackstageResourceClient {
   Call<Object>
   providerRefresh(
       @Path("accountIdentifier") String accountIdentifier, @Path("userGroupIdentifier") String userGroupIdentifier);
+
+  @GET(SCAFFOLDER_API + "/tasks/list")
+  Call<Object> scaffolderListTasks(
+      @Path("accountIdentifier") String accountIdentifier, @Query("listFrom") long listFrom);
 }

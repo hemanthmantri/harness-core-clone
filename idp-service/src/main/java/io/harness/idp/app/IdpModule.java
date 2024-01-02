@@ -607,6 +607,9 @@ public class IdpModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("statsComputeDailyRunJob"))
         .toInstance(new ManagedScheduledExecutorService("statsComputeDailyRunJob"));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("scaffolderTasksSyncJob"))
+        .toInstance(new ManagedScheduledExecutorService("scaffolderTasksSyncJob"));
     install(new AbstractTelemetryModule() {
       @Override
       public TelemetryConfiguration telemetryConfiguration() {

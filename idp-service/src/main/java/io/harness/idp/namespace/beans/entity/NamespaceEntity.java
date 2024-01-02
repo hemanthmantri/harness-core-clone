@@ -18,8 +18,10 @@ import io.harness.ng.DbAliases;
 
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -42,6 +44,7 @@ public class NamespaceEntity implements PersistentIterable, PersistentRegularIte
   @FdIndex Long nextIteration;
   private boolean isDeleted;
   private long deletedAt;
+  private Metadata metadata;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -56,5 +59,14 @@ public class NamespaceEntity implements PersistentIterable, PersistentRegularIte
   @Override
   public String getUuid() {
     return this.id;
+  }
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldNameConstants(innerTypeName = "NamespaceMetadataKeys")
+  public static class Metadata {
+    private long scaffolderTasksSyncFrom;
   }
 }

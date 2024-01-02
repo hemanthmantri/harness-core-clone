@@ -40,6 +40,7 @@ import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.idp.annotations.IdpServiceAuth;
 import io.harness.idp.annotations.IdpServiceAuthIfHasApiKey;
+import io.harness.idp.backstage.jobs.ScaffolderTasksSyncJob;
 import io.harness.idp.configmanager.jobs.ConfigPurgeJob;
 import io.harness.idp.envvariable.jobs.BackstageEnvVariablesSyncJob;
 import io.harness.idp.events.consumers.EntityCrudStreamConsumer;
@@ -292,6 +293,7 @@ public class IdpApplication extends Application<IdpConfiguration> {
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     environment.lifecycle().manage(injector.getInstance(LicenseUsageDailyCountJob.class));
     environment.lifecycle().manage(injector.getInstance(StatsComputeDailyRunJob.class));
+    environment.lifecycle().manage(injector.getInstance(ScaffolderTasksSyncJob.class));
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
