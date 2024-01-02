@@ -10,7 +10,6 @@ package io.harness.idp.scorecard.scores.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.expression.common.ExpressionMode.RETURN_NULL_IF_UNRESOLVED;
 import static io.harness.idp.common.Constants.DATA_POINT_VALUE_KEY;
-import static io.harness.idp.common.Constants.DOT_SEPARATOR;
 import static io.harness.idp.common.Constants.ERROR_MESSAGE_KEY;
 import static io.harness.idp.common.Constants.SPACE_SEPARATOR;
 import static io.harness.idp.common.JacksonUtils.convert;
@@ -352,7 +351,7 @@ public class ScoreComputerServiceImpl implements ScoreComputerService {
             Collections.singletonList(rule), checkEntity.getRuleStrategy(), ERROR_MESSAGE_KEY, true);
         Object errorMessage = evaluator.evaluateExpression(errorMessageExpression, RETURN_NULL_IF_UNRESOLVED);
         if ((errorMessage instanceof String) && !((String) errorMessage).isEmpty()) {
-          reasonBuilder.append(String.format("Reason: %s", errorMessage + DOT_SEPARATOR + SPACE_SEPARATOR));
+          reasonBuilder.append(String.format("Reason: %s", errorMessage));
         } else {
           String lhsExpression = constructExpressionFromRules(
               Collections.singletonList(rule), checkEntity.getRuleStrategy(), DATA_POINT_VALUE_KEY, true);
@@ -363,7 +362,7 @@ public class ScoreComputerServiceImpl implements ScoreComputerService {
             reasonBuilder.append(String.format(". Message: %s", checkEntity.getFailMessage()));
           }
         }
-        reasonBuilder.append("; ");
+        reasonBuilder.append(";").append(SPACE_SEPARATOR);
       } catch (Exception e) {
         log.warn("Reason expression evaluation failed", e);
       }

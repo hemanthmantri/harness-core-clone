@@ -96,6 +96,6 @@ public class CommonUtils {
   }
 
   public static String parseObjectToString(Object value) {
-    return value != null ? (String) value : null;
+    return value != null ? (String) value : StringUtils.EMPTY;
   }
 }

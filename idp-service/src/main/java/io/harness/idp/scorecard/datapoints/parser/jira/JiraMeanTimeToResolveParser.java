@@ -40,8 +40,8 @@ public class JiraMeanTimeToResolveParser implements DataPointParser {
 
     if (isEmpty(data) || !isEmpty((String) data.get(ERROR_MESSAGE_KEY))) {
       String errorMessage = (String) data.get(ERROR_MESSAGE_KEY);
-      dataPointData.putAll(
-          constructDataPointInfo(dataFetchDTO, null, isEmpty(errorMessage) ? errorMessage : INVALID_CONDITIONAL_INPUT));
+      dataPointData.putAll(constructDataPointInfo(
+          dataFetchDTO, null, !isEmpty(errorMessage) ? errorMessage : INVALID_CONDITIONAL_INPUT));
       return dataPointData;
     }
 
