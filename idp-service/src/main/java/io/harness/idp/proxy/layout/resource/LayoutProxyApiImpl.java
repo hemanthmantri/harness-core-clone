@@ -7,8 +7,8 @@
 
 package io.harness.idp.proxy.layout.resource;
 
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
+import static io.harness.idp.common.RbacConstants.IDP_LAYOUT;
+import static io.harness.idp.common.RbacConstants.IDP_LAYOUT_EDIT;
 import static io.harness.remote.client.NGRestUtils.getGeneralResponse;
 
 import io.harness.accesscontrol.AccountIdentifier;
@@ -41,7 +41,7 @@ public class LayoutProxyApiImpl implements LayoutProxyApi {
   LayoutService layoutsService;
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_LAYOUT, permission = IDP_LAYOUT_EDIT)
   public Response createLayout(@Valid LayoutRequest body, @AccountIdentifier String harnessAccount) {
     try {
       Object entity = getGeneralResponse(backstageResourceClient.createLayout(body, harnessAccount));
@@ -56,7 +56,7 @@ public class LayoutProxyApiImpl implements LayoutProxyApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_LAYOUT, permission = IDP_LAYOUT_EDIT)
   public Response deleteLayout(@Valid LayoutRequest body, @AccountIdentifier String harnessAccount) {
     try {
       Object entity = getGeneralResponse(backstageResourceClient.deleteLayout(body, harnessAccount));
@@ -70,7 +70,7 @@ public class LayoutProxyApiImpl implements LayoutProxyApi {
   }
 
   @Override
-  public Response getAllLayouts(String harnessAccount) {
+  public Response getAllLayouts(@AccountIdentifier String harnessAccount) {
     try {
       Object entity = getGeneralResponse(backstageResourceClient.getAllLayouts(harnessAccount));
       return Response.ok(entity).build();
@@ -83,7 +83,7 @@ public class LayoutProxyApiImpl implements LayoutProxyApi {
   }
 
   @Override
-  public Response getLayout(String layoutIdentifier, String harnessAccount) {
+  public Response getLayout(String layoutIdentifier, @AccountIdentifier String harnessAccount) {
     try {
       Object entity = getGeneralResponse(backstageResourceClient.getLayout(harnessAccount, layoutIdentifier));
       return Response.ok(entity).build();
@@ -96,7 +96,7 @@ public class LayoutProxyApiImpl implements LayoutProxyApi {
   }
 
   @Override
-  public Response getLayoutHealth(String harnessAccount) {
+  public Response getLayoutHealth(@AccountIdentifier String harnessAccount) {
     try {
       Object entity = getGeneralResponse(backstageResourceClient.getHealth(harnessAccount));
       return Response.ok(entity).build();
@@ -109,7 +109,7 @@ public class LayoutProxyApiImpl implements LayoutProxyApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_LAYOUT, permission = IDP_LAYOUT_EDIT)
   public Response layoutIngest(@Valid LayoutIngestRequest body, @AccountIdentifier String harnessAccount) {
     try {
       Object entity = getGeneralResponse(backstageResourceClient.ingestLayout(body, harnessAccount));

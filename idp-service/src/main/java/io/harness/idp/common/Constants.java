@@ -18,8 +18,6 @@ public class Constants {
   private Constants() {}
 
   public static final String IDP_PREFIX = "idp_";
-  public static final String IDP_RESOURCE_TYPE = "IDP_SETTINGS";
-  public static final String IDP_PERMISSION = "idp_idpsettings_manage";
 
   // Plugin identifiers
   public static final String CIRCLE_CI_PLUGIN = "circleci";

@@ -7,6 +7,7 @@
 
 package io.harness.idp.status.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
@@ -28,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class StatusInfoV2ApiImpl implements StatusInfoV2Api {
   private StatusInfoService statusInfoService;
   @Override
-  public Response getStatusInfoTypeV2(String type, String harnessAccount) {
+  public Response getStatusInfoTypeV2(String type, @AccountIdentifier String harnessAccount) {
     try {
       StatusInfoV2 statusInfoV2 = statusInfoService.findByAccountIdentifierAndTypeV2(harnessAccount, type);
       return Response.status(Response.Status.OK).entity(statusInfoV2).build();

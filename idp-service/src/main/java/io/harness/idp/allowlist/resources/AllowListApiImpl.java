@@ -7,8 +7,8 @@
 
 package io.harness.idp.allowlist.resources;
 
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
+import static io.harness.idp.common.RbacConstants.IDP_ADVANCED_CONFIGURATION;
+import static io.harness.idp.common.RbacConstants.IDP_ADVANCED_CONFIGURATION_EDIT;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AllowListApiImpl implements AllowListApi {
   private AllowListService allowListService;
   @Override
-  public Response getAllowList(String harnessAccount) {
+  public Response getAllowList(@AccountIdentifier String harnessAccount) {
     try {
       List<HostInfo> hostInfoList = allowListService.getAllowList(harnessAccount);
       AllowListResponse response = new AllowListResponse();
@@ -53,7 +53,7 @@ public class AllowListApiImpl implements AllowListApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_ADVANCED_CONFIGURATION, permission = IDP_ADVANCED_CONFIGURATION_EDIT)
   public Response saveAllowList(@Valid AllowListRequest body, @AccountIdentifier String harnessAccount) {
     try {
       List<HostInfo> hostInfoList = allowListService.saveAllowList(body.getAllow(), harnessAccount);

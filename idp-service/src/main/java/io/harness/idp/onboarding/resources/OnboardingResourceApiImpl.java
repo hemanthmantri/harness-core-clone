@@ -7,8 +7,8 @@
 
 package io.harness.idp.onboarding.resources;
 
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
+import static io.harness.idp.common.RbacConstants.IDP_ADVANCED_CONFIGURATION;
+import static io.harness.idp.common.RbacConstants.IDP_ADVANCED_CONFIGURATION_EDIT;
 import static io.harness.idp.onboarding.utils.Constants.UI_DEFAULT_PAGE;
 import static io.harness.idp.onboarding.utils.Constants.UI_DEFAULT_PAGE_LIMIT;
 
@@ -44,7 +44,6 @@ public class OnboardingResourceApiImpl implements OnboardingResourceApi {
   private OnboardingService onboardingService;
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
   public Response getHarnessEntitiesCount(@AccountIdentifier String harnessAccount) {
     log.info("Request received to get harness entities count for idp import. Account = {}", harnessAccount);
     HarnessEntitiesCountResponse harnessEntitiesCount = onboardingService.getHarnessEntitiesCount(harnessAccount);
@@ -52,7 +51,6 @@ public class OnboardingResourceApiImpl implements OnboardingResourceApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
   public Response getHarnessEntities(@AccountIdentifier String harnessAccount, Integer page, Integer limit, String sort,
       String order, String searchTerm, String projectToFilter) {
     log.info("Request received to get harness entities for idp import. Account = {}", harnessAccount);
@@ -69,7 +67,6 @@ public class OnboardingResourceApiImpl implements OnboardingResourceApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
   public Response onboardingGenerateYaml(
       @Valid GenerateYamlRequest generateYamlRequest, @AccountIdentifier String harnessAccount) {
     log.info("Request received to generate entity yaml definition. Account = {}, Request = {}", harnessAccount,
@@ -79,7 +76,7 @@ public class OnboardingResourceApiImpl implements OnboardingResourceApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_ADVANCED_CONFIGURATION, permission = IDP_ADVANCED_CONFIGURATION_EDIT)
   public Response importHarnessEntities(
       @Valid ImportEntitiesBase importHarnessEntitiesRequest, @AccountIdentifier String harnessAccount) {
     log.info("Request received to import harness entities to IDP. Account = {}, Request = {}", harnessAccount,

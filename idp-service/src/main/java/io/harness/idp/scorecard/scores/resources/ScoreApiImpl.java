@@ -7,6 +7,7 @@
 
 package io.harness.idp.scorecard.scores.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
@@ -45,7 +46,7 @@ public class ScoreApiImpl implements ScoresApi {
   private AsyncScoreComputationService asyncScoreComputationService;
 
   @Override
-  public Response getAllScorecardSummary(String entityIdentifier, String harnessAccount) {
+  public Response getAllScorecardSummary(String entityIdentifier, @AccountIdentifier String harnessAccount) {
     try {
       List<ScorecardSummaryInfo> scorecardSummaryInfoList =
           scoreService.getScoresSummaryForAnEntity(harnessAccount, entityIdentifier);
@@ -63,7 +64,7 @@ public class ScoreApiImpl implements ScoresApi {
 
   @Override
   public Response scorecardRecalibrate(
-      @Valid ScorecardRecalibrateRequest scorecardRecalibrateRequest, String harnessAccount) {
+      @Valid ScorecardRecalibrateRequest scorecardRecalibrateRequest, @AccountIdentifier String harnessAccount) {
     try {
       ScorecardSummaryInfo scorecardSummaryInfo = scoreService.getScorecardRecalibratedScoreInfoForAnEntityAndScorecard(
           harnessAccount, scorecardRecalibrateRequest.getIdentifiers().getEntityIdentifier(),
@@ -84,7 +85,7 @@ public class ScoreApiImpl implements ScoresApi {
 
   @Override
   public Response getScorecardsGraphsScoreSummary(
-      String entityIdentifier, String harnessAccount, String scorecardIdentifier) {
+      String entityIdentifier, String harnessAccount, @AccountIdentifier String scorecardIdentifier) {
     try {
       List<ScorecardGraphSummaryInfo> scorecardGraphSummaryInfos =
           scoreService.getScoresGraphSummaryForAnEntityAndScorecard(
@@ -103,7 +104,7 @@ public class ScoreApiImpl implements ScoresApi {
   }
 
   @Override
-  public Response getScorecardsScoresOverview(String entityIdentifier, String harnessAccount) {
+  public Response getScorecardsScoresOverview(String entityIdentifier, @AccountIdentifier String harnessAccount) {
     try {
       List<ScorecardScore> scorecardScores =
           scoreService.getScorecardScoreOverviewForAnEntity(harnessAccount, entityIdentifier);
@@ -127,7 +128,8 @@ public class ScoreApiImpl implements ScoresApi {
   }
 
   @Override
-  public Response getScoresRecalibrateStatus(@Valid ScorecardRecalibrateRequest body, String harnessAccount) {
+  public Response getScoresRecalibrateStatus(
+      @Valid ScorecardRecalibrateRequest body, @AccountIdentifier String harnessAccount) {
     ScorecardRecalibrateIdentifiers identifiers = body.getIdentifiers();
     String scorecardIdentifier = identifiers.getScorecardIdentifier();
     String entityIdentifier = identifiers.getEntityIdentifier();
@@ -147,7 +149,7 @@ public class ScoreApiImpl implements ScoresApi {
   }
 
   @Override
-  public Response getAggregatedScores(@Valid ScorecardFilter body, String harnessAccount) {
+  public Response getAggregatedScores(@Valid ScorecardFilter body, @AccountIdentifier String harnessAccount) {
     try {
       List<EntityScores> entityScores = scoreService.getEntityScores(harnessAccount, body);
       List<EntityScoresResponse> entityScoresResponse = new ArrayList<>();

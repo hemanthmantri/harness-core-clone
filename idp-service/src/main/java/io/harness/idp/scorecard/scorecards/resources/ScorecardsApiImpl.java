@@ -7,9 +7,10 @@
 
 package io.harness.idp.scorecard.scorecards.resources;
 
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
 import static io.harness.idp.common.Constants.SUCCESS_RESPONSE;
+import static io.harness.idp.common.RbacConstants.IDP_SCORECARD;
+import static io.harness.idp.common.RbacConstants.IDP_SCORECARD_DELETE;
+import static io.harness.idp.common.RbacConstants.IDP_SCORECARD_EDIT;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
@@ -47,13 +48,13 @@ public class ScorecardsApiImpl implements ScorecardsApi {
   }
 
   @Override
-  public Response getScorecards(String harnessAccount) {
+  public Response getScorecards(@AccountIdentifier String harnessAccount) {
     List<Scorecard> scorecards = scorecardService.getAllScorecardsAndChecksDetails(harnessAccount);
     return Response.status(Response.Status.OK).entity(ScorecardMapper.toResponseList(scorecards)).build();
   }
 
   @Override
-  public Response getScorecard(String scorecardId, String harnessAccount) {
+  public Response getScorecard(String scorecardId, @AccountIdentifier String harnessAccount) {
     try {
       ScorecardDetailsResponse response = scorecardService.getScorecardDetails(harnessAccount, scorecardId);
       return Response.status(Response.Status.OK).entity(response).build();
@@ -69,7 +70,7 @@ public class ScorecardsApiImpl implements ScorecardsApi {
   }
 
   @Override
-  public Response getScorecardStats(String scorecardId, String harnessAccount) {
+  public Response getScorecardStats(String scorecardId, @AccountIdentifier String harnessAccount) {
     try {
       ScorecardStatsResponse response = scorecardService.getScorecardStats(harnessAccount, scorecardId);
       return Response.status(Response.Status.OK).entity(response).build();
@@ -85,7 +86,7 @@ public class ScorecardsApiImpl implements ScorecardsApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_SCORECARD, permission = IDP_SCORECARD_EDIT)
   public Response createScorecard(@Valid ScorecardDetailsRequest body, @AccountIdentifier String harnessAccount) {
     try {
       scorecardService.saveScorecard(body, harnessAccount);
@@ -108,7 +109,7 @@ public class ScorecardsApiImpl implements ScorecardsApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_SCORECARD, permission = IDP_SCORECARD_DELETE)
   public Response deleteScorecard(String scorecardId, @AccountIdentifier String harnessAccount) {
     try {
       scorecardService.deleteScorecard(harnessAccount, scorecardId);
@@ -125,7 +126,7 @@ public class ScorecardsApiImpl implements ScorecardsApi {
   }
 
   @Override
-  public Response getEntityFacets(@NotNull String kind, String harnessAccount) {
+  public Response getEntityFacets(@NotNull String kind, @AccountIdentifier String harnessAccount) {
     try {
       Facets facets = scorecardService.getAllEntityFacets(harnessAccount, kind);
       return Response.status(Response.Status.OK).entity(facets).build();
@@ -138,7 +139,7 @@ public class ScorecardsApiImpl implements ScorecardsApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_SCORECARD, permission = IDP_SCORECARD_EDIT)
   public Response updateScorecard(
       String scorecardId, @Valid ScorecardDetailsRequest body, @AccountIdentifier String harnessAccount) {
     try {

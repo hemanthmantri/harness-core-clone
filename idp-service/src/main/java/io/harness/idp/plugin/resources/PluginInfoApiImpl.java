@@ -7,8 +7,9 @@
 
 package io.harness.idp.plugin.resources;
 
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
+import static io.harness.idp.common.RbacConstants.IDP_PLUGIN;
+import static io.harness.idp.common.RbacConstants.IDP_PLUGIN_DELETE;
+import static io.harness.idp.common.RbacConstants.IDP_PLUGIN_EDIT;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
@@ -51,13 +52,13 @@ public class PluginInfoApiImpl implements PluginInfoApi {
   private IdpCommonService idpCommonService;
   private PluginInfoService pluginInfoService;
   @Override
-  public Response getPlugins(String harnessAccount) {
+  public Response getPlugins(@AccountIdentifier String harnessAccount) {
     List<PluginInfo> plugins = pluginInfoService.getAllPluginsInfo(harnessAccount);
     return Response.status(Response.Status.OK).entity(PluginInfoMapper.toResponseList(plugins)).build();
   }
 
   @Override
-  public Response getPluginsInfoPluginId(String pluginId, String harnessAccount, Boolean meta) {
+  public Response getPluginsInfoPluginId(String pluginId, @AccountIdentifier String harnessAccount, Boolean meta) {
     try {
       // set default to false
       meta = meta != null && meta;
@@ -74,6 +75,7 @@ public class PluginInfoApiImpl implements PluginInfoApi {
   }
 
   @Override
+  @NGAccessControlCheck(resourceType = IDP_PLUGIN, permission = IDP_PLUGIN_DELETE)
   public Response deleteCustomPluginInfo(String pluginId, @AccountIdentifier String harnessAccount) {
     try {
       pluginInfoService.deletePluginInfo(pluginId, harnessAccount);
@@ -99,13 +101,14 @@ public class PluginInfoApiImpl implements PluginInfoApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_PLUGIN, permission = IDP_PLUGIN_EDIT)
   public Response postPluginRequest(@Valid RequestPlugin pluginRequest, @AccountIdentifier String harnessAccount) {
     pluginInfoService.savePluginRequest(harnessAccount, pluginRequest);
     return Response.status(Response.Status.CREATED).build();
   }
 
   @Override
+  @NGAccessControlCheck(resourceType = IDP_PLUGIN, permission = IDP_PLUGIN_EDIT)
   public Response saveCustomPluginsInfo(@Valid Object body, @AccountIdentifier String harnessAccount) {
     try {
       CustomPluginDetailedInfo info = pluginInfoService.generateIdentifierAndSaveCustomPluginInfo(harnessAccount);
@@ -121,6 +124,7 @@ public class PluginInfoApiImpl implements PluginInfoApi {
   }
 
   @Override
+  @NGAccessControlCheck(resourceType = IDP_PLUGIN, permission = IDP_PLUGIN_EDIT)
   public Response updateCustomPluginsInfo(
       String pluginId, @Valid CustomPluginInfoRequest body, @AccountIdentifier String harnessAccount) {
     try {

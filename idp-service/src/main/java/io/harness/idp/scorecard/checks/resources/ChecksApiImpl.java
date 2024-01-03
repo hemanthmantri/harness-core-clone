@@ -9,9 +9,10 @@ package io.harness.idp.scorecard.checks.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.idp.common.Constants.DOT_SEPARATOR;
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
 import static io.harness.idp.common.Constants.SUCCESS_RESPONSE;
+import static io.harness.idp.common.RbacConstants.IDP_SCORECARD;
+import static io.harness.idp.common.RbacConstants.IDP_SCORECARD_DELETE;
+import static io.harness.idp.common.RbacConstants.IDP_SCORECARD_EDIT;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
@@ -63,8 +64,8 @@ public class ChecksApiImpl implements ChecksApi {
   }
 
   @Override
-  public Response getChecks(
-      Boolean custom, String harnessAccount, Integer page, Integer limit, String sort, String searchTerm) {
+  public Response getChecks(Boolean custom, @AccountIdentifier String harnessAccount, Integer page, Integer limit,
+      String sort, String searchTerm) {
     int pageIndex = page == null ? 0 : page;
     int pageLimit = limit == null ? 100 : limit;
     Pageable pageRequest = isEmpty(sort)
@@ -85,7 +86,7 @@ public class ChecksApiImpl implements ChecksApi {
   }
 
   @Override
-  public Response getCheck(String checkId, String harnessAccount, Boolean isCustom) {
+  public Response getCheck(String checkId, @AccountIdentifier String harnessAccount, Boolean isCustom) {
     try {
       CheckDetails checkDetails = checkService.getCheckDetails(harnessAccount, checkId, isCustom);
       CheckDetailsResponse response = new CheckDetailsResponse();
@@ -102,7 +103,7 @@ public class ChecksApiImpl implements ChecksApi {
   }
 
   @Override
-  public Response getCheckGraph(String checkId, String harnessAccount, Boolean custom) {
+  public Response getCheckGraph(String checkId, @AccountIdentifier String harnessAccount, Boolean custom) {
     try {
       List<CheckGraph> checkGraphs = checkService.getCheckGraph(harnessAccount, checkId, custom);
       return Response.status(Response.Status.OK).entity(checkGraphs).build();
@@ -117,7 +118,7 @@ public class ChecksApiImpl implements ChecksApi {
   }
 
   @Override
-  public Response getCheckStats(String checkId, String harnessAccount, Boolean isCustom) {
+  public Response getCheckStats(String checkId, @AccountIdentifier String harnessAccount, Boolean isCustom) {
     try {
       CheckStatsResponse response = checkService.getCheckStats(harnessAccount, checkId, isCustom);
       return Response.status(Response.Status.OK).entity(response).build();
@@ -132,7 +133,7 @@ public class ChecksApiImpl implements ChecksApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_SCORECARD, permission = IDP_SCORECARD_EDIT)
   public Response createCheck(@Valid CheckDetailsRequest body, @AccountIdentifier String harnessAccount) {
     try {
       checkService.createCheck(body.getCheckDetails(), harnessAccount);
@@ -155,7 +156,7 @@ public class ChecksApiImpl implements ChecksApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_SCORECARD, permission = IDP_SCORECARD_DELETE)
   public Response deleteCheck(String checkId, @AccountIdentifier String harnessAccount, Boolean forceDelete) {
     try {
       checkService.deleteCustomCheck(harnessAccount, checkId, forceDelete);
@@ -172,7 +173,7 @@ public class ChecksApiImpl implements ChecksApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_SCORECARD, permission = IDP_SCORECARD_EDIT)
   public Response updateCheck(
       String checkId, @Valid CheckDetailsRequest body, @AccountIdentifier String harnessAccount) {
     try {

@@ -7,6 +7,7 @@
 
 package io.harness.idp.scorecard.datasources.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
@@ -32,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DataSourceApiImpl implements DataSourceApi {
   DataSourceService dataSourceService;
   @Override
-  public Response getAllDatasourcesForAccount(String harnessAccount) {
+  public Response getAllDatasourcesForAccount(@AccountIdentifier String harnessAccount) {
     try {
       List<DataSource> dataSources = dataSourceService.getAllDataSourcesDetailsForAnAccount(harnessAccount);
       DataSourcesResponse dataSourcesResponse = new DataSourcesResponse();
@@ -47,7 +48,7 @@ public class DataSourceApiImpl implements DataSourceApi {
   }
 
   @Override
-  public Response getDataPointsForDataSource(String dataSource, String harnessAccount) {
+  public Response getDataPointsForDataSource(String dataSource, @AccountIdentifier String harnessAccount) {
     try {
       List<DataPoint> dataPoints = dataSourceService.getAllDataPointsDetailsForDataSource(harnessAccount, dataSource);
       DataPointsResponse dataPointsResponse = new DataPointsResponse();
@@ -63,7 +64,7 @@ public class DataSourceApiImpl implements DataSourceApi {
   }
 
   @Override
-  public Response getDataSourcesDataPointsMap(String harnessAccount) {
+  public Response getDataSourcesDataPointsMap(@AccountIdentifier String harnessAccount) {
     try {
       List<DataSourceDataPointsMap> dataSourceDataPointsMaps =
           dataSourceService.getDataPointsForDataSources(harnessAccount);

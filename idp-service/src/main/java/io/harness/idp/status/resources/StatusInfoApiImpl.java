@@ -7,8 +7,8 @@
 
 package io.harness.idp.status.resources;
 
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
+import static io.harness.idp.common.RbacConstants.IDP_ADVANCED_CONFIGURATION;
+import static io.harness.idp.common.RbacConstants.IDP_ADVANCED_CONFIGURATION_EDIT;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
@@ -38,7 +38,7 @@ public class StatusInfoApiImpl implements StatusInfoApi {
   private StatusInfoService statusInfoService;
 
   @Override
-  public Response getStatusInfoByType(String type, String harnessAccount) {
+  public Response getStatusInfoByType(String type, @AccountIdentifier String harnessAccount) {
     try {
       Optional<StatusInfo> statusInfo = statusInfoService.findByAccountIdentifierAndType(harnessAccount, type);
       StatusInfoResponse statusResponse = new StatusInfoResponse();
@@ -56,7 +56,7 @@ public class StatusInfoApiImpl implements StatusInfoApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_ADVANCED_CONFIGURATION, permission = IDP_ADVANCED_CONFIGURATION_EDIT)
   public Response saveStatusInfoByType(
       String type, @Valid StatusInfoRequest body, @AccountIdentifier String harnessAccount) {
     try {

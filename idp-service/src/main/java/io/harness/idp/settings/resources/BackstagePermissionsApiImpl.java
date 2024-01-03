@@ -7,8 +7,10 @@
 
 package io.harness.idp.settings.resources;
 
-import static io.harness.idp.common.Constants.IDP_PERMISSION;
-import static io.harness.idp.common.Constants.IDP_RESOURCE_TYPE;
+import static io.harness.idp.common.RbacConstants.IDP_CATALOG_ACCESS_POLICY;
+import static io.harness.idp.common.RbacConstants.IDP_CATALOG_ACCESS_POLICY_CREATE;
+import static io.harness.idp.common.RbacConstants.IDP_CATALOG_ACCESS_POLICY_EDIT;
+import static io.harness.idp.common.RbacConstants.IDP_CATALOG_ACCESS_POLICY_VIEW;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
@@ -37,7 +39,8 @@ public class BackstagePermissionsApiImpl implements BackstagePermissionsApi {
   private BackstagePermissionsService backstagePermissionsService;
 
   @Override
-  public Response getBackstagePermissions(String harnessAccount) {
+  @NGAccessControlCheck(resourceType = IDP_CATALOG_ACCESS_POLICY, permission = IDP_CATALOG_ACCESS_POLICY_VIEW)
+  public Response getBackstagePermissions(@AccountIdentifier String harnessAccount) {
     Optional<BackstagePermissions> backstagePermissions =
         backstagePermissionsService.findByAccountIdentifier(harnessAccount);
     if (backstagePermissions.isEmpty()) {
@@ -50,7 +53,7 @@ public class BackstagePermissionsApiImpl implements BackstagePermissionsApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_CATALOG_ACCESS_POLICY, permission = IDP_CATALOG_ACCESS_POLICY_CREATE)
   public Response createBackstagePermissions(
       @Valid BackstagePermissionsRequest body, @AccountIdentifier String harnessAccount) {
     BackstagePermissions backstagePermissions;
@@ -68,7 +71,7 @@ public class BackstagePermissionsApiImpl implements BackstagePermissionsApi {
   }
 
   @Override
-  @NGAccessControlCheck(resourceType = IDP_RESOURCE_TYPE, permission = IDP_PERMISSION)
+  @NGAccessControlCheck(resourceType = IDP_CATALOG_ACCESS_POLICY, permission = IDP_CATALOG_ACCESS_POLICY_EDIT)
   public Response updateBackstagePermissions(
       @Valid BackstagePermissionsRequest body, @AccountIdentifier String harnessAccount) {
     BackstagePermissions backstagePermissions;

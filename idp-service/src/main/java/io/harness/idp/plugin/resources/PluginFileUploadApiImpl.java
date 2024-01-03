@@ -7,7 +7,12 @@
 
 package io.harness.idp.plugin.resources;
 
+import static io.harness.idp.common.RbacConstants.IDP_PLUGIN;
+import static io.harness.idp.common.RbacConstants.IDP_PLUGIN_DELETE;
+import static io.harness.idp.common.RbacConstants.IDP_PLUGIN_EDIT;
+
 import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
@@ -34,6 +39,7 @@ public class PluginFileUploadApiImpl implements PluginFileUploadApi {
   private PluginInfoService pluginInfoService;
 
   @Override
+  @NGAccessControlCheck(resourceType = IDP_PLUGIN, permission = IDP_PLUGIN_EDIT)
   public Response uploadCustomPluginFile(String pluginId, String fileType, InputStream fileInputStream,
       FormDataContentDisposition fileDetail, @AccountIdentifier String harnessAccount) {
     try {
@@ -64,6 +70,7 @@ public class PluginFileUploadApiImpl implements PluginFileUploadApi {
   }
 
   @Override
+  @NGAccessControlCheck(resourceType = IDP_PLUGIN, permission = IDP_PLUGIN_DELETE)
   public Response deletePluginFile(
       String pluginId, @AccountIdentifier String harnessAccount, String fileType, String fileName) {
     try {
