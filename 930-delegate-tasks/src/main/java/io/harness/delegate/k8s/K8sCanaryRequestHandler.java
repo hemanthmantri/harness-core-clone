@@ -6,6 +6,7 @@
  */
 
 package io.harness.delegate.k8s;
+
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
@@ -14,6 +15,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
+import static io.harness.k8s.K8sCommandUnitConstants.TrafficRouting;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
@@ -25,6 +27,8 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.CodePulse;
 import io.harness.annotations.dev.HarnessModuleComponent;
@@ -45,6 +49,7 @@ import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.client.K8sClient;
 import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
 import io.harness.delegate.task.k8s.data.K8sCanaryDataException.K8sCanaryDataExceptionBuilder;
+import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfig;
 import io.harness.delegate.task.utils.ServiceHookDTO;
 import io.harness.delegate.utils.ServiceHookHandler;
 import io.harness.exception.InvalidArgumentsException;
@@ -139,6 +144,9 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     prepareForCanary(k8sCanaryDeployRequest, k8sDelegateTaskParams,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress));
 
+    prepareForTrafficRouting(
+        k8sCanaryDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
+
     if (k8sCanaryDeployRequest.getManifestDelegateConfig() instanceof HelmChartManifestDelegateConfig) {
       helmChartInfo = k8sTaskHelperBase.getHelmChartDetails(
           k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory());
@@ -215,6 +223,12 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
       canaryObjectsNames = k8sCanaryBaseHandler.appendSecretAndConfigMapNamesToCanaryWorkloads(
           canaryObjectsNames, k8sCanaryHandlerConfig.getResources());
     }
+
+    if (k8sCanaryDeployRequest.getTrafficRoutingConfig() != null) {
+      canaryObjectsNames = k8sCanaryBaseHandler.appendTrafficRoutingResourceNamesToCanaryWorkloads(
+          canaryObjectsNames, k8sCanaryHandlerConfig.getResources());
+    }
+
     return K8sDeployResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .k8sNGTaskResponse(K8sCanaryDeployResponse.builder()
@@ -384,5 +398,33 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
   @VisibleForTesting
   K8sRequestHandlerContext getK8sRequestHandlerContext() {
     return k8sRequestHandlerContext;
+  }
+
+  void prepareForTrafficRouting(K8sCanaryDeployRequest k8sCanaryDeployRequest,
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) {
+    K8sTrafficRoutingConfig trafficRoutingConfig = k8sCanaryDeployRequest.getTrafficRoutingConfig();
+    if (trafficRoutingConfig == null) {
+      return;
+    }
+
+    LogCallback logCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, TrafficRouting, true, commandUnitsProgress);
+    List<KubernetesResource> kubernetesResources = k8sCanaryHandlerConfig.getResources();
+
+    KubernetesResource primaryService = k8sCanaryBaseHandler.findPrimaryServiceForCanaryDeployment(kubernetesResources);
+    logCallback.saveExecutionLog(format("Primary service: %s", primaryService.getResourceId().getName()));
+
+    KubernetesResource canaryService = k8sCanaryBaseHandler.createCanaryServiceFromPrimary(primaryService);
+    kubernetesResources.add(canaryService);
+    logCallback.saveExecutionLog(format("Canary service: %s", canaryService.getResourceId().getName()));
+
+    k8sCanaryBaseHandler.setStableAndCanaryLabelSelectors(primaryService, canaryService);
+
+    List<KubernetesResource> trafficRoutingResources =
+        k8sCanaryBaseHandler.createTrafficRoutingResources(k8sCanaryDeployRequest, k8sDelegateTaskParams,
+            trafficRoutingConfig, k8sCanaryHandlerConfig, primaryService, canaryService, logCallback);
+
+    kubernetesResources.addAll(trafficRoutingResources);
   }
 }

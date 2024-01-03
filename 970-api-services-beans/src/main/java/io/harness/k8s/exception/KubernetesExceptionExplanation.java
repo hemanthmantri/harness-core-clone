@@ -46,7 +46,10 @@ public class KubernetesExceptionExplanation {
   public final String BG_MULTIPLE_WORKLOADS =
       "Found %d workloads in manifest: [%s]. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only";
   public final String BG_NO_SERVICE_FOUND = "Service is required for BlueGreen deployments";
+  public final String CANARY_NO_SERVICE_FOUND = "Service is required for Canary deployments";
   public final String BG_MULTIPLE_PRIMARY_SERVICE =
+      "Found %s services in manifest: [%s]. Could not locate primary service";
+  public final String CANARY_MULTIPLE_PRIMARY_SERVICE =
       "Found %s services in manifest: [%s]. Could not locate primary service";
   public final String BG_CONFLICTING_SERVICE =
       "For blue/green deployment, the label [" + HarnessLabels.color + "] is required in service selector";

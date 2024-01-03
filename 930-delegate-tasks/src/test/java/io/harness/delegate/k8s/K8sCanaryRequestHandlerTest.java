@@ -11,6 +11,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.BUHA;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.PRATYUSH;
 
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -43,6 +45,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.helm.HelmChartInfo;
@@ -59,6 +62,7 @@ import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.delegate.task.k8s.client.K8sClient;
 import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
+import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfig;
 import io.harness.delegate.utils.ServiceHookHandler;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -72,6 +76,7 @@ import io.harness.k8s.model.K8sRequestHandlerContext;
 import io.harness.k8s.model.K8sSteadyStateDTO;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.releasehistory.IK8sRelease;
 import io.harness.k8s.releasehistory.IK8sReleaseHistory;
 import io.harness.k8s.releasehistory.K8sRelease;
@@ -84,6 +89,7 @@ import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -105,6 +111,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
   @InjectMocks private K8sCanaryRequestHandler k8sCanaryRequestHandler;
 
   @Mock ILogStreamingTaskClient iLogStreamingTaskClient;
+  @Mock CommandUnitsProgress commandUnitProgress;
   @Mock private LogCallback logCallback;
   @Mock private K8sInfraDelegateConfig k8sInfraDelegateConfig;
   @Mock private ManifestDelegateConfig manifestDelegateConfig;
@@ -152,6 +159,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
     k8sCanaryHandlerConfig = k8sCanaryRequestHandler.getK8sCanaryHandlerConfig();
     k8sCanaryHandlerConfig.setKubernetesConfig(kubernetesConfig);
     k8sCanaryHandlerConfig.setManifestFilesDirectory(manifestFileDirectory);
+    k8sCanaryHandlerConfig.setResources(new ArrayList<>());
   }
 
   @Test
@@ -591,6 +599,45 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
     });
 
     verify(k8sCanaryBaseHandler, times(1)).failAndSaveRelease(k8sCanaryHandlerConfig);
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testPrepareForTrafficRouting() {
+    K8sTrafficRoutingConfig trafficRoutingConfig = K8sTrafficRoutingConfig.builder().build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    K8sCanaryDeployRequest deployRequest =
+        K8sCanaryDeployRequest.builder().trafficRoutingConfig(trafficRoutingConfig).build();
+
+    doReturn(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build())
+        .when(k8sCanaryBaseHandler)
+        .findPrimaryServiceForCanaryDeployment(any());
+    doReturn(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build())
+        .when(k8sCanaryBaseHandler)
+        .createCanaryServiceFromPrimary(any());
+
+    k8sCanaryRequestHandler.prepareForTrafficRouting(
+        deployRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitProgress);
+
+    verify(k8sCanaryBaseHandler, times(1)).findPrimaryServiceForCanaryDeployment(any());
+    verify(k8sCanaryBaseHandler, times(1)).createCanaryServiceFromPrimary(any());
+    verify(k8sCanaryBaseHandler, times(1)).setStableAndCanaryLabelSelectors(any(), any());
+    verify(k8sCanaryBaseHandler, times(1))
+        .createTrafficRoutingResources(any(), any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testPrepareForTrafficRoutingWhenConfigIsNull() {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    K8sCanaryDeployRequest deployRequest = K8sCanaryDeployRequest.builder().trafficRoutingConfig(null).build();
+
+    k8sCanaryRequestHandler.prepareForTrafficRouting(
+        deployRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitProgress);
+
+    verifyNoInteractions(k8sCanaryBaseHandler);
   }
 
   private void testExecutionWithFailure(Exception applyThrowable, Exception statusCheckThrowable) throws Exception {

@@ -22,6 +22,7 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABHINAV2;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BUHA;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.PRATYUSH;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -45,12 +47,20 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
+import io.harness.delegate.k8s.trafficrouting.TrafficRoutingResourceCreator;
+import io.harness.delegate.k8s.trafficrouting.TrafficRoutingResourceCreatorFactory;
+import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
+import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
+import io.harness.delegate.task.k8s.client.K8sApiClient;
 import io.harness.delegate.task.k8s.istio.IstioTaskHelper;
+import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.helpers.k8s.releasehistory.K8sReleaseHandler;
 import io.harness.k8s.exception.KubernetesExceptionExplanation;
 import io.harness.k8s.exception.KubernetesExceptionHints;
@@ -72,6 +82,7 @@ import io.harness.k8s.releasehistory.K8sRelease;
 import io.harness.k8s.releasehistory.K8sReleaseHistory;
 import io.harness.k8s.releasehistory.K8sReleaseSecretHelper;
 import io.harness.k8s.releasehistory.ReleaseHistory;
+import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -84,6 +95,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,6 +103,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDP)
@@ -102,6 +116,10 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
   @Mock private LogCallback logCallback;
   @Mock private Kubectl client;
   @Mock private K8sReleaseHandler releaseHandler;
+  @Mock private K8sApiClient kubernetesApiClient;
+  @Mock K8sInfraDelegateConfig k8sInfraDelegateConfig;
+  @Mock TrafficRoutingResourceCreator trafficRoutingResourceCreator;
+  @Mock K8sCanaryHandlerConfig k8sCanaryHandlerConfig;
 
   private final String namespace = "default";
   private final K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
@@ -525,6 +543,284 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     canaryResources =
         k8sCanaryBaseHandler.appendSecretAndConfigMapNamesToCanaryWorkloads("ns/Deployment/test", kubernetesResources);
     assertThat(canaryResources).isEqualTo("ns/Deployment/test,ns/ConfigMap/mycm,ns/Secret/mysecret");
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testFindPrimaryServiceForCanaryDeploymentWhenPrimaryExists() {
+    KubernetesResource primaryService =
+        when(mock(KubernetesResource.class).isPrimaryService()).thenReturn(true).getMock();
+    KubernetesResource someOtherService =
+        when(mock(KubernetesResource.class).isPrimaryService()).thenReturn(false).getMock();
+    KubernetesResource deployment = when(mock(KubernetesResource.class).isPrimaryService()).thenReturn(false).getMock();
+
+    List<KubernetesResource> kubernetesResources = List.of(primaryService, someOtherService, deployment);
+
+    KubernetesResource primaryServiceForCanaryDeployment =
+        k8sCanaryBaseHandler.findPrimaryServiceForCanaryDeployment(kubernetesResources);
+
+    assertThat(primaryServiceForCanaryDeployment).isEqualTo(primaryService);
+  }
+
+  @Test(expected = KubernetesYamlException.class)
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testFindPrimaryServiceForCanaryDeploymentWhenTwoPrimaryExists() {
+    KubernetesResource primaryService =
+        when(mock(KubernetesResource.class).isPrimaryService()).thenReturn(true).getMock();
+    KubernetesResource someOtherService =
+        when(mock(KubernetesResource.class).isPrimaryService()).thenReturn(true).getMock();
+    KubernetesResource deployment = when(mock(KubernetesResource.class).isPrimaryService()).thenReturn(false).getMock();
+
+    List<KubernetesResource> kubernetesResources = List.of(primaryService, someOtherService, deployment);
+
+    k8sCanaryBaseHandler.findPrimaryServiceForCanaryDeployment(kubernetesResources);
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testFindPrimaryServiceForCanaryDeploymentWhenOneService() {
+    KubernetesResource primaryService = when(mock(KubernetesResource.class).isService()).thenReturn(true).getMock();
+    KubernetesResource someResource = when(mock(KubernetesResource.class).isService()).thenReturn(false).getMock();
+    KubernetesResource deployment = when(mock(KubernetesResource.class).isService()).thenReturn(false).getMock();
+
+    List<KubernetesResource> kubernetesResources = List.of(primaryService, someResource, deployment);
+
+    KubernetesResource primaryServiceForCanaryDeployment =
+        k8sCanaryBaseHandler.findPrimaryServiceForCanaryDeployment(kubernetesResources);
+
+    assertThat(primaryServiceForCanaryDeployment).isEqualTo(primaryService);
+  }
+
+  @Test(expected = HintException.class)
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testFindPrimaryServiceForCanaryDeploymentWhenNoService() {
+    KubernetesResource resource = when(mock(KubernetesResource.class).isService()).thenReturn(false).getMock();
+    KubernetesResource someResource = when(mock(KubernetesResource.class).isService()).thenReturn(false).getMock();
+    KubernetesResource deployment = when(mock(KubernetesResource.class).isService()).thenReturn(false).getMock();
+
+    List<KubernetesResource> kubernetesResources = List.of(resource, someResource, deployment);
+
+    k8sCanaryBaseHandler.findPrimaryServiceForCanaryDeployment(kubernetesResources);
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testCreateCanaryServiceFromPrimary() {
+    String spec = "apiVersion: v1\n"
+        + "kind: Service\n"
+        + "metadata:\n"
+        + "  name: my-service\n"
+        + "spec:\n"
+        + "  selector:\n"
+        + "    app: MyApp";
+
+    String canarySpec = "apiVersion: v1\n"
+        + "kind: Service\n"
+        + "metadata:\n"
+        + "  name: my-service-canary\n"
+        + "spec:\n"
+        + "  selector:\n"
+        + "    app: MyApp\n";
+    KubernetesResource primaryService =
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().name("my-service").kind("Service").namespace("default").build())
+            .spec(spec)
+            .build();
+
+    KubernetesResource canaryService = k8sCanaryBaseHandler.createCanaryServiceFromPrimary(primaryService);
+    assertThat(canaryService.getResourceId().getName()).isEqualTo("my-service-canary");
+    assertThat(canaryService.getResourceId().getKind()).isEqualTo("Service");
+    assertThat(canaryService.getResourceId().getNamespace()).isEqualTo("default");
+    assertThat(canaryService.getSpec()).isEqualTo(canarySpec);
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testSetStableAndCanaryLabelSelectors() {
+    String spec = "apiVersion: v1\n"
+        + "kind: Service\n"
+        + "metadata:\n"
+        + "  name: my-service\n"
+        + "spec:\n"
+        + "  selector:\n"
+        + "    app: MyApp";
+
+    String canarySpec = "apiVersion: v1\n"
+        + "kind: Service\n"
+        + "metadata:\n"
+        + "  name: my-service-canary\n"
+        + "spec:\n"
+        + "  selector:\n"
+        + "    app: MyApp\n";
+
+    String specWithStableSelector = "apiVersion: v1\n"
+        + "kind: Service\n"
+        + "metadata:\n"
+        + "  name: my-service\n"
+        + "spec:\n"
+        + "  selector:\n"
+        + "    app: MyApp\n"
+        + "    harness.io/track: stable\n";
+
+    String canarySpecWithCanarySelector = "apiVersion: v1\n"
+        + "kind: Service\n"
+        + "metadata:\n"
+        + "  name: my-service-canary\n"
+        + "spec:\n"
+        + "  selector:\n"
+        + "    app: MyApp\n"
+        + "    harness.io/track: canary\n";
+
+    KubernetesResource primaryService =
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().name("my-service").kind("Service").namespace("default").build())
+            .spec(spec)
+            .build();
+
+    KubernetesResource canaryService =
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("my-service-canary").kind("Service").namespace("default").build())
+            .spec(canarySpec)
+            .build();
+
+    k8sCanaryBaseHandler.setStableAndCanaryLabelSelectors(primaryService, canaryService);
+
+    assertThat(primaryService.getSpec()).isEqualTo(specWithStableSelector);
+    assertThat(canaryService.getSpec()).isEqualTo(canarySpecWithCanarySelector);
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testCreateTrafficRoutingResources() {
+    K8sTrafficRoutingConfig trafficRoutingProvider = K8sTrafficRoutingConfig.builder().build();
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory(".").build();
+    KubernetesResource primaryService =
+        KubernetesResource.builder().resourceId(KubernetesResourceId.builder().name("primaryService").build()).build();
+    KubernetesResource canaryService =
+        KubernetesResource.builder().resourceId(KubernetesResourceId.builder().name("canaryService").build()).build();
+    K8sLegacyRelease legacyRelease = K8sLegacyRelease.builder().build();
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+
+    final K8sCanaryDeployRequest k8sCanaryDeployRequest =
+        K8sCanaryDeployRequest.builder()
+            .skipResourceVersioning(true)
+            .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
+            .manifestDelegateConfig(KustomizeManifestDelegateConfig.builder().build())
+            .releaseName("releaseName")
+            .useDeclarativeRollback(true)
+            .trafficRoutingConfig(trafficRoutingProvider)
+            .build();
+
+    doReturn(List.of(KubernetesResource.builder().build()))
+        .when(trafficRoutingResourceCreator)
+        .createTrafficRoutingResources(any(), any(), any(), any(), any(), any());
+    doReturn(Optional.of(TrafficRoutingInfoDTO.builder().build()))
+        .when(trafficRoutingResourceCreator)
+        .getTrafficRoutingInfo(anyList());
+    doReturn(legacyRelease).when(k8sCanaryHandlerConfig).getCurrentRelease();
+    doReturn(kubernetesConfig).when(k8sCanaryHandlerConfig).getKubernetesConfig();
+
+    try (MockedStatic<TrafficRoutingResourceCreatorFactory> utilities =
+             Mockito.mockStatic(TrafficRoutingResourceCreatorFactory.class)) {
+      utilities.when(() -> TrafficRoutingResourceCreatorFactory.create(trafficRoutingProvider))
+          .thenReturn(trafficRoutingResourceCreator);
+
+      List<KubernetesResource> trafficRoutingResources =
+          k8sCanaryBaseHandler.createTrafficRoutingResources(k8sCanaryDeployRequest, k8sDelegateTaskParams,
+              trafficRoutingProvider, k8sCanaryHandlerConfig, primaryService, canaryService, logCallback);
+
+      assertThat(trafficRoutingResources).hasSize(1);
+      assertThat(legacyRelease.getTrafficRoutingInfo()).isNotNull();
+      verify(kubernetesApiClient).getApiVersions(any(), any(), any(), any());
+      verify(trafficRoutingResourceCreator).createTrafficRoutingResources(any(), any(), any(), any(), any(), any());
+    }
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testCreateTrafficRoutingResourcesSkipStoringInfoInRelease() {
+    K8sTrafficRoutingConfig trafficRoutingProvider = K8sTrafficRoutingConfig.builder().build();
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory(".").build();
+    KubernetesResource primaryService =
+        KubernetesResource.builder().resourceId(KubernetesResourceId.builder().name("primaryService").build()).build();
+    KubernetesResource canaryService =
+        KubernetesResource.builder().resourceId(KubernetesResourceId.builder().name("canaryService").build()).build();
+    K8sLegacyRelease legacyRelease = K8sLegacyRelease.builder().build();
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+
+    final K8sCanaryDeployRequest k8sCanaryDeployRequest =
+        K8sCanaryDeployRequest.builder()
+            .skipResourceVersioning(true)
+            .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
+            .manifestDelegateConfig(KustomizeManifestDelegateConfig.builder().build())
+            .releaseName("releaseName")
+            .useDeclarativeRollback(true)
+            .trafficRoutingConfig(trafficRoutingProvider)
+            .build();
+
+    doReturn(List.of(KubernetesResource.builder().build()))
+        .when(trafficRoutingResourceCreator)
+        .createTrafficRoutingResources(any(), any(), any(), any(), any(), any());
+    doReturn(Optional.empty()).when(trafficRoutingResourceCreator).getTrafficRoutingInfo(anyList());
+    doReturn(legacyRelease).when(k8sCanaryHandlerConfig).getCurrentRelease();
+    doReturn(kubernetesConfig).when(k8sCanaryHandlerConfig).getKubernetesConfig();
+
+    try (MockedStatic<TrafficRoutingResourceCreatorFactory> utilities =
+             Mockito.mockStatic(TrafficRoutingResourceCreatorFactory.class)) {
+      utilities.when(() -> TrafficRoutingResourceCreatorFactory.create(trafficRoutingProvider))
+          .thenReturn(trafficRoutingResourceCreator);
+
+      List<KubernetesResource> trafficRoutingResources =
+          k8sCanaryBaseHandler.createTrafficRoutingResources(k8sCanaryDeployRequest, k8sDelegateTaskParams,
+              trafficRoutingProvider, k8sCanaryHandlerConfig, primaryService, canaryService, logCallback);
+
+      assertThat(trafficRoutingResources).hasSize(1);
+      assertThat(legacyRelease.getTrafficRoutingInfo()).isNull();
+      verify(kubernetesApiClient).getApiVersions(any(), any(), any(), any());
+      verify(trafficRoutingResourceCreator).createTrafficRoutingResources(any(), any(), any(), any(), any(), any());
+    }
+  }
+
+  @Test
+  @Owner(developers = BUHA)
+  @Category(UnitTests.class)
+  public void testAppendTrafficRoutingResourceNamesToCanaryWorkloads() {
+    List<KubernetesResource> resources = List.of(
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("service-canary").kind("Service").namespace("default").build())
+            .build(),
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder()
+                            .kind("TrafficSplit")
+                            .name("traffic-split-name")
+                            .namespace("default")
+                            .build())
+            .build(),
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder()
+                            .kind("HTTPRouteGroup")
+                            .name("routing-group-name")
+                            .namespace("default")
+                            .build())
+            .build(),
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().kind("Deployment").name("deployment").namespace("default").build())
+            .build());
+
+    assertThat(k8sCanaryBaseHandler.appendTrafficRoutingResourceNamesToCanaryWorkloads("default/kind/name", resources))
+        .isEqualTo(
+            "default/kind/name,default/Service/service-canary,default/TrafficSplit/traffic-split-name,default/HTTPRouteGroup/routing-group-name");
   }
 
   private void assertInvalidWorkloadsInManifest(boolean result, String expectedMessage) throws Exception {

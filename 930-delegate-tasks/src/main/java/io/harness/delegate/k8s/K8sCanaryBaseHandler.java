@@ -10,6 +10,9 @@ package io.harness.delegate.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.k8s.manifest.ManifestHelper.getKubernetesResourceFromSpec;
+import static io.harness.k8s.manifest.ManifestHelper.getPrimaryService;
+import static io.harness.k8s.manifest.ManifestHelper.getServices;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanaryAndBG;
 import static io.harness.k8s.manifest.VersionUtils.addSuffixToConfigmapsAndSecrets;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
@@ -28,9 +31,15 @@ import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
+import io.harness.delegate.k8s.trafficrouting.TrafficRoutingResourceCreator;
+import io.harness.delegate.k8s.trafficrouting.TrafficRoutingResourceCreatorFactory;
+import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.client.K8sApiClient;
 import io.harness.delegate.task.k8s.istio.IstioTaskHelper;
+import io.harness.delegate.task.k8s.trafficrouting.K8sTrafficRoutingConfig;
 import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.NestedExceptionUtils;
 import io.harness.helpers.k8s.releasehistory.K8sReleaseHandler;
 import io.harness.k8s.K8sConstants;
@@ -55,6 +64,7 @@ import io.harness.k8s.releasehistory.K8sRelease;
 import io.harness.k8s.releasehistory.K8sReleaseHistory;
 import io.harness.k8s.releasehistory.K8sReleaseHistoryCleanupDTO;
 import io.harness.k8s.releasehistory.K8sReleasePersistDTO;
+import io.harness.k8s.releasehistory.TrafficRoutingInfoDTO;
 import io.harness.logging.LogCallback;
 
 import software.wings.beans.LogColor;
@@ -65,6 +75,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -76,6 +88,7 @@ import lombok.extern.slf4j.Slf4j;
 public class K8sCanaryBaseHandler {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private IstioTaskHelper istioTaskHelper;
+  @Inject private K8sApiClient kubernetesApiClient;
 
   public boolean prepareForCanary(K8sCanaryHandlerConfig canaryHandlerConfig,
       K8sRequestHandlerContext k8sRequestHandlerContext, K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -275,6 +288,14 @@ public class K8sCanaryBaseHandler {
                .contains(resource.getResourceId().getKind()));
   }
 
+  public String appendTrafficRoutingResourceNamesToCanaryWorkloads(
+      String canaryWorkloadName, List<KubernetesResource> resources) {
+    return appendResourceNamesToCanaryWorkloads(canaryWorkloadName, resources,
+        resource
+        -> Kind.TRAFFIC_ROUTING_KINDS.contains(resource.getResourceId().getKind())
+            || (resource.isService() && resource.getResourceId().getName().endsWith("-canary")));
+  }
+
   public String appendResourceNamesToCanaryWorkloads(
       String canaryWorkloadName, List<KubernetesResource> resources, Predicate<KubernetesResource> filter) {
     if (isEmpty(resources)) {
@@ -294,5 +315,67 @@ public class K8sCanaryBaseHandler {
       canaryWorkloadNameBuilder.append(resourceNames);
     }
     return canaryWorkloadNameBuilder.toString();
+  }
+
+  KubernetesResource findPrimaryServiceForCanaryDeployment(List<KubernetesResource> kubernetesResources) {
+    KubernetesResource primaryService = getPrimaryService(kubernetesResources);
+    if (primaryService == null) {
+      List<KubernetesResource> services = getServices(kubernetesResources);
+      if (services.size() == 0) {
+        throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.CANARY_NO_SERVICE_FOUND,
+            KubernetesExceptionExplanation.CANARY_NO_SERVICE_FOUND,
+            new KubernetesYamlException(KubernetesExceptionMessages.NO_SERVICE_FOUND));
+      }
+      if (services.size() > 1) {
+        String servicePrintableList = services.stream()
+                                          .map(KubernetesResource::getResourceId)
+                                          .map(KubernetesResourceId::kindNameRef)
+                                          .collect(Collectors.joining(", "));
+
+        throw NestedExceptionUtils.hintWithExplanationException(
+            KubernetesExceptionHints.CANARY_MULTIPLE_PRIMARY_SERVICE,
+            format(
+                KubernetesExceptionExplanation.CANARY_MULTIPLE_PRIMARY_SERVICE, services.size(), servicePrintableList),
+            new KubernetesYamlException(KubernetesExceptionMessages.MULTIPLE_SERVICES));
+      }
+      primaryService = services.get(0);
+    }
+    return primaryService;
+  }
+
+  KubernetesResource createCanaryServiceFromPrimary(KubernetesResource primaryService) {
+    KubernetesResource canaryService = getKubernetesResourceFromSpec(primaryService.getSpec());
+    canaryService.setResourceId(primaryService.getResourceId().cloneInternal());
+    canaryService.appendSuffixInName("-canary", null);
+    return canaryService;
+  }
+
+  void setStableAndCanaryLabelSelectors(KubernetesResource primaryService, KubernetesResource canaryService) {
+    // update primary service by adding stable label selector
+    primaryService.addLabelsInResourceSelector(Map.of(HarnessLabels.track, HarnessLabelValues.trackStable), null);
+    // update canary service by adding canary label selector
+    canaryService.addLabelsInResourceSelector(Map.of(HarnessLabels.track, HarnessLabelValues.trackCanary), null);
+  }
+
+  List<KubernetesResource> createTrafficRoutingResources(K8sCanaryDeployRequest k8sCanaryDeployRequest,
+      K8sDelegateTaskParams k8sDelegateTaskParams, K8sTrafficRoutingConfig trafficRoutingConfig,
+      K8sCanaryHandlerConfig k8sCanaryHandlerConfig, KubernetesResource primaryService,
+      KubernetesResource canaryService, LogCallback logCallback) {
+    // create traffic routing resource for those two services
+    Set<String> availableApiVersions =
+        kubernetesApiClient.getApiVersions(k8sCanaryDeployRequest.getK8sInfraDelegateConfig(),
+            k8sDelegateTaskParams.getWorkingDirectory(), k8sCanaryHandlerConfig.getKubernetesConfig(), logCallback);
+
+    TrafficRoutingResourceCreator trafficRoutingResourceCreator =
+        TrafficRoutingResourceCreatorFactory.create(trafficRoutingConfig);
+
+    List<KubernetesResource> trafficRoutingResources = trafficRoutingResourceCreator.createTrafficRoutingResources(
+        k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace(), k8sCanaryHandlerConfig.getReleaseName(),
+        primaryService, canaryService, availableApiVersions, logCallback);
+
+    Optional<TrafficRoutingInfoDTO> trafficRoutingInfo =
+        trafficRoutingResourceCreator.getTrafficRoutingInfo(trafficRoutingResources);
+    trafficRoutingInfo.ifPresent(s -> k8sCanaryHandlerConfig.getCurrentRelease().setTrafficRoutingInfo(s));
+    return trafficRoutingResources;
   }
 }

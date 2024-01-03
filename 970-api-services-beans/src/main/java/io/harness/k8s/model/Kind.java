@@ -51,6 +51,8 @@ public enum Kind {
   DestinationRule,
   HorizontalPodAutoscaler,
   PodDisruptionBudget,
+  TrafficSplit,
+  HTTPRouteGroup,
   NOOP;
 
   public static final Set<String> BG_STAGE_SCALE_DOWN_WORKLOAD_KINDS =
@@ -62,6 +64,8 @@ public enum Kind {
   public static final Set<String> SCALABLE_WORKLOAD_KINDS =
       ImmutableSet.of(Deployment.name(), DaemonSet.name(), StatefulSet.name(), DeploymentConfig.name(),
           ReplicationController.name(), ReplicaSet.name(), Job.name(), CronJob.name());
+  public static final Set<String> TRAFFIC_ROUTING_KINDS =
+      ImmutableSet.of(TrafficSplit.name(), VirtualService.name(), HTTPRouteGroup.name());
 
   public static Kind fromString(String kindName) {
     if (isEmpty(kindName)) {

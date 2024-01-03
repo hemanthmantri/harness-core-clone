@@ -60,7 +60,7 @@ public abstract class TrafficRoutingResourceCreator {
         getTrafficRoutingManifests(namespace, releaseName, primaryService, secondaryService, apiVersions);
 
     logCallback.saveExecutionLog(
-        format("Traffic Routing resources created: %n%s", String.join("\n---", trafficRoutingManifests)), INFO,
+        format("Traffic Routing resources created: %n%s", String.join("\n---\n", trafficRoutingManifests)), INFO,
         CommandExecutionStatus.SUCCESS);
     return trafficRoutingManifests.stream()
         .map(ManifestHelper::getKubernetesResourcesFromSpec)
