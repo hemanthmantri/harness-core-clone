@@ -17,8 +17,7 @@ import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
 @OwnedBy(HarnessTeam.IDP)
-public interface BackstageScaffolderTasksEntityRepository
-    extends CrudRepository<BackstageScaffolderTaskEntity, String> {
+public interface BackstageScaffolderTaskEntityRepository extends CrudRepository<BackstageScaffolderTaskEntity, String> {
   Optional<BackstageScaffolderTaskEntity> findByAccountIdentifierAndIdentifier(
       String accountIdentifier, String identifier);
 }

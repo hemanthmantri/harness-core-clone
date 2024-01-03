@@ -8,6 +8,7 @@
 package io.harness.idp.backstage.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.idp.backstage.beans.BackstageCatalogEntityTypes.GROUP;
 import static io.harness.idp.backstage.beans.BackstageCatalogEntityTypes.USER;
 import static io.harness.idp.backstage.beans.BackstageScaffolderTask.toEntities;
@@ -32,7 +33,7 @@ import io.harness.idp.backstage.events.BackstageCatalogEntityCreateEvent;
 import io.harness.idp.backstage.events.BackstageCatalogEntityDeleteEvent;
 import io.harness.idp.backstage.events.BackstageCatalogEntityUpdateEvent;
 import io.harness.idp.backstage.repositories.BackstageCatalogEntityRepository;
-import io.harness.idp.backstage.repositories.BackstageScaffolderTasksEntityRepository;
+import io.harness.idp.backstage.repositories.BackstageScaffolderTaskEntityRepository;
 import io.harness.idp.backstage.service.BackstageService;
 import io.harness.idp.events.producers.IdpEntityCrudStreamProducer;
 import io.harness.idp.events.producers.IdpServiceMiscRedisProducer;
@@ -46,6 +47,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +81,7 @@ public class BackstageServiceImpl implements BackstageService {
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
   private static final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_RETRY_POLICY;
   @Inject NamespaceRepository namespaceRepository;
-  @Inject BackstageScaffolderTasksEntityRepository scaffolderTasksEntityRepository;
+  @Inject BackstageScaffolderTaskEntityRepository scaffolderTaskEntityRepository;
 
   @Override
   public void sync() {
@@ -127,37 +129,24 @@ public class BackstageServiceImpl implements BackstageService {
       long syncFrom = Objects.nonNull(namespaceEntity.getMetadata())
           ? namespaceEntity.getMetadata().getScaffolderTasksSyncFrom()
           : 0;
-      boolean result = syncScaffolderTasks(namespaceEntity.getAccountIdentifier(), syncFrom);
-      if (result) {
-        log.info("Successfully synced scaffolder tasks for accountIdentifier = {} syncFrom = {}", accountIdentifier,
-            syncFrom);
-        updateScaffolderTasksSyncFrom(namespaceEntity);
-        log.info(
-            "Updated scaffolder tasks sync from to current timestamp for accountIdentifier = {}", accountIdentifier);
-      } else {
-        log.error(
-            "Error in syncing scaffolder tasks for accountIdentifier = {} syncFrom = {} Skipping update to metadata scaffolderTasksSyncFrom",
-            accountIdentifier, syncFrom);
-      }
+      syncScaffolderTasks(accountIdentifier, syncFrom, namespaceEntity);
     });
   }
 
   @Override
-  public boolean syncScaffolderTasks(String accountIdentifier, long syncFrom) {
+  public void syncScaffolderTasks(String accountIdentifier, long syncFrom, NamespaceEntity namespaceEntity) {
     log.info("Syncing scaffolder tasks for accountIdentifier = {} syncFrom = {}", accountIdentifier, syncFrom);
     try {
       Object response = getGeneralResponse(backstageResourceClient.scaffolderListTasks(accountIdentifier, syncFrom));
       List<BackstageScaffolderTask> scaffolderTasks = convert(response, BackstageScaffolderTask.class);
       log.info("Fetched {} scaffolder tasks for accountIdentifier = {} syncFrom = {}", scaffolderTasks.size(),
           accountIdentifier, syncFrom);
-      List<BackstageScaffolderTaskEntity> scaffolderTasksEntities = toEntities(accountIdentifier, scaffolderTasks);
-      scaffolderTasksEntityRepository.saveAll(scaffolderTasksEntities);
+      syncScaffolderTasksInternal(accountIdentifier, syncFrom, namespaceEntity, scaffolderTasks);
     } catch (Exception ex) {
-      log.error("Error in syncing scaffolder tasks for accountIdentifier = {} syncFrom = {} Error = {}",
+      log.error(
+          "Error in syncing scaffolder tasks for accountIdentifier = {} syncFrom = {} Skipping update to metadata scaffolderTasksSyncFrom Error = {}",
           accountIdentifier, syncFrom, ex.getMessage(), ex);
-      return false;
     }
-    return true;
   }
 
   private List<BackstageCatalogEntity> filter(List<BackstageCatalogEntity> backstageCatalogEntities) {
@@ -362,11 +351,29 @@ public class BackstageServiceImpl implements BackstageService {
     });
   }
 
-  private void updateScaffolderTasksSyncFrom(NamespaceEntity namespaceEntity) {
+  private void syncScaffolderTasksInternal(String accountIdentifier, long syncFrom, NamespaceEntity namespaceEntity,
+      List<BackstageScaffolderTask> scaffolderTasks) {
+    long nextSyncFrom = syncFrom;
+    if (isNotEmpty(scaffolderTasks)) {
+      List<BackstageScaffolderTaskEntity> scaffolderTasksEntities =
+          toEntities(accountIdentifier, scaffolderTasks, scaffolderTaskEntityRepository);
+      scaffolderTaskEntityRepository.saveAll(scaffolderTasksEntities);
+      log.info(
+          "Successfully synced scaffolder tasks for accountIdentifier = {} syncFrom = {}", accountIdentifier, syncFrom);
+      nextSyncFrom = scaffolderTasksEntities.stream()
+                         .max(Comparator.comparing(BackstageScaffolderTaskEntity::getLastHeartbeatAt))
+                         .orElse(new BackstageScaffolderTaskEntity())
+                         .getLastHeartbeatAt();
+    }
+    updateScaffolderTasksSyncFrom(namespaceEntity, nextSyncFrom);
+    log.info("Updated scaffolder tasks sync from to {} for accountIdentifier = {}", nextSyncFrom, accountIdentifier);
+  }
+
+  private void updateScaffolderTasksSyncFrom(NamespaceEntity namespaceEntity, long nextSyncFrom) {
     NamespaceEntity.Metadata metadata = Objects.isNull(namespaceEntity.getMetadata())
         ? NamespaceEntity.Metadata.builder().build()
         : namespaceEntity.getMetadata();
-    metadata.setScaffolderTasksSyncFrom(System.currentTimeMillis());
+    metadata.setScaffolderTasksSyncFrom(nextSyncFrom);
     namespaceEntity.setMetadata(metadata);
     namespaceRepository.save(namespaceEntity);
   }

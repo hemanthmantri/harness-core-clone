@@ -9,6 +9,7 @@ package io.harness.idp.backstage.service;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.idp.namespace.beans.entity.NamespaceEntity;
 
 @OwnedBy(HarnessTeam.IDP)
 public interface BackstageService {
@@ -16,5 +17,5 @@ public interface BackstageService {
   boolean sync(String accountIdentifier);
   boolean sync(String accountIdentifier, String entityUid, String action, String syncMode);
   void syncScaffolderTasks();
-  boolean syncScaffolderTasks(String accountIdentifier, long syncFrom);
+  void syncScaffolderTasks(String accountIdentifier, long syncFrom, NamespaceEntity namespaceEntity);
 }

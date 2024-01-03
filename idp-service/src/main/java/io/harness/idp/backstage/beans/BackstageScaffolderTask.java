@@ -10,12 +10,14 @@ package io.harness.idp.backstage.beans;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.idp.backstage.entities.BackstageScaffolderTaskEntity;
+import io.harness.idp.backstage.repositories.BackstageScaffolderTaskEntityRepository;
 import io.harness.idp.common.DateUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,11 +41,19 @@ public class BackstageScaffolderTask {
 
   private static final String TIMESTAMP_WITH_TIMEZONE = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
-  public static List<BackstageScaffolderTaskEntity> toEntities(
-      String accountIdentifier, List<BackstageScaffolderTask> backstageScaffolderTasks) {
+  public static List<BackstageScaffolderTaskEntity> toEntities(String accountIdentifier,
+      List<BackstageScaffolderTask> backstageScaffolderTasks,
+      BackstageScaffolderTaskEntityRepository scaffolderTasksEntityRepository) {
     List<BackstageScaffolderTaskEntity> backstageScaffolderTasksEntities = new ArrayList<>();
     backstageScaffolderTasks.forEach(backstageScaffolderTask -> {
       BackstageScaffolderTaskEntity backstageScaffolderTaskEntity = new BackstageScaffolderTaskEntity();
+
+      Optional<BackstageScaffolderTaskEntity> optionalBackstageScaffolderTaskEntity =
+          scaffolderTasksEntityRepository.findByAccountIdentifierAndIdentifier(
+              accountIdentifier, backstageScaffolderTask.getIdentifier());
+      optionalBackstageScaffolderTaskEntity.ifPresent(existingBackstageScaffolderTaskEntity
+          -> backstageScaffolderTaskEntity.setId(existingBackstageScaffolderTaskEntity.getId()));
+
       backstageScaffolderTaskEntity.setAccountIdentifier(accountIdentifier);
       backstageScaffolderTaskEntity.setIdentifier(backstageScaffolderTask.getIdentifier());
       backstageScaffolderTaskEntity.setSpec(backstageScaffolderTask.getSpec());
