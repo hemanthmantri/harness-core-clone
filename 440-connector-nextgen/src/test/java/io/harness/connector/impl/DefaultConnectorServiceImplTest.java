@@ -65,6 +65,8 @@ import io.harness.gitsync.clients.YamlGitConfigClient;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.ngsettings.SettingIdentifiers;
 import io.harness.ngsettings.SettingValueType;
 import io.harness.ngsettings.client.remote.NGSettingsClient;
@@ -93,6 +95,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.data.domain.Page;
@@ -116,6 +119,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock NGSettingsClient settingsClient;
   @Mock Call<ResponseDTO<SettingValueResponseDTO>> request;
   @Mock FavoritesService favoritesService;
+  @Mock ProjectService projectService;
+  @Mock OrganizationService organizationService;
 
   @Mock AccountClient accountClient;
 
@@ -189,6 +194,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   public void testCreate() {
     ConnectorResponseDTO connectorDTOOutput = createConnector(identifier, name);
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTOOutput);
+    verify(projectService, Mockito.times(0)).get(anyString(), anyString(), anyString());
+    verify(organizationService, Mockito.times(0)).get(anyString(), anyString());
   }
 
   @Test

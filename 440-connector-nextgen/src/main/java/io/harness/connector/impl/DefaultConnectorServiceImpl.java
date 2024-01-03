@@ -573,6 +573,22 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Connector savedConnectorEntity = null;
     try {
       Supplier<OutboxEvent> supplier = null;
+      if (isEmpty(connectorInfo.getOrgIdentifier()) && isEmpty(connectorInfo.getProjectIdentifier())) {
+        connectorEntity.setParentUniqueId(accountIdentifier);
+      } else if (isEmpty(connectorInfo.getProjectIdentifier())) {
+        organizationService.get(accountIdentifier, connectorInfo.getOrgIdentifier()).ifPresent(org -> {
+          if (isNotEmpty(org.getUniqueId())) {
+            connectorEntity.setParentUniqueId(org.getUniqueId());
+          }
+        });
+      } else {
+        projectService.get(accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier())
+            .ifPresent(proj -> {
+              if (isNotEmpty(proj.getUniqueId())) {
+                connectorEntity.setParentUniqueId(proj.getUniqueId());
+              }
+            });
+      }
       if (!gitSyncSdkService.isGitSyncEnabled(
               accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier())) {
         supplier = ()
@@ -651,6 +667,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     final ConnectorResponseDTO oldConnectorDTO = connectorMapper.writeDTO(existingConnector);
     Connector newConnector = connectorMapper.toConnector(connectorRequest, accountIdentifier);
     newConnector.setId(existingConnector.getId());
+    newConnector.setUniqueId(existingConnector.getUniqueId());
+    newConnector.setParentUniqueId(existingConnector.getParentUniqueId());
     newConnector.setVersion(existingConnector.getVersion());
     newConnector.setConnectivityDetails(existingConnector.getConnectivityDetails());
     newConnector.setCreatedAt(existingConnector.getCreatedAt());

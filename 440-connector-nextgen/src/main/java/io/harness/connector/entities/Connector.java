@@ -34,6 +34,7 @@ import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UniqueIdAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -73,7 +74,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
         ConnectorKeys.identifier, ConnectorKeys.name, ConnectorKeys.scope, ConnectorKeys.createdAt,
         ConnectorKeys.createdBy, ConnectorKeys.lastUpdatedBy, ConnectorKeys.type, ConnectorKeys.categories},
     handler = "Connectors")
-public abstract class Connector implements PersistentEntity, NGAccountAccess, GitSyncableEntity, PersistentIterable {
+public abstract class Connector
+    implements PersistentEntity, NGAccountAccess, GitSyncableEntity, PersistentIterable, UniqueIdAware {
   @Id @dev.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @NGEntityName String name;
@@ -109,6 +111,8 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   String yaml;
   @FdIndex Long connectorDisconnectIteration;
   Boolean proxy = Boolean.FALSE;
+  String uniqueId;
+  String parentUniqueId;
 
   public void setEntityInvalid(boolean isEntityInvalid) {
     this.isEntityInvalid = isEntityInvalid;
