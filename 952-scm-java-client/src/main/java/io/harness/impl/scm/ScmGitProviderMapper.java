@@ -152,8 +152,6 @@ public class ScmGitProviderMapper {
         } else {
           log.error("file does not exist in {}", sourceCertPathConcatenated);
         }
-      } else {
-        log.error("SHARED_CA_CERTS_PATH environment variable is not set.");
       }
     } catch (Exception e) {
       log.error("Error setting certs from SHARED_CA_CERTS_PATH dir", e);
