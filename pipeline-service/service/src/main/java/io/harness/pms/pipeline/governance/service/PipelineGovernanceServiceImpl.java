@@ -15,6 +15,7 @@ import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.GovernanceService;
+import io.harness.engine.governance.PolicyEvaluationFailureException;
 import io.harness.engine.utils.OpaPolicyEvaluationHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.beans.StoreType;
@@ -81,9 +82,13 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
                                              .filter(PolicySetMetadata::getDeny)
                                              .map(PolicySetMetadata::getIdentifier)
                                              .collect(Collectors.toList());
-      // todo: see if this can be changed to PolicyEvaluationFailureException, probably yes
-      throw new InvalidRequestException(
-          "Pipeline does not follow the Policies in these Policy Sets: " + denyingPolicySetIds);
+      if (pmsFeatureFlagService.isEnabled(accountId, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE)) {
+        throw new PolicyEvaluationFailureException(
+            "Pipeline does not follow the Policies in these Policy Sets: " + denyingPolicySetIds, governanceMetadata);
+      } else {
+        throw new InvalidRequestException(
+            "Pipeline does not follow the Policies in these Policy Sets: " + denyingPolicySetIds);
+      }
     }
     return governanceMetadata;
   }

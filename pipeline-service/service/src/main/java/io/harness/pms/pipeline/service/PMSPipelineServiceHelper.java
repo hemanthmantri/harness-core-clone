@@ -378,6 +378,8 @@ public class PMSPipelineServiceHelper {
       throw ex;
     } catch (NGTemplateException ex) {
       throw ex;
+    } catch (PolicyEvaluationFailureException ex) {
+      throw ex;
     } catch (Exception ex) {
       YamlSchemaErrorWrapperDTO errorWrapperDTO =
           YamlSchemaErrorWrapperDTO.builder()
@@ -409,6 +411,8 @@ public class PMSPipelineServiceHelper {
         return validateYaml(pipelineEntity, templateMergeResponseDTO, throwExceptionIfGovernanceRulesFails)
             .getGovernanceMetadata();
       }
+    } catch (PolicyEvaluationFailureException ex) {
+      throw ex;
     } catch (io.harness.yaml.validator.InvalidYamlException ex) {
       ex.setYaml(pipelineEntity.getData());
       throw ex;

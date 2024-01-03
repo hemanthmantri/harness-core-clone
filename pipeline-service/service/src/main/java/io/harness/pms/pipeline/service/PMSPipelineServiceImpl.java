@@ -300,7 +300,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             clonePipelineDTO.getDestinationConfig().getProjectIdentifier(), pipelineId, pipelineName, destYaml, false,
             sourcePipelineVersion);
 
-    PipelineCRUDResult pipelineCRUDResult = validateAndCreatePipeline(destPipelineEntity, false);
+    PipelineCRUDResult pipelineCRUDResult = validateAndCreatePipeline(destPipelineEntity,
+        pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE));
     GovernanceMetadata destGovernanceMetadata = pipelineCRUDResult.getGovernanceMetadata();
     if (destGovernanceMetadata.getDeny()) {
       return PipelineSaveResponse.builder().governanceMetadata(destGovernanceMetadata).build();

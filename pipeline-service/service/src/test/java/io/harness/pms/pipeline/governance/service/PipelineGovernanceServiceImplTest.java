@@ -8,20 +8,30 @@
 package io.harness.pms.pipeline.governance.service;
 
 import static io.harness.rule.OwnerRule.ADITHYA;
+import static io.harness.rule.OwnerRule.MEENA;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.RAGHAV_GUPTA;
 
 import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.GovernanceService;
+import io.harness.engine.governance.PolicyEvaluationFailureException;
 import io.harness.engine.utils.OpaPolicyEvaluationHelper;
+import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.beans.StoreType;
+import io.harness.governance.GovernanceMetadata;
 import io.harness.opaclient.model.OpaConstants;
 import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
@@ -49,18 +59,31 @@ public class PipelineGovernanceServiceImplTest extends CategoryTest {
   String accountIdentifier = "account";
   String orgIdentifier = "org";
   String projectIdentifier = "project";
+  String branch = "branch";
+  String yaml = "yaml";
 
   @Mock PmsFeatureFlagService pmsFeatureFlagService;
   @Mock private PmsGitSyncHelper gitSyncHelper;
   @Mock private ExpansionRequestsExtractor expansionRequestsExtractor;
+  @Mock private GovernanceService governanceService;
   @Mock private JsonExpander jsonExpander;
   @Mock private OpaPolicyEvaluationHelper opaPolicyEvaluationHelper;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks PipelineGovernanceServiceImpl pipelineGovernanceService;
+  PipelineEntity pipelineEntity;
+  PipelineGovernanceServiceImpl pipelineGovernanceService1;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    pipelineEntity = PipelineEntity.builder()
+                         .accountId(accountIdentifier)
+                         .orgIdentifier(orgIdentifier)
+                         .projectIdentifier(projectIdentifier)
+                         .identifier("pipeline")
+                         .build();
+    pipelineGovernanceService1 = spy(pipelineGovernanceService);
   }
 
   @Test
@@ -186,5 +209,51 @@ public class PipelineGovernanceServiceImplTest extends CategoryTest {
     verify(gitSyncHelper, times(1)).getGitSyncBranchContextBytesThreadLocal();
     verify(expansionRequestsExtractor, times(1)).fetchExpansionRequests(pipelineYaml);
     verify(jsonExpander, times(1)).fetchExpansionResponses(dummyRequestSet, expansionRequestMetadata);
+  }
+
+  @Test
+  @Owner(developers = MEENA)
+  @Category(UnitTests.class)
+  public void testPolicyFailureException() {
+    GovernanceMetadata governanceMetadata = GovernanceMetadata.newBuilder().setDeny(true).build();
+    doReturn(true)
+        .when(pmsFeatureFlagService)
+        .isEnabled(accountIdentifier, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE);
+    doReturn(governanceMetadata)
+        .when(governanceService)
+        .evaluateGovernancePolicies(
+            any(), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), any(), any(), any());
+    doReturn(governanceMetadata)
+        .when(pipelineGovernanceService1)
+        .validateGovernanceRules(accountIdentifier, orgIdentifier, projectIdentifier, branch, pipelineEntity, yaml);
+
+    assertThatExceptionOfType(PolicyEvaluationFailureException.class)
+        .isThrownBy(()
+                        -> pipelineGovernanceService.validateGovernanceRulesAndThrowExceptionIfDenied(
+                            accountIdentifier, orgIdentifier, projectIdentifier, branch, pipelineEntity, yaml));
+  }
+
+  @Test
+  @Owner(developers = MEENA)
+  @Category(UnitTests.class)
+  public void testGovernanceRulesAndThrowExceptionWhenNotDenied() {
+    GovernanceMetadata governanceMetadata = GovernanceMetadata.newBuilder().setDeny(false).setId("someID").build();
+    doReturn(true)
+        .when(pmsFeatureFlagService)
+        .isEnabled(accountIdentifier, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE);
+    doReturn(governanceMetadata)
+        .when(governanceService)
+        .evaluateGovernancePolicies(
+            any(), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), any(), any(), any());
+    doReturn(governanceMetadata)
+        .when(pipelineGovernanceService1)
+        .validateGovernanceRules(accountIdentifier, orgIdentifier, projectIdentifier, branch, pipelineEntity, yaml);
+
+    when(pipelineGovernanceService.validateGovernanceRulesAndThrowExceptionIfDenied(
+             accountIdentifier, orgIdentifier, projectIdentifier, branch, pipelineEntity, yaml))
+        .thenReturn(governanceMetadata);
+
+    assertThat(governanceMetadata.getDeny()).isFalse();
+    assertThat(governanceMetadata.getId()).isEqualTo("someID");
   }
 }

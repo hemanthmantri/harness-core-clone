@@ -19,4 +19,5 @@ public interface ErrorMetadataConstants {
   String FILTER_CREATOR_ERROR = "FilterCreatorResponseError";
   String GIT_ERROR = "GitErrorMetadataDTO";
   String CONNECTOR_VALIDATION_ERROR = "ConnectorValidationErrorMetaData";
+  String GOVERNANCE_METADATA_ERROR = "GovernanceMetadataErrorDTO";
 }

@@ -912,7 +912,9 @@ public enum FeatureName {
   SSCA_MATCH_INSTANCE_IMAGE_NAME(
       "Enable matching K8s instance image name with SSCA artifact to determine artifacts deployed", SSCA),
   CDS_INPUT_YAML_IN_WEBHOOK_NOTIFICATION(
-      "FF to enable sending input set yaml as part of pipeline webhook notification", PIPELINE);
+      "FF to enable sending input set yaml as part of pipeline webhook notification", PIPELINE),
+  CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE(
+      "FF to enable 4xx response code on pipeline save when OPA policy fails", CDC);
 
   // keep-sorted end
 

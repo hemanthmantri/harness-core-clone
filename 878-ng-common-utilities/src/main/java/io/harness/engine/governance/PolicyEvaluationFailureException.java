@@ -11,6 +11,7 @@ import static io.harness.eraro.ErrorCode.POLICY_EVALUATION_FAILURE;
 
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
+import io.harness.exception.ngexception.ErrorMetadataDTO;
 import io.harness.governance.GovernanceMetadata;
 
 public class PolicyEvaluationFailureException extends WingsException {
@@ -24,6 +25,15 @@ public class PolicyEvaluationFailureException extends WingsException {
     param(MESSAGE_KEY, message);
     this.governanceMetadata = governanceMetadata;
     this.yaml = yaml;
+  }
+
+  public PolicyEvaluationFailureException(String message, GovernanceMetadata governanceMetadata) {
+    super(message, null, POLICY_EVALUATION_FAILURE, Level.ERROR, null, null, getErrorDTO(governanceMetadata));
+    param(MESSAGE_KEY, message);
+  }
+
+  private static ErrorMetadataDTO getErrorDTO(GovernanceMetadata governanceMetadata) {
+    return GovernanceMetadataErrorDTO.builder().governanceMetadata(governanceMetadata).build();
   }
 
   public GovernanceMetadata getGovernanceMetadata() {

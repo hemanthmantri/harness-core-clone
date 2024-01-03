@@ -803,7 +803,9 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testClonePipeline() throws IOException {
     ClonePipelineDTO clonePipelineDTO = buildCloneDTO();
-
+    doReturn(false)
+        .when(pmsFeatureFlagHelper)
+        .isEnabled(accountId, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE);
     doReturn(Optional.empty()).when(pipelineMetadataService).getMetadata(any(), any(), any(), any());
     on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
     doReturn(outboxEvent).when(outboxService).save(any());
@@ -832,7 +834,9 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testClonePipelineWithoutGovernance() throws IOException {
     ClonePipelineDTO clonePipelineDTO = buildCloneDTO();
-
+    doReturn(false)
+        .when(pmsFeatureFlagHelper)
+        .isEnabled(accountId, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE);
     doReturn(Optional.empty()).when(pipelineMetadataService).getMetadata(any(), any(), any(), any());
     on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
     doReturn(outboxEvent).when(outboxService).save(any());
@@ -978,7 +982,9 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   public void testClonePipelineV1() throws IOException {
     ClonePipelineDTO clonePipelineDTO = buildCloneDTO();
     pipelineEntity.setHarnessVersion(HarnessYamlVersion.V1);
-
+    doReturn(false)
+        .when(pmsFeatureFlagHelper)
+        .isEnabled(accountId, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE);
     doReturn(Optional.empty()).when(pipelineMetadataService).getMetadata(any(), any(), any(), any());
     on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
     doReturn(outboxEvent).when(outboxService).save(any());

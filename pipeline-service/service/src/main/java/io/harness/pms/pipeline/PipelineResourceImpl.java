@@ -26,6 +26,7 @@ import io.harness.annotations.dev.HarnessModuleComponent;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ProductModule;
 import io.harness.beans.ExecutionNode;
+import io.harness.beans.FeatureName;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.governance.PolicyEvaluationFailureException;
 import io.harness.exception.EntityNotFoundException;
@@ -146,8 +147,8 @@ public class PipelineResourceImpl implements YamlSchemaResource, PipelineResourc
         accountId, orgId, projectId, pipelineIdentifier, pipelineName, yaml, isDraft, pipelineVersion);
     log.info(String.format("Creating pipeline with identifier %s in project %s, org %s, account %s",
         pipelineEntity.getIdentifier(), projectId, orgId, accountId));
-    PipelineCRUDResult pipelineCRUDResult = pmsPipelineService.validateAndCreatePipeline(pipelineEntity, false);
-
+    PipelineCRUDResult pipelineCRUDResult = pmsPipelineService.validateAndCreatePipeline(pipelineEntity,
+        pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE));
     GovernanceMetadata governanceMetadata = pipelineCRUDResult.getGovernanceMetadata();
     if (governanceMetadata.getDeny()) {
       return ResponseDTO.newResponse(PipelineSaveResponse.builder().governanceMetadata(governanceMetadata).build());
@@ -369,8 +370,10 @@ public class PipelineResourceImpl implements YamlSchemaResource, PipelineResourc
         projectId, orgId, accountId));
     PipelineEntity withVersion = PMSPipelineDtoMapper.toPipelineEntityWithVersion(
         accountId, orgId, projectId, pipelineId, pipelineName, yaml, ifMatch, isDraft, pipelineVersion);
-    PipelineCRUDResult pipelineCRUDResult =
-        pmsPipelineService.validateAndUpdatePipeline(withVersion, ChangeType.MODIFY, false);
+
+    PipelineCRUDResult pipelineCRUDResult = pmsPipelineService.validateAndUpdatePipeline(withVersion, ChangeType.MODIFY,
+        pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE));
+
     GovernanceMetadata governanceMetadata = pipelineCRUDResult.getGovernanceMetadata();
     if (governanceMetadata.getDeny()) {
       return ResponseDTO.newResponse(PipelineSaveResponse.builder().governanceMetadata(governanceMetadata).build());

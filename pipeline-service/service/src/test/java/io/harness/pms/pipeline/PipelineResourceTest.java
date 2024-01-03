@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -875,7 +874,9 @@ public class PipelineResourceTest extends CategoryTest {
                  .governanceMetadata(GovernanceMetadata.newBuilder().setDeny(false).build())
                  .build())
         .when(pmsPipelineService)
-        .validateAndCreatePipeline(any(), eq(false));
+        .validateAndCreatePipeline(any(), anyBoolean());
+    when(featureFlagHelper.isEnabled(ACCOUNT_ID, FeatureName.CDS_SAVE_PIPELINE_OPA_RESPONSE_CODE_CHANGE))
+        .thenReturn(false);
     ResponseDTO<PipelineSaveResponse> response = pipelineResource.createPipelineV2(ACCOUNT_ID, ORG_IDENTIFIER,
         PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, PIPELINE_NAME, null, null, null, simplifiedYaml, false);
     assertThat(response.getData().getIdentifier()).isNotEmpty();
