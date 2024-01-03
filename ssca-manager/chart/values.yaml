@@ -25,7 +25,7 @@ global:
             keys:
               MONGO_USER: ""
               MONGO_PASSWORD: ""
-        secretManagement: 
+        secretManagement:
           externalSecretsOperator:
             - secretStore:
                 name: ""
@@ -105,26 +105,21 @@ global:
       gateways:
       hosts:
   imagePullSecrets: []
-
 replicaCount: 1
-
 updateStrategy:
   type: RollingUpdate
   rollingUpdate:
     maxSurge: 25%
     maxUnavailable: 25%
-
 image:
-  registry: docker.io
-  repository: harness/ssca-manager
+  registry: us.gcr.io/platform-205701
+  repository: ssca-manager
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
-
+  tag: "1.6.1"
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
 waitForInitContainer:
   ## image version
   ## ref: https://hub.docker.com/r/harness/helm-init-container/tags
@@ -144,7 +139,6 @@ waitForInitContainer:
   containerSecurityContext:
     runAsUser: 65534
     runAsNonRoot: true
-
 mongoSecrets:
   userName:
     name: harness-secrets
@@ -152,7 +146,6 @@ mongoSecrets:
   password:
     name: mongodb-replicaset-chart
     key: mongodb-root-password
-
 serviceAccount:
   # Specifies whether a service account should be created
   create: false
@@ -161,68 +154,56 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: "harness-default"
-
 podAnnotations: {}
-
 podSecurityContext: {}
-  # fsGroup: 2000
+# fsGroup: 2000
 
 containerSecurityContext:
   runAsUser: 65534
   runAsNonRoot: true
-
 securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
 
 service:
   annotations: {}
   type: ClusterIP
   port: 8188
-
 ingress:
   annotations: {}
-
 resources:
   limits:
     memory: 8192Mi
   requests:
     cpu: 1
     memory: 1024Mi
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 100
   targetCPU: ""
   targetMemory: ""
-
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}
-
 java:
   memory: 4096m
-
 virtualService:
   annotations: {}
-
 s3:
   ### Default values are configured to work with Minio, override if you are using own s3 buckets
   endpoint: ""
@@ -231,17 +212,13 @@ s3:
   region: "us-east-1"
   accessKeyId: ""
   secretAccessKey: ""
-
 s3AccessKeyID:
   name: minio
   key: root-user
-
 s3SecretAccessKey:
   name: minio
   key: root-password
-
 java17flags: ""
-
 redis:
   protocol: ""
   hosts: []
@@ -267,7 +244,6 @@ redis:
             REDIS_PASSWORD:
               name: ""
               property: ""
-
 database:
   mongo:
     ssca:
@@ -281,7 +257,7 @@ database:
             keys:
               MONGO_USER: ""
               MONGO_PASSWORD: ""
-        secretManagement: 
+        secretManagement:
           externalSecretsOperator:
             - secretStore:
                 name: ""
@@ -293,7 +269,6 @@ database:
                 MONGO_PASSWORD:
                   name: ""
                   property: ""
-
 secrets:
   default:
     POLICY_MGMT_SERVICE_SECRET: "dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq"
