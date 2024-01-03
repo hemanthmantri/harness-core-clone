@@ -88,6 +88,16 @@ spec:
             {{- include "harnesscommon.dbv3.mongoConnectionEnv" (dict "ctx" $ "database" "harness-ci" "connectionURIVariableName" "CIMANAGER_MONGO_URI") | indent 12 }}
             {{- include "harnesscommon.dbv3.mongoEnv" (dict "ctx" $ "database" "pms-harness") | indent 12 }}
             {{- include "harnesscommon.dbv3.mongoConnectionEnv" (dict "ctx" $ "database" "pms-harness" "connectionURIVariableName" "PMS_MONGO_URI") | indent 12 }}
+            {{- if .Values.extraEnvVars }}
+              {{- include "harnesscommon.tplvalues.render" (dict "value" .Values.extraEnvVars "context" $) | nindent 12 }}
+            {{- end }}
+          {{- if .Values.lifecycleHooks }}
+          lifecycle: {{- include "harnesscommon.tplvalues.render" (dict "value" .Values.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+          {{- include "harnesscommon.tplvalues.render" (dict "value" .Values.extraVolumeMounts "context" $) | nindent 10 }}
+          {{- end }}
           envFrom:
           - configMapRef:
               name: ci-manager
@@ -127,4 +137,8 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+      {{- include "harnesscommon.tplvalues.render" ( dict "value" .Values.extraVolumes "context" $ ) | nindent 8 }}
       {{- end }}
